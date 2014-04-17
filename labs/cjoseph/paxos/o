@@ -1,0 +1,3 @@
+can't load package: package out: cannot find package "out" in any of:
+	/usr/lib/go/src/pkg/out (from $GOROOT)
+	/home/cjoseph/Desktop/6.824/labs/src/out (from $GOPATH)

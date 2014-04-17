@@ -1,0 +1,1168 @@
+2014/03/01 17:02:51 method Done has wrong number of ins: 2
+2014/03/01 17:02:51 method Kill has wrong number of ins: 1
+2014/03/01 17:02:51 method Max has wrong number of ins: 1
+2014/03/01 17:02:51 method Min has wrong number of ins: 1
+2014/03/01 17:02:51 method Start reply type not a pointer: interface {}
+2014/03/01 17:02:51 method Status has wrong number of ins: 2
+2014/03/01 17:02:51 method Done has wrong number of ins: 2
+2014/03/01 17:02:51 method Kill has wrong number of ins: 1
+2014/03/01 17:02:51 method Max has wrong number of ins: 1
+2014/03/01 17:02:51 method Min has wrong number of ins: 1
+2014/03/01 17:02:51 method Start reply type not a pointer: interface {}
+2014/03/01 17:02:51 method Status has wrong number of ins: 2
+2014/03/01 17:02:51 method Done has wrong number of ins: 2
+2014/03/01 17:02:51 method Kill has wrong number of ins: 1
+2014/03/01 17:02:51 method Max has wrong number of ins: 1
+2014/03/01 17:02:51 method Min has wrong number of ins: 1
+2014/03/01 17:02:51 method Start reply type not a pointer: interface {}
+2014/03/01 17:02:51 method Status has wrong number of ins: 2
+2014/03/01 17:02:51 method Done has wrong number of ins: 2
+2014/03/01 17:02:51 method Kill has wrong number of ins: 1
+2014/03/01 17:02:51 method Max has wrong number of ins: 1
+2014/03/01 17:02:51 method Min has wrong number of ins: 1
+2014/03/01 17:02:51 method Start reply type not a pointer: interface {}
+2014/03/01 17:02:51 method Status has wrong number of ins: 2
+2014/03/01 17:02:51 method Done has wrong number of ins: 2
+2014/03/01 17:02:51 method Kill has wrong number of ins: 1
+2014/03/01 17:02:51 method Max has wrong number of ins: 1
+2014/03/01 17:02:51 method Min has wrong number of ins: 1
+2014/03/01 17:02:51 method Start reply type not a pointer: interface {}
+2014/03/01 17:02:51 method Status has wrong number of ins: 2
+Test: No decision if partitioned ...
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:51 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:52 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:53 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+2014/03/01 17:02:54 missing majority of prepares , starting over
+  ... Passed
+Test: Decision in majority partition ...
+2014/03/01 17:02:54 Proposes accepted, sending out accepts
+2014/03/01 17:02:54 A majority got decides. hooray!
+2014/03/01 17:02:54 at end of proposer!
+  ... Passed
+Test: All agree after full heal ...
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 Proposes accepted, sending out accepts
+2014/03/01 17:02:56 A majority got decides. hooray!
+2014/03/01 17:02:56 at end of proposer!
+2014/03/01 17:02:56 at end of proposer!
+  ... Passed
+Test: One peer switches partitions ...
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 Proposes accepted, sending out accepts
+2014/03/01 17:02:56 A majority got decides. hooray!
+2014/03/01 17:02:56 at end of proposer!
+2 switches partitions================================
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 Proposes accepted, sending out accepts
+2014/03/01 17:02:56 A majority got decides. hooray!
+2014/03/01 17:02:56 at end of proposer!
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 Proposes accepted, sending out accepts
+2014/03/01 17:02:56 A majority got decides. hooray!
+2014/03/01 17:02:56 at end of proposer!
+2 switches partitions================================
+2014/03/01 17:02:56 Proposes accepted, sending out accepts
+2014/03/01 17:02:56 A majority got decides. hooray!
+2014/03/01 17:02:56 at end of proposer!
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 missing majority of prepares , starting over
+2014/03/01 17:02:56 Proposes accepted, sending out accepts
+2014/03/01 17:02:56 A majority got decides. hooray!
+2014/03/01 17:02:56 at end of proposer!
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:57 A majority got decides. hooray!
+2014/03/01 17:02:57 at end of proposer!
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 missing majority of prepares , starting over
+2014/03/01 17:02:57 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2 switches partitions================================
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+  ... Passed
+Test: One peer switches partitions, unreliable ...
+read unix /var/tmp/824-1000/px-29657-partition-0: connection reset by peer
+read unix /var/tmp/824-1000/px-29657-partition-1: connection reset by peer
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 not enough responded to decide... start over?
+read unix /var/tmp/824-1000/px-29657-partition-1: connection reset by peer
+unexpected EOF
+2014/03/01 17:02:58 not enough responded to decide... start over?
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+read unix /var/tmp/824-1000/px-29657-partition-1: connection reset by peer
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+read unix /var/tmp/824-1000/px-29657-partition-2: connection reset by peer
+2014/03/01 17:02:58 not enough responded to decide... start over?
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:58 not enough responded to decide... start over?
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 at end of proposer!
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-4: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-0: connection reset by peer
+read unix /var/tmp/824-1000/px-29657-partition-2: connection reset by peer
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 A_N tooo small
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A_N tooo small
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 A_N tooo small
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 not enough responded to decide... start over?
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 at end of proposer!
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 not enough responded to decide... start over?
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 at end of proposer!
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 at end of proposer!
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 not enough responded to decide... start over?
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:58 A_N tooo small
+2014/03/01 17:02:58 A_N tooo small
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-4: broken pipe
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 A majority got decides. hooray!
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 at end of proposer!
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:58 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+read unix /var/tmp/824-1000/px-29657-partition-0: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-1000/px-29657-partition-2: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-1: connection reset by peer
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-4: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-2: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+read unix /var/tmp/824-1000/px-29657-partition-3: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/px-29657-partition-3: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+read unix /var/tmp/824-1000/px-29657-partition-4: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 not enough responded to decide... start over?
+2014/03/01 17:02:59 at end of proposer!
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+unexpected EOF
+read unix /var/tmp/824-1000/px-29657-partition-0: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+read unix /var/tmp/824-1000/px-29657-partition-0: connection reset by peer
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:59 not enough responded to decide... start over?
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+read unix /var/tmp/824-1000/px-29657-partition-3: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-4: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-4: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-2: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+read unix /var/tmp/824-1000/px-29657-partition-4: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-1: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+read unix /var/tmp/824-1000/px-29657-partition-3: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 A_N tooo small
+unexpected EOF
+2014/03/01 17:02:59 A_N tooo small
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-3: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-3: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 not enough responded to decide... start over?
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+unexpected EOF
+read unix /var/tmp/824-1000/px-29657-partition-0: connection reset by peer
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+unexpected EOF
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A majority got decides. hooray!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+2014/03/01 17:02:59 at end of proposer!
+read unix /var/tmp/824-1000/px-29657-partition-1: connection reset by peer
+unexpected EOF
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+2014/03/01 17:02:59 A_N tooo small
+unexpected EOF
+2014/03/01 17:02:59 A_N tooo small
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+unexpected EOF
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:02:59 missing majority of prepares , starting over
+2014/03/01 17:02:59 Proposes accepted, sending out accepts
+write unix /var/tmp/824-1000/px-29657-partition-0: broken pipe
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+2014/03/01 17:03:00 at end of proposer!
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 A majority got decides. hooray!
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-3: broken pipe
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+2014/03/01 17:03:00 A majority got decides. hooray!
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+2014/03/01 17:03:00 A majority got decides. hooray!
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+write unix /var/tmp/824-1000/px-29657-partition-1: broken pipe
+write unix /var/tmp/824-1000/px-29657-partition-2: broken pipe
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:03:00 A_N tooo small
+2014/03/01 17:03:00 A_N tooo small
+2014/03/01 17:03:00 A_N tooo small
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:03:00 not enough responded to decide... start over?
+2014/03/01 17:03:00 at end of proposer!
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 at end of proposer!
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-4: connection reset by peer
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-3: connection reset by peer
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 A majority got decides. hooray!
+2014/03/01 17:03:00 at end of proposer!
+read unix /var/tmp/824-1000/px-29657-partition-0: connection reset by peer
+read unix /var/tmp/824-1000/px-29657-partition-2: connection reset by peer
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+read unix /var/tmp/824-1000/px-29657-partition-2: connection reset by peer
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 A_N tooo small
+2014/03/01 17:03:00 A_N tooo small
+unexpected EOF
+2014/03/01 17:03:00 not enough responded to decide... start over?
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 missing majority of prepares , starting over
+unexpected EOF
+2014/03/01 17:03:00 missing majority of prepares , starting over
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 Proposes accepted, sending out accepts
+2014/03/01 17:03:00 at end of proposer!
+2014/03/01 17:03:00 A majority got decides. hooray!
+2014/03/01 17:03:00 at end of proposer!
+--- FAIL: TestPartition (8.60 seconds)
+	test_test.go:32: decided values do not match; seq=35 i=2 v=351 v1=354
+FAIL
+exit status 1
+FAIL	paxos	8.608s

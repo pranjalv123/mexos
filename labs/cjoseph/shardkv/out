@@ -1,0 +1,654 @@
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:38 method Lock has wrong number of ins: 2
+2014/04/11 22:43:38 method Unlock has wrong number of ins: 2
+2014/04/11 22:43:38 method Done has wrong number of ins: 2
+2014/04/11 22:43:38 method Kill has wrong number of ins: 1
+2014/04/11 22:43:38 method Max has wrong number of ins: 1
+2014/04/11 22:43:38 method Min has wrong number of ins: 1
+2014/04/11 22:43:38 method Start reply type not a pointer: interface {}
+2014/04/11 22:43:38 method Status has wrong number of ins: 2
+2014/04/11 22:43:39 1.100 about to PutHash (2, 2907281439932170679) during config 2
+2014/04/11 22:43:39 shards about to PutHash (2, 2907281439932170679) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-2 PutHash from 1474378359995232149 seq 1 during config 2
+2014/04/11 22:43:39 1.100 about to PutHash (4, 1271018128506549375) during config 2
+2014/04/11 22:43:39 shards about to PutHash (4, 1271018128506549375) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-3 PutHash from 3134786795917931626 seq 1 during config 2
+2014/04/11 22:43:39 1.100 about to PutHash (3, 1472519844697410736) during config 2
+2014/04/11 22:43:39 shards about to PutHash (3, 1472519844697410736) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-4 PutHash from 4518121637561816842 seq 1 during config 2
+2014/04/11 22:43:39 1.100 about to PutHash (5, 2975558351153467687) during config 2
+2014/04/11 22:43:39 shards about to PutHash (5, 2975558351153467687) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-5 PutHash from 3363534256813576577 seq 1 during config 2
+2014/04/11 22:43:39 0.100 about to PutHash (2, 2907281439932170679) during config 2
+2014/04/11 22:43:39 shards about to PutHash (2, 2907281439932170679) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-2 PutHash from 1474378359995232149 seq 1 during config 2
+2014/04/11 22:43:39 0.100 about to PutHash (4, 1271018128506549375) during config 2
+2014/04/11 22:43:39 shards about to PutHash (4, 1271018128506549375) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-3 PutHash from 3134786795917931626 seq 1 during config 2
+2014/04/11 22:43:39 0.100 about to PutHash (3, 1472519844697410736) during config 2
+2014/04/11 22:43:39 shards about to PutHash (3, 1472519844697410736) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-4 PutHash from 4518121637561816842 seq 1 during config 2
+2014/04/11 22:43:39 0.100 about to PutHash (5, 2975558351153467687) during config 2
+2014/04/11 22:43:39 shards about to PutHash (5, 2975558351153467687) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-5 PutHash from 3363534256813576577 seq 1 during config 2
+2014/04/11 22:43:39 PutHash (3, 1472519844697410736) returned ''. History: [2082323083,2082323083,]
+2014/04/11 22:43:39 PutHash (4, 1271018128506549375) returned ''. History: [238898872,238898872,]
+2014/04/11 22:43:39 PutHash (2, 2907281439932170679) returned ''. History: [1193226994,1193226994,]
+2014/04/11 22:43:39 PutHash (5, 2975558351153467687) returned ''. History: [1673903382,1673903382,]
+2014/04/11 22:43:39 2.100 about to PutHash (2, 2907281439932170679) during config 2
+2014/04/11 22:43:39 shards about to PutHash (2, 2907281439932170679) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-2 PutHash from 1474378359995232149 seq 1 during config 2
+2014/04/11 22:43:39 2.100 about to PutHash (4, 1271018128506549375) during config 2
+2014/04/11 22:43:39 shards about to PutHash (4, 1271018128506549375) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-3 PutHash from 3134786795917931626 seq 1 during config 2
+2014/04/11 22:43:39 2.100 about to PutHash (3, 1472519844697410736) during config 2
+2014/04/11 22:43:39 shards about to PutHash (3, 1472519844697410736) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-4 PutHash from 4518121637561816842 seq 1 during config 2
+2014/04/11 22:43:39 2.100 about to PutHash (5, 2975558351153467687) during config 2
+2014/04/11 22:43:39 shards about to PutHash (5, 2975558351153467687) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-5 PutHash from 3363534256813576577 seq 1 during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.100-7 Get from 4518121637561816842 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-8 Get from 3134786795917931626 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-7 Get from 4518121637561816842 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-8 Get from 3134786795917931626 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-7 Get from 4518121637561816842 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-9 Get from 1474378359995232149 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-10 Get from 3363534256813576577 seq 2 during config 3
+2014/04/11 22:43:39 1.100 prior state for PutHash (3, 3332386209403781106) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 1.100 about to PutHash (3, 3332386209403781106) during config 3
+2014/04/11 22:43:39 shards about to PutHash (3, 3332386209403781106) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-11 PutHash from 4518121637561816842 seq 3 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-9 Get from 1474378359995232149 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-10 Get from 3363534256813576577 seq 2 during config 3
+2014/04/11 22:43:39 1.100 prior state for PutHash (4, 786423969550794099) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 1.100 about to PutHash (4, 786423969550794099) during config 3
+2014/04/11 22:43:39 shards about to PutHash (4, 786423969550794099) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-12 PutHash from 3134786795917931626 seq 3 during config 3
+2014/04/11 22:43:39 1.100 prior state for PutHash (5, 543752676297752941) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 1.100 about to PutHash (5, 543752676297752941) during config 3
+2014/04/11 22:43:39 shards about to PutHash (5, 543752676297752941) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-13 PutHash from 3363534256813576577 seq 3 during config 3
+2014/04/11 22:43:39 1.100 prior state for PutHash (2, 1406299935057669650) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 1.100 about to PutHash (2, 1406299935057669650) during config 3
+2014/04/11 22:43:39 shards about to PutHash (2, 1406299935057669650) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-14 PutHash from 1474378359995232149 seq 3 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-8 Get from 3134786795917931626 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-9 Get from 1474378359995232149 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-10 Get from 3363534256813576577 seq 2 during config 3
+2014/04/11 22:43:39 0.100 prior state for PutHash (3, 3332386209403781106) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 0.100 about to PutHash (3, 3332386209403781106) during config 3
+2014/04/11 22:43:39 shards about to PutHash (3, 3332386209403781106) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-11 PutHash from 4518121637561816842 seq 3 during config 3
+2014/04/11 22:43:39 0.100 prior state for PutHash (4, 786423969550794099) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 0.100 about to PutHash (4, 786423969550794099) during config 3
+2014/04/11 22:43:39 shards about to PutHash (4, 786423969550794099) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-12 PutHash from 3134786795917931626 seq 3 during config 3
+2014/04/11 22:43:39 0.100 prior state for PutHash (5, 543752676297752941) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 0.100 about to PutHash (5, 543752676297752941) during config 3
+2014/04/11 22:43:39 PutHash (3, 3332386209403781106) returned '2082323083'. History: [3835451649,3835451649,3835451649,]
+2014/04/11 22:43:39 shards about to PutHash (5, 543752676297752941) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-13 PutHash from 3363534256813576577 seq 3 during config 3
+2014/04/11 22:43:39 0.100 prior state for PutHash (2, 1406299935057669650) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 0.100 about to PutHash (2, 1406299935057669650) during config 3
+2014/04/11 22:43:39 shards about to PutHash (2, 1406299935057669650) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-14 PutHash from 1474378359995232149 seq 3 during config 3
+2014/04/11 22:43:39 PutHash (2, 1406299935057669650) returned '1193226994'. History: [2851904855,2851904855,2851904855,]
+2014/04/11 22:43:39 PutHash (5, 543752676297752941) returned '1673903382'. History: [561267580,561267580,561267580,]
+2014/04/11 22:43:39 PutHash (4, 786423969550794099) returned '238898872'. History: [1889136024,1889136024,1889136024,]
+2014/04/11 22:43:39 clientStates.put(): 0.100-15 Get from 4518121637561816842 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-16 Get from 1474378359995232149 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-17 Get from 3363534256813576577 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-18 Get from 3134786795917931626 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-15 Get from 4518121637561816842 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-16 Get from 1474378359995232149 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-17 Get from 3363534256813576577 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-18 Get from 3134786795917931626 seq 4 during config 3
+2014/04/11 22:43:39 2.100 prior state for PutHash (3, 3332386209403781106) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 2.100 about to PutHash (3, 3332386209403781106) during config 3
+2014/04/11 22:43:39 shards about to PutHash (3, 3332386209403781106) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-11 PutHash from 4518121637561816842 seq 3 during config 3
+2014/04/11 22:43:39 2.100 prior state for PutHash (4, 786423969550794099) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 2.100 about to PutHash (4, 786423969550794099) during config 3
+2014/04/11 22:43:39 shards about to PutHash (4, 786423969550794099) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-12 PutHash from 3134786795917931626 seq 3 during config 3
+2014/04/11 22:43:39 2.100 prior state for PutHash (5, 543752676297752941) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 2.100 about to PutHash (5, 543752676297752941) during config 3
+2014/04/11 22:43:39 shards about to PutHash (5, 543752676297752941) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-13 PutHash from 3363534256813576577 seq 3 during config 3
+2014/04/11 22:43:39 2.100 prior state for PutHash (2, 1406299935057669650) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 2.100 about to PutHash (2, 1406299935057669650) during config 3
+2014/04/11 22:43:39 shards about to PutHash (2, 1406299935057669650) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-14 PutHash from 1474378359995232149 seq 3 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-15 Get from 4518121637561816842 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-16 Get from 1474378359995232149 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-17 Get from 3363534256813576577 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.100-18 Get from 3134786795917931626 seq 4 during config 3
+2014/04/11 22:43:39 0.100 prior state for PutHash (5, 6773834012716829387) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:39 0.100 about to PutHash (5, 6773834012716829387) during config 3
+2014/04/11 22:43:39 shards about to PutHash (5, 6773834012716829387) during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.100-4 PutHash from 3363534256813576577 seq 6 during config 3
+2014/04/11 22:43:39 1.101 about to PutHash (9, 6310401763252345915) during config 2
+2014/04/11 22:43:39 shards about to PutHash (9, 6310401763252345915) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-6 PutHash from 3506062261767717716 seq 1 during config 2
+2014/04/11 22:43:39 1.101 about to PutHash (8, 4729576928770978365) during config 2
+2014/04/11 22:43:39 shards about to PutHash (8, 4729576928770978365) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-7 PutHash from 716204349849228244 seq 1 during config 2
+2014/04/11 22:43:39 1.101 about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 shards about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-8 PutHash from 4196795661401513778 seq 1 during config 2
+2014/04/11 22:43:39 2.100 prior state for PutHash (5, 6773834012716829387) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:39 2.100 about to PutHash (5, 6773834012716829387) during config 3
+2014/04/11 22:43:39 shards about to PutHash (5, 6773834012716829387) during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.100-4 PutHash from 3363534256813576577 seq 6 during config 3
+2014/04/11 22:43:39 2.100 prior state for PutHash (4, 867543044957389718) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 2.100 about to PutHash (4, 867543044957389718) during config 4
+2014/04/11 22:43:39 shards about to PutHash (4, 867543044957389718) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-20 PutHash from 3134786795917931626 seq 5 during config 4
+2014/04/11 22:43:39 2.100 prior state for PutHash (2, 1261393837453606385) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 2.100 about to PutHash (2, 1261393837453606385) during config 4
+2014/04/11 22:43:39 shards about to PutHash (2, 1261393837453606385) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-21 PutHash from 1474378359995232149 seq 5 during config 4
+2014/04/11 22:43:39 1.100 prior state for PutHash (5, 6773834012716829387) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:39 1.100 about to PutHash (5, 6773834012716829387) during config 3
+2014/04/11 22:43:39 shards about to PutHash (5, 6773834012716829387) during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.100-4 PutHash from 3363534256813576577 seq 6 during config 3
+2014/04/11 22:43:39 0.100 prior state for PutHash (4, 867543044957389718) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 0.100 about to PutHash (4, 867543044957389718) during config 4
+2014/04/11 22:43:39 shards about to PutHash (4, 867543044957389718) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-20 PutHash from 3134786795917931626 seq 5 during config 4
+2014/04/11 22:43:39 1.100 prior state for PutHash (4, 867543044957389718) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 1.100 about to PutHash (4, 867543044957389718) during config 4
+2014/04/11 22:43:39 shards about to PutHash (4, 867543044957389718) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-20 PutHash from 3134786795917931626 seq 5 during config 4
+2014/04/11 22:43:39 1.100 prior state for PutHash (2, 1261393837453606385) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 1.100 about to PutHash (2, 1261393837453606385) during config 4
+2014/04/11 22:43:39 shards about to PutHash (2, 1261393837453606385) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-21 PutHash from 1474378359995232149 seq 5 during config 4
+2014/04/11 22:43:39 1.100 prior state for PutHash (3, 449898666984041757) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 PutHash (5, 6773834012716829387) returned '561267580'. History: [3068876191,3068876191,3068876191,]
+2014/04/11 22:43:39 PutHash (4, 867543044957389718) returned '1889136024'. History: [1229483557,1229483557,1229483557,1229483557,]
+2014/04/11 22:43:39 1.100 about to PutHash (3, 449898666984041757) during config 4
+2014/04/11 22:43:39 shards about to PutHash (3, 449898666984041757) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-22 PutHash from 4518121637561816842 seq 5 during config 4
+2014/04/11 22:43:39 0.100 prior state for PutHash (2, 1261393837453606385) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 0.100 about to PutHash (2, 1261393837453606385) during config 4
+2014/04/11 22:43:39 shards about to PutHash (2, 1261393837453606385) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-21 PutHash from 1474378359995232149 seq 5 during config 4
+2014/04/11 22:43:39 0.100 prior state for PutHash (3, 449898666984041757) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 0.100 about to PutHash (3, 449898666984041757) during config 4
+2014/04/11 22:43:39 shards about to PutHash (3, 449898666984041757) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-22 PutHash from 4518121637561816842 seq 5 during config 4
+2014/04/11 22:43:39 PutHash (3, 449898666984041757) returned '3835451649'. History: [553195680,553195680,553195680,553195680,]
+2014/04/11 22:43:39 PutHash (2, 1261393837453606385) returned '2851904855'. History: [2716513645,2716513645,2716513645,2716513645,]
+2014/04/11 22:43:39 2.100 prior state for PutHash (3, 449898666984041757) during 4 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 5,)
+2014/04/11 22:43:39 2.100 about to PutHash (3, 449898666984041757) during config 4
+2014/04/11 22:43:39 shards about to PutHash (3, 449898666984041757) during config 4
+2014/04/11 22:43:39 clientStates.put(): 0.100-22 PutHash from 4518121637561816842 seq 5 during config 4
+2014/04/11 22:43:39 1.101 prior state for PutHash (7, 5265176936851488044) during 2 is &{  [ ,3055400451,]}. dSeq vs Seq = (1, 2,)
+2014/04/11 22:43:39 1.101 about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 shards about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 clientStates.put(): 1.101-6 PutHash from 4196795661401513778 seq 2 during config 2
+2014/04/11 22:43:39 PutHash (7, 5265176936851488044) returned '3055400451'. History: [ ,1801340178,]
+2014/04/11 22:43:39 0.102 about to PutHash (6, 4972084826242927497) during config 3
+2014/04/11 22:43:39 shards about to PutHash (6, 4972084826242927497) during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.102-5 PutHash from 1489249086999010368 seq 4 during config 3
+2014/04/11 22:43:39 0.102 about to PutHash (10, 6023232766987393410) during config 3
+2014/04/11 22:43:39 shards about to PutHash (10, 6023232766987393410) during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.102-6 PutHash from 1375813771145845264 seq 3 during config 3
+2014/04/11 22:43:39 0.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.102 about to PutHash (0, 1400508188743108884) during config 3
+2014/04/11 22:43:39 shards about to PutHash (0, 1400508188743108884) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.102-17 PutHash from 1652365476682356898 seq 3 during config 3
+2014/04/11 22:43:39 PutHash (0, 1400508188743108884) returned ''. History: [ , ,3220912971,]
+2014/04/11 22:43:39 clientStates.put(): 0.100-24 Get from 4518121637561816842 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 0.100-25 Get from 1474378359995232149 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 0.100-27 Get from 3134786795917931626 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 0.100-24 Get from 4518121637561816842 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 0.100-25 Get from 1474378359995232149 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 0.100-24 Get from 4518121637561816842 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 0.100-25 Get from 1474378359995232149 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 0.100-27 Get from 3134786795917931626 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 1.100-9 Get from 4518121637561816842 seq 7 during config 7
+2014/04/11 22:43:39 clientStates.put(): 0.100-27 Get from 3134786795917931626 seq 6 during config 5
+2014/04/11 22:43:39 clientStates.put(): 1.100-9 Get from 4518121637561816842 seq 7 during config 7
+2014/04/11 22:43:39 2.101 about to PutHash (9, 6310401763252345915) during config 2
+2014/04/11 22:43:39 shards about to PutHash (9, 6310401763252345915) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-6 PutHash from 3506062261767717716 seq 1 during config 2
+2014/04/11 22:43:39 2.101 about to PutHash (8, 4729576928770978365) during config 2
+2014/04/11 22:43:39 shards about to PutHash (8, 4729576928770978365) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-7 PutHash from 716204349849228244 seq 1 during config 2
+2014/04/11 22:43:39 2.101 about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 shards about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-8 PutHash from 4196795661401513778 seq 1 during config 2
+2014/04/11 22:43:39 0.102 about to PutHash (1, 702731134813084759) during config 3
+2014/04/11 22:43:39 shards about to PutHash (1, 702731134813084759) during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.102-7 PutHash from 4072220237217494857 seq 3 during config 3
+2014/04/11 22:43:39 0.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:39 0.101 about to PutHash (9, 6310401763252345915) during config 2
+2014/04/11 22:43:39 shards about to PutHash (9, 6310401763252345915) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-6 PutHash from 3506062261767717716 seq 1 during config 2
+2014/04/11 22:43:39 clientStates.put(): 1.102-8 Get from 1652365476682356898 seq 5 during config 3
+2014/04/11 22:43:39 2.101 prior state for PutHash (7, 5265176936851488044) during 2 is &{  [ ,3055400451,]}. dSeq vs Seq = (1, 2,)
+2014/04/11 22:43:39 2.101 about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 shards about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 clientStates.put(): 1.101-6 PutHash from 4196795661401513778 seq 2 during config 2
+2014/04/11 22:43:39 0.101 about to PutHash (8, 4729576928770978365) during config 2
+2014/04/11 22:43:39 shards about to PutHash (8, 4729576928770978365) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-7 PutHash from 716204349849228244 seq 1 during config 2
+2014/04/11 22:43:39 0.101 about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 shards about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-8 PutHash from 4196795661401513778 seq 1 during config 2
+2014/04/11 22:43:39 PutHash (8, 4729576928770978365) returned ''. History: [ ,3182951600,]
+2014/04/11 22:43:39 PutHash (9, 6310401763252345915) returned ''. History: [ ,1704361382,]
+2014/04/11 22:43:39 clientStates.put(): 1.100-9 Get from 4518121637561816842 seq 7 during config 7
+2014/04/11 22:43:39 clientStates.put(): 0.101-10 Get from 716204349849228244 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-11 Get from 3506062261767717716 seq 2 during config 3
+2014/04/11 22:43:39 0.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.101 prior state for PutHash (7, 5265176936851488044) during 2 is &{  [ ,3055400451,]}. dSeq vs Seq = (1, 2,)
+2014/04/11 22:43:39 0.101 about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 shards about to PutHash (7, 5265176936851488044) during config 2
+2014/04/11 22:43:39 clientStates.put(): 1.101-6 PutHash from 4196795661401513778 seq 2 during config 2
+2014/04/11 22:43:39 clientStates.put(): 0.101-10 Get from 716204349849228244 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-11 Get from 3506062261767717716 seq 2 during config 3
+2014/04/11 22:43:39 0.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.101 prior state for PutHash (9, 7102048702923034671) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 0.101 about to PutHash (9, 7102048702923034671) during config 3
+2014/04/11 22:43:39 shards about to PutHash (9, 7102048702923034671) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-12 PutHash from 3506062261767717716 seq 3 during config 3
+2014/04/11 22:43:39 0.101 prior state for PutHash (8, 7690044019612455980) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 0.101 about to PutHash (8, 7690044019612455980) during config 3
+2014/04/11 22:43:39 shards about to PutHash (8, 7690044019612455980) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-13 PutHash from 716204349849228244 seq 3 during config 3
+2014/04/11 22:43:39 PutHash (9, 7102048702923034671) returned '1704361382'. History: [ ,436292630,436292630,]
+2014/04/11 22:43:39 PutHash (8, 7690044019612455980) returned '3182951600'. History: [ ,2712301088,2712301088,]
+2014/04/11 22:43:39 2.101 prior state for PutHash (9, 7102048702923034671) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 2.101 about to PutHash (9, 7102048702923034671) during config 3
+2014/04/11 22:43:39 shards about to PutHash (9, 7102048702923034671) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-12 PutHash from 3506062261767717716 seq 3 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-14 Get from 3506062261767717716 seq 4 during config 3
+2014/04/11 22:43:39 0.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 clientStates.put(): 0.101-10 Get from 716204349849228244 seq 2 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-11 Get from 3506062261767717716 seq 2 during config 3
+2014/04/11 22:43:39 0.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 2.101 prior state for PutHash (8, 7690044019612455980) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 2.101 about to PutHash (8, 7690044019612455980) during config 3
+2014/04/11 22:43:39 shards about to PutHash (8, 7690044019612455980) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-13 PutHash from 716204349849228244 seq 3 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-14 Get from 3506062261767717716 seq 4 during config 3
+2014/04/11 22:43:39 0.102 prior state for PutHash (1, 702731134813084759) during 4 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (6, 4972084826242927497) during 4 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (10, 6023232766987393410) during 4 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 1.101 prior state for PutHash (9, 7102048702923034671) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 1.101 about to PutHash (9, 7102048702923034671) during config 3
+2014/04/11 22:43:39 shards about to PutHash (9, 7102048702923034671) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-12 PutHash from 3506062261767717716 seq 3 during config 3
+2014/04/11 22:43:39 1.101 prior state for PutHash (8, 7690044019612455980) during 3 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:39 1.101 about to PutHash (8, 7690044019612455980) during config 3
+2014/04/11 22:43:39 shards about to PutHash (8, 7690044019612455980) during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-13 PutHash from 716204349849228244 seq 3 during config 3
+2014/04/11 22:43:39 clientStates.put(): 0.101-14 Get from 3506062261767717716 seq 4 during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.101-9 Get from 3506062261767717716 seq 5 during config 4
+2014/04/11 22:43:39 clientStates.put(): 1.101-10 Get from 716204349849228244 seq 5 during config 4
+2014/04/11 22:43:39 clientStates.put(): 1.101-9 Get from 3506062261767717716 seq 5 during config 4
+2014/04/11 22:43:39 clientStates.put(): 1.101-10 Get from 716204349849228244 seq 5 during config 4
+2014/04/11 22:43:39 0.102 prior state for PutHash (1, 702731134813084759) during 5 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (6, 4972084826242927497) during 5 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (10, 6023232766987393410) during 5 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 2.102 about to PutHash (6, 4972084826242927497) during config 3
+2014/04/11 22:43:39 shards about to PutHash (6, 4972084826242927497) during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.102-5 PutHash from 1489249086999010368 seq 4 during config 3
+2014/04/11 22:43:39 2.102 about to PutHash (10, 6023232766987393410) during config 3
+2014/04/11 22:43:39 shards about to PutHash (10, 6023232766987393410) during config 3
+2014/04/11 22:43:39 clientStates.put(): 1.102-6 PutHash from 1375813771145845264 seq 3 during config 3
+2014/04/11 22:43:39 0.102 prior state for PutHash (1, 702731134813084759) during 6 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (6, 4972084826242927497) during 6 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:39 0.102 prior state for PutHash (10, 6023232766987393410) during 6 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:39 clientStates.put(): 1.101-9 Get from 3506062261767717716 seq 5 during config 4
+2014/04/11 22:43:40 clientStates.put(): 1.101-14 Get from 3134786795917931626 seq 10 during config 7
+2014/04/11 22:43:40 clientStates.put(): 1.101-14 Get from 3134786795917931626 seq 10 during config 7
+2014/04/11 22:43:40 0.102 prior state for PutHash (1, 702731134813084759) during 7 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 0.102 prior state for PutHash (6, 4972084826242927497) during 7 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 0.102 prior state for PutHash (10, 6023232766987393410) during 7 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 about to PutHash (6, 4972084826242927497) during config 3
+2014/04/11 22:43:40 shards about to PutHash (6, 4972084826242927497) during config 3
+2014/04/11 22:43:40 clientStates.put(): 1.102-5 PutHash from 1489249086999010368 seq 4 during config 3
+2014/04/11 22:43:40 1.102 about to PutHash (10, 6023232766987393410) during config 3
+2014/04/11 22:43:40 shards about to PutHash (10, 6023232766987393410) during config 3
+2014/04/11 22:43:40 clientStates.put(): 1.102-6 PutHash from 1375813771145845264 seq 3 during config 3
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 about to PutHash (0, 1400508188743108884) during config 3
+2014/04/11 22:43:40 shards about to PutHash (0, 1400508188743108884) during config 3
+2014/04/11 22:43:40 clientStates.put(): 0.102-17 PutHash from 1652365476682356898 seq 3 during config 3
+2014/04/11 22:43:40 1.102 about to PutHash (1, 702731134813084759) during config 3
+2014/04/11 22:43:40 shards about to PutHash (1, 702731134813084759) during config 3
+2014/04/11 22:43:40 clientStates.put(): 1.102-7 PutHash from 4072220237217494857 seq 3 during config 3
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 clientStates.put(): 1.102-8 Get from 1652365476682356898 seq 5 during config 3
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 PutHash (6, 4972084826242927497) returned ''. History: [ , ,3538847469,]
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 PutHash (10, 6023232766987393410) returned ''. History: [ , ,945746252,]
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 about to PutHash (0, 1400508188743108884) during config 3
+2014/04/11 22:43:40 shards about to PutHash (0, 1400508188743108884) during config 3
+2014/04/11 22:43:40 clientStates.put(): 0.102-17 PutHash from 1652365476682356898 seq 3 during config 3
+2014/04/11 22:43:40 2.102 about to PutHash (1, 702731134813084759) during config 3
+2014/04/11 22:43:40 shards about to PutHash (1, 702731134813084759) during config 3
+2014/04/11 22:43:40 clientStates.put(): 1.102-7 PutHash from 4072220237217494857 seq 3 during config 3
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 clientStates.put(): 1.102-8 Get from 1652365476682356898 seq 5 during config 3
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 clientStates.put(): 1.101-10 Get from 716204349849228244 seq 5 during config 4
+2014/04/11 22:43:40 1.101 prior state for PutHash (9, 2050725715706575445) during 7 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:40 1.101 about to PutHash (9, 2050725715706575445) during config 7
+2014/04/11 22:43:40 shards about to PutHash (9, 2050725715706575445) during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-18 PutHash from 3506062261767717716 seq 6 during config 7
+2014/04/11 22:43:40 1.101 prior state for PutHash (8, 7397813143867187621) during 7 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:40 1.101 about to PutHash (8, 7397813143867187621) during config 7
+2014/04/11 22:43:40 shards about to PutHash (8, 7397813143867187621) during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-19 PutHash from 716204349849228244 seq 6 during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-20 Get from 3363534256813576577 seq 10 during config 7
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 2.101 prior state for PutHash (9, 2050725715706575445) during 7 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:40 2.101 about to PutHash (9, 2050725715706575445) during config 7
+2014/04/11 22:43:40 shards about to PutHash (9, 2050725715706575445) during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-18 PutHash from 3506062261767717716 seq 6 during config 7
+2014/04/11 22:43:40 clientStates.put(): 1.101-14 Get from 3134786795917931626 seq 10 during config 7
+2014/04/11 22:43:40 0.101 prior state for PutHash (9, 2050725715706575445) during 7 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:40 0.101 about to PutHash (9, 2050725715706575445) during config 7
+2014/04/11 22:43:40 shards about to PutHash (9, 2050725715706575445) during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-18 PutHash from 3506062261767717716 seq 6 during config 7
+2014/04/11 22:43:40 0.101 prior state for PutHash (8, 7397813143867187621) during 7 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:40 0.101 about to PutHash (8, 7397813143867187621) during config 7
+2014/04/11 22:43:40 shards about to PutHash (8, 7397813143867187621) during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-19 PutHash from 716204349849228244 seq 6 during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-20 Get from 3363534256813576577 seq 10 during config 7
+2014/04/11 22:43:40 PutHash (9, 2050725715706575445) returned '436292630'. History: [ ,2146082777,2146082777,2146082777,2146082777,2146082777,2146082777,]
+2014/04/11 22:43:40 PutHash (8, 7397813143867187621) returned '2712301088'. History: [ ,4294331463,4294331463,4294331463,4294331463,4294331463,4294331463,]
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 4 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 4 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 4 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 5 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 5 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 5 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.101 prior state for PutHash (8, 7397813143867187621) during 7 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 6,)
+2014/04/11 22:43:40 2.101 about to PutHash (8, 7397813143867187621) during config 7
+2014/04/11 22:43:40 shards about to PutHash (8, 7397813143867187621) during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-19 PutHash from 716204349849228244 seq 6 during config 7
+2014/04/11 22:43:40 clientStates.put(): 0.101-24 Get from 3506062261767717716 seq 7 during config 9
+2014/04/11 22:43:40 clientStates.put(): 1.101-18 Get from 716204349849228244 seq 8 during config 9
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 6 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 6 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 6 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 7 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 7 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 7 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 3 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 3 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 3 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 4 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 4 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 4 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 5 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 clientStates.put(): 0.101-20 Get from 3363534256813576577 seq 10 during config 7
+2014/04/11 22:43:40 0.102 prior state for PutHash (1, 702731134813084759) during 8 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 clientStates.put(): 0.101-24 Get from 3506062261767717716 seq 7 during config 9
+2014/04/11 22:43:40 0.102 prior state for PutHash (6, 4972084826242927497) during 8 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 clientStates.put(): 1.101-18 Get from 716204349849228244 seq 8 during config 9
+2014/04/11 22:43:40 0.102 prior state for PutHash (10, 6023232766987393410) during 8 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 clientStates.put(): 0.102-51 Get from 1489249086999010368 seq 5 during config 8
+2014/04/11 22:43:40 clientStates.put(): 1.102-10 Get from 1375813771145845264 seq 5 during config 8
+2014/04/11 22:43:40 0.102 prior state for PutHash (0, 5826761702353010531) during 8 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 7,)
+2014/04/11 22:43:40 0.102 about to PutHash (0, 5826761702353010531) during config 8
+2014/04/11 22:43:40 shards about to PutHash (0, 5826761702353010531) during config 8
+2014/04/11 22:43:40 clientStates.put(): 1.102-11 PutHash from 1652365476682356898 seq 7 during config 8
+2014/04/11 22:43:40 clientStates.put(): 0.101-24 Get from 3506062261767717716 seq 7 during config 9
+2014/04/11 22:43:40 clientStates.put(): 1.101-18 Get from 716204349849228244 seq 8 during config 9
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 8 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 8 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 8 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 0.102 prior state for PutHash (1, 702731134813084759) during 9 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 5 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 5 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 6 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 6 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 6 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 7 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 7 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 7 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 0.102 prior state for PutHash (6, 4972084826242927497) during 9 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:40 0.102 about to PutHash (6, 4972084826242927497) during config 9
+2014/04/11 22:43:40 shards about to PutHash (6, 4972084826242927497) during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-55 PutHash from 1489249086999010368 seq 3 during config 9
+2014/04/11 22:43:40 0.102 prior state for PutHash (10, 6023232766987393410) during 9 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 2,)
+2014/04/11 22:43:40 0.102 about to PutHash (10, 6023232766987393410) during config 9
+2014/04/11 22:43:40 shards about to PutHash (10, 6023232766987393410) during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-56 PutHash from 1375813771145845264 seq 2 during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-57 Get from 1375813771145845264 seq 4 during config 9
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 8 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 8 is &{  [ , ,3538847469,]}. dSeq vs Seq = (4, 3,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 8 is &{  [ , ,945746252,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 0.102 prior state for PutHash (1, 702731134813084759) during 10 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 0.102 prior state for PutHash (6, 4636604098081996739) during 10 is &{ 3538847469 [ , ,220791046,220791046,220791046,220791046,220791046,220791046,220791046,]}. dSeq vs Seq = (3, 8,)
+2014/04/11 22:43:40 0.102 about to PutHash (6, 4636604098081996739) during config 10
+2014/04/11 22:43:40 shards about to PutHash (6, 4636604098081996739) during config 10
+2014/04/11 22:43:40 clientStates.put(): 2.102-8 PutHash from 1489249086999010368 seq 8 during config 10
+2014/04/11 22:43:40 clientStates.put(): 0.102-51 Get from 1489249086999010368 seq 5 during config 8
+2014/04/11 22:43:40 clientStates.put(): 1.102-10 Get from 1375813771145845264 seq 5 during config 8
+2014/04/11 22:43:40 1.102 prior state for PutHash (0, 5826761702353010531) during 8 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 7,)
+2014/04/11 22:43:40 1.102 about to PutHash (0, 5826761702353010531) during config 8
+2014/04/11 22:43:40 shards about to PutHash (0, 5826761702353010531) during config 8
+2014/04/11 22:43:40 clientStates.put(): 1.102-11 PutHash from 1652365476682356898 seq 7 during config 8
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 9 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4972084826242927497) during 9 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:40 1.102 about to PutHash (6, 4972084826242927497) during config 9
+2014/04/11 22:43:40 shards about to PutHash (6, 4972084826242927497) during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-55 PutHash from 1489249086999010368 seq 3 during config 9
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6023232766987393410) during 9 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 2,)
+2014/04/11 22:43:40 1.102 about to PutHash (10, 6023232766987393410) during config 9
+2014/04/11 22:43:40 shards about to PutHash (10, 6023232766987393410) during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-56 PutHash from 1375813771145845264 seq 2 during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-57 Get from 1375813771145845264 seq 4 during config 9
+2014/04/11 22:43:40 PutHash (0, 5826761702353010531) returned '3220912971'. History: [ , ,3424681068,3424681068,3424681068,3424681068,3424681068,3424681068,]
+2014/04/11 22:43:40 clientStates.put(): 0.102-51 Get from 1489249086999010368 seq 5 during config 8
+2014/04/11 22:43:40 clientStates.put(): 1.102-10 Get from 1375813771145845264 seq 5 during config 8
+2014/04/11 22:43:40 2.102 prior state for PutHash (0, 5826761702353010531) during 8 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 7,)
+2014/04/11 22:43:40 2.102 about to PutHash (0, 5826761702353010531) during config 8
+2014/04/11 22:43:40 shards about to PutHash (0, 5826761702353010531) during config 8
+2014/04/11 22:43:40 clientStates.put(): 1.102-11 PutHash from 1652365476682356898 seq 7 during config 8
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 9 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4972084826242927497) during 9 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 3,)
+2014/04/11 22:43:40 2.102 about to PutHash (6, 4972084826242927497) during config 9
+2014/04/11 22:43:40 shards about to PutHash (6, 4972084826242927497) during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-55 PutHash from 1489249086999010368 seq 3 during config 9
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6023232766987393410) during 9 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 2,)
+2014/04/11 22:43:40 2.102 about to PutHash (10, 6023232766987393410) during config 9
+2014/04/11 22:43:40 shards about to PutHash (10, 6023232766987393410) during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-56 PutHash from 1375813771145845264 seq 2 during config 9
+2014/04/11 22:43:40 clientStates.put(): 0.102-57 Get from 1375813771145845264 seq 4 during config 9
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 10 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4636604098081996739) during 10 is &{ 3538847469 [ , ,220791046,220791046,220791046,220791046,220791046,220791046,220791046,]}. dSeq vs Seq = (3, 8,)
+2014/04/11 22:43:40 2.102 about to PutHash (6, 4636604098081996739) during config 10
+2014/04/11 22:43:40 shards about to PutHash (6, 4636604098081996739) during config 10
+2014/04/11 22:43:40 clientStates.put(): 2.102-8 PutHash from 1489249086999010368 seq 8 during config 10
+2014/04/11 22:43:40 PutHash (6, 4636604098081996739) returned '220791046'. History: [ , ,43716698,43716698,43716698,43716698,43716698,43716698,43716698,43716698,]
+2014/04/11 22:43:40 0.102 prior state for PutHash (1, 702731134813084759) during 11 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 clientStates.put(): 0.102-62 Get from 1652365476682356898 seq 8 during config 11
+2014/04/11 22:43:40 0.102 prior state for PutHash (1, 702731134813084759) during 11 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 4,)
+2014/04/11 22:43:40 0.102 about to PutHash (1, 702731134813084759) during config 11
+2014/04/11 22:43:40 shards about to PutHash (1, 702731134813084759) during config 11
+2014/04/11 22:43:40 clientStates.put(): 2.102-9 PutHash from 4072220237217494857 seq 4 during config 11
+2014/04/11 22:43:40 0.102 prior state for PutHash (10, 6696983711934110460) during 11 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 8,)
+2014/04/11 22:43:40 0.102 about to PutHash (10, 6696983711934110460) during config 11
+2014/04/11 22:43:40 shards about to PutHash (10, 6696983711934110460) during config 11
+2014/04/11 22:43:40 clientStates.put(): 2.102-11 PutHash from 1375813771145845264 seq 8 during config 11
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 10 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4636604098081996739) during 10 is &{ 3538847469 [ , ,220791046,220791046,220791046,220791046,220791046,220791046,220791046,]}. dSeq vs Seq = (3, 8,)
+2014/04/11 22:43:40 1.102 about to PutHash (6, 4636604098081996739) during config 10
+2014/04/11 22:43:40 shards about to PutHash (6, 4636604098081996739) during config 10
+2014/04/11 22:43:40 clientStates.put(): 2.102-8 PutHash from 1489249086999010368 seq 8 during config 10
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 11 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 clientStates.put(): 0.102-62 Get from 1652365476682356898 seq 8 during config 11
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 11 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 4,)
+2014/04/11 22:43:40 1.102 about to PutHash (1, 702731134813084759) during config 11
+2014/04/11 22:43:40 shards about to PutHash (1, 702731134813084759) during config 11
+2014/04/11 22:43:40 clientStates.put(): 2.102-9 PutHash from 4072220237217494857 seq 4 during config 11
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6696983711934110460) during 11 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 8,)
+2014/04/11 22:43:40 1.102 about to PutHash (10, 6696983711934110460) during config 11
+2014/04/11 22:43:40 shards about to PutHash (10, 6696983711934110460) during config 11
+2014/04/11 22:43:40 clientStates.put(): 2.102-11 PutHash from 1375813771145845264 seq 8 during config 11
+2014/04/11 22:43:40 0.102 prior state for PutHash (10, 6696983711934110460) during 12 is &{ 771694230 [ , ,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,]}. dSeq vs Seq = (8, 6,)
+2014/04/11 22:43:40 0.102 prior state for PutHash (1, 702731134813084759) during 12 is &{ 4144447326 [ , ,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,]}. dSeq vs Seq = (4, 2,)
+2014/04/11 22:43:40 0.102 prior state for PutHash (0, 2521878399392129676) during 12 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 11,)
+2014/04/11 22:43:40 0.102 about to PutHash (0, 2521878399392129676) during config 12
+2014/04/11 22:43:40 shards about to PutHash (0, 2521878399392129676) during config 12
+2014/04/11 22:43:40 clientStates.put(): 2.102-12 PutHash from 1652365476682356898 seq 11 during config 12
+2014/04/11 22:43:40 0.102 prior state for PutHash (6, 4636604098081996739) during 12 is &{ 220791046 [ , ,43716698,43716698,43716698,43716698,43716698,43716698,43716698,43716698,]}. dSeq vs Seq = (8, 7,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 11 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 2,)
+2014/04/11 22:43:40 clientStates.put(): 0.102-62 Get from 1652365476682356898 seq 8 during config 11
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 11 is &{  [ , ,4144447326,]}. dSeq vs Seq = (3, 4,)
+2014/04/11 22:43:40 2.102 about to PutHash (1, 702731134813084759) during config 11
+2014/04/11 22:43:40 shards about to PutHash (1, 702731134813084759) during config 11
+2014/04/11 22:43:40 clientStates.put(): 2.102-9 PutHash from 4072220237217494857 seq 4 during config 11
+2014/04/11 22:43:40 PutHash (1, 702731134813084759) returned '4144447326'. History: [ , ,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,]
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6696983711934110460) during 11 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 8,)
+2014/04/11 22:43:40 2.102 about to PutHash (10, 6696983711934110460) during config 11
+2014/04/11 22:43:40 shards about to PutHash (10, 6696983711934110460) during config 11
+2014/04/11 22:43:40 clientStates.put(): 2.102-11 PutHash from 1375813771145845264 seq 8 during config 11
+2014/04/11 22:43:40 2.102 prior state for PutHash (10, 6696983711934110460) during 12 is &{ 771694230 [ , ,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,]}. dSeq vs Seq = (8, 6,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (1, 702731134813084759) during 12 is &{ 4144447326 [ , ,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,]}. dSeq vs Seq = (4, 2,)
+2014/04/11 22:43:40 2.102 prior state for PutHash (0, 2521878399392129676) during 12 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 11,)
+2014/04/11 22:43:40 2.102 about to PutHash (0, 2521878399392129676) during config 12
+2014/04/11 22:43:40 shards about to PutHash (0, 2521878399392129676) during config 12
+2014/04/11 22:43:40 clientStates.put(): 2.102-12 PutHash from 1652365476682356898 seq 11 during config 12
+2014/04/11 22:43:40 2.102 prior state for PutHash (6, 4636604098081996739) during 12 is &{ 220791046 [ , ,43716698,43716698,43716698,43716698,43716698,43716698,43716698,43716698,]}. dSeq vs Seq = (8, 7,)
+2014/04/11 22:43:40 PutHash (0, 2521878399392129676) returned '3424681068'. History: [ , ,44937846,44937846,44937846,44937846,44937846,44937846,44937846,44937846,44937846,44937846,]
+2014/04/11 22:43:40 PutHash (10, 6696983711934110460) returned '771694230'. History: [ , ,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,]
+2014/04/11 22:43:40 1.102 prior state for PutHash (10, 6696983711934110460) during 12 is &{ 771694230 [ , ,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,]}. dSeq vs Seq = (8, 6,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (1, 702731134813084759) during 12 is &{ 4144447326 [ , ,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,]}. dSeq vs Seq = (4, 2,)
+2014/04/11 22:43:40 1.102 prior state for PutHash (0, 2521878399392129676) during 12 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 11,)
+2014/04/11 22:43:40 1.102 about to PutHash (0, 2521878399392129676) during config 12
+2014/04/11 22:43:40 shards about to PutHash (0, 2521878399392129676) during config 12
+2014/04/11 22:43:40 clientStates.put(): 2.102-12 PutHash from 1652365476682356898 seq 11 during config 12
+2014/04/11 22:43:40 1.102 prior state for PutHash (6, 4636604098081996739) during 12 is &{ 220791046 [ , ,43716698,43716698,43716698,43716698,43716698,43716698,43716698,43716698,]}. dSeq vs Seq = (8, 7,)
+2014/04/11 22:43:41 0.102 prior state for PutHash (10, 6696983711934110460) during 13 is &{ 771694230 [ , ,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,]}. dSeq vs Seq = (8, 6,)
+2014/04/11 22:43:41 0.102 prior state for PutHash (1, 702731134813084759) during 13 is &{ 4144447326 [ , ,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,]}. dSeq vs Seq = (4, 2,)
+2014/04/11 22:43:41 clientStates.put(): 0.102-69 Get from 1652365476682356898 seq 12 during config 13
+2014/04/11 22:43:41 0.102 prior state for PutHash (0, 2521878399392129676) during 13 is %!s(*shardkv.PutReply=<nil>). dSeq vs Seq = (-1, 10,)
+2014/04/11 22:43:41 0.102 about to PutHash (0, 2521878399392129676) during config 13
+2014/04/11 22:43:41 shards about to PutHash (0, 2521878399392129676) during config 13
+2014/04/11 22:43:41 clientStates.put(): 1.102-15 PutHash from 1652365476682356898 seq 10 during config 13
+2014/04/11 22:43:41 0.102 prior state for PutHash (6, 4636604098081996739) during 13 is &{ 220791046 [ , ,43716698,43716698,43716698,43716698,43716698,43716698,43716698,43716698,]}. dSeq vs Seq = (8, 7,)
+2014/04/11 22:43:41 0.102 prior state for PutHash (10, 6696983711934110460) during 14 is &{ 771694230 [ , ,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,3219726332,]}. dSeq vs Seq = (8, 6,)
+2014/04/11 22:43:41 0.102 prior state for PutHash (1, 702731134813084759) during 14 is &{ 4144447326 [ , ,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,255739395,]}. dSeq vs Seq = (4, 2,)
+--- FAIL: TestConcurrentUnreliable (2.69 seconds)
+	test_test.go:292: PutHash(7) expected  got 3055400451
+	test_test.go:292: PutHash(6) expected 3538847469 got 220791046
+	test_test.go:292: PutHash(1) expected  got 4144447326
+	test_test.go:292: PutHash(10) expected 945746252 got 771694230
+	test_test.go:312: something is wrong
+FAIL
+FAIL	shardkv	2.706s

@@ -1,0 +1,91 @@
+2014/02/20 17:37:10 method Kill has wrong number of ins: 1
+Test: Repeated failures/restarts; unreliable ...
+2014/02/20 17:37:11 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:11 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:11 method Sync has wrong number of ins: 2
+2014/02/20 17:37:11 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:11 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:11 method Sync has wrong number of ins: 2
+2014/02/20 17:37:11 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:11 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:11 method Sync has wrong number of ins: 2
+2014/02/20 17:37:11 Adding the  first primary.
+2014/02/20 17:37:11 View changed from 0 to 1  P,B is /var/tmp/824-1000/pb-14690-rcu-1  and I am /var/tmp/824-1000/pb-14690-rcu-1
+2014/02/20 17:37:11 validated first primary /var/tmp/824-1000/pb-14690-rcu-1
+2014/02/20 17:37:11 Syncing /var/tmp/824-1000/pb-14690-rcu-1 to /var/tmp/824-1000/pb-14690-rcu-3
+2014/02/20 17:37:11 /var/tmp/824-1000/pb-14690-rcu-3 validated
+2014/02/20 17:37:11 Sync done!
+2014/02/20 17:37:11 View changed from 1 to 2  P,B is /var/tmp/824-1000/pb-14690-rcu-1 /var/tmp/824-1000/pb-14690-rcu-3 and I am /var/tmp/824-1000/pb-14690-rcu-1
+unexpected EOF
+connection is shut down
+2014/02/20 17:37:11 Inserted k/v 0 890022063
+write unix /var/tmp/824-1000/pb-14690-rcu-1: broken pipe
+2014/02/20 17:37:11 Inserted k/v 1 95291263
+2014/02/20 17:37:11 trying to get 0
+2014/02/20 17:37:11 I am /var/tmp/824-1000/pb-14690-rcu-1 and the current view is /var/tmp/824-1000/pb-14690-rcu-1 /var/tmp/824-1000/pb-14690-rcu-3  and I have db map[1:95291263 0:890022063]
+write unix /var/tmp/824-1000/pb-14690-rcu-3: broken pipe
+Backup nonresponsive while forwarding Get
+2014/02/20 17:37:12 trying to get 0
+2014/02/20 17:37:12 I am /var/tmp/824-1000/pb-14690-rcu-1 and the current view is /var/tmp/824-1000/pb-14690-rcu-1 /var/tmp/824-1000/pb-14690-rcu-3  and I have db map[1:95291263 0:890022063]
+unexpected EOF
+Backup nonresponsive while forwarding Put
+write unix /var/tmp/824-1000/pb-14690-rcu-1: broken pipe
+2014/02/20 17:37:12 Inserted k/v 0 3199936968
+2014/02/20 17:37:12 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:12 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:12 method Sync has wrong number of ins: 2
+2014/02/20 17:37:14 View changed from 2 to 3  P,B is /var/tmp/824-1000/pb-14690-rcu-1  and I am /var/tmp/824-1000/pb-14690-rcu-1
+2014/02/20 17:37:14 Syncing /var/tmp/824-1000/pb-14690-rcu-1 to /var/tmp/824-1000/pb-14690-rcu-2
+2014/02/20 17:37:14 Cannot sync to me ( /var/tmp/824-1000/pb-14690-rcu-2 from  /var/tmp/824-1000/pb-14690-rcu-1 ! Current view is &{3 /var/tmp/824-1000/pb-14690-rcu-1 }
+ErrWrongServer
+2014/02/20 17:37:14 Syncing /var/tmp/824-1000/pb-14690-rcu-1 to /var/tmp/824-1000/pb-14690-rcu-2
+2014/02/20 17:37:14 /var/tmp/824-1000/pb-14690-rcu-2 validated
+2014/02/20 17:37:14 Sync done!
+2014/02/20 17:37:14 View changed from 3 to 4  P,B is /var/tmp/824-1000/pb-14690-rcu-1 /var/tmp/824-1000/pb-14690-rcu-2 and I am /var/tmp/824-1000/pb-14690-rcu-1
+2014/02/20 17:37:14 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:14 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:14 method Sync has wrong number of ins: 2
+2014/02/20 17:37:16 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:16 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:16 method Sync has wrong number of ins: 2
+2014/02/20 17:37:18 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:18 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:18 method Sync has wrong number of ins: 2
+2014/02/20 17:37:20 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:20 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:20 method Sync has wrong number of ins: 2
+2014/02/20 17:37:22 Syncing /var/tmp/824-1000/pb-14690-rcu-1 to /var/tmp/824-1000/pb-14690-rcu-3
+2014/02/20 17:37:22 /var/tmp/824-1000/pb-14690-rcu-3 validated
+2014/02/20 17:37:22 Sync done!
+2014/02/20 17:37:22 View changed from 4 to 5  P,B is /var/tmp/824-1000/pb-14690-rcu-2 /var/tmp/824-1000/pb-14690-rcu-3 and I am /var/tmp/824-1000/pb-14690-rcu-2
+2014/02/20 17:37:22 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:22 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:22 method Sync has wrong number of ins: 2
+2014/02/20 17:37:24 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:24 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:24 method Sync has wrong number of ins: 2
+2014/02/20 17:37:26 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:26 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:26 method Sync has wrong number of ins: 2
+2014/02/20 17:37:28 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:28 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:28 method Sync has wrong number of ins: 2
+2014/02/20 17:37:30 View changed from 5 to 6  P,B is /var/tmp/824-1000/pb-14690-rcu-2  and I am /var/tmp/824-1000/pb-14690-rcu-2
+2014/02/20 17:37:30 Syncing /var/tmp/824-1000/pb-14690-rcu-2 to /var/tmp/824-1000/pb-14690-rcu-1
+2014/02/20 17:37:30 Cannot sync to me ( /var/tmp/824-1000/pb-14690-rcu-1 from  /var/tmp/824-1000/pb-14690-rcu-2 ! Current view is &{6 /var/tmp/824-1000/pb-14690-rcu-2 }
+ErrWrongServer
+2014/02/20 17:37:30 Syncing /var/tmp/824-1000/pb-14690-rcu-2 to /var/tmp/824-1000/pb-14690-rcu-1
+2014/02/20 17:37:30 /var/tmp/824-1000/pb-14690-rcu-1 validated
+2014/02/20 17:37:30 Sync done!
+2014/02/20 17:37:30 View changed from 6 to 7  P,B is /var/tmp/824-1000/pb-14690-rcu-2 /var/tmp/824-1000/pb-14690-rcu-1 and I am /var/tmp/824-1000/pb-14690-rcu-2
+2014/02/20 17:37:30 method FwdGet has wrong number of ins: 4
+2014/02/20 17:37:30 method FwdPut has wrong number of ins: 4
+2014/02/20 17:37:30 method Sync has wrong number of ins: 2
+  ... Put/Gets done ... 
+--- FAIL: TestRepeatedCrashUnreliable (21.61 seconds)
+	test_test.go:662: ck.Puthash(1) returned 890022063 but expected  at iter 0
+	test_test.go:662: ck.Puthash(0) returned 78513644 but expected 890022063 at iter 1
+	test_test.go:688: child failed
+FAIL
+exit status 1
+FAIL	pbservice	21.613s

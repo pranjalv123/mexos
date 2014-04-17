@@ -1,0 +1,11 @@
+benchmarks, all run on colleen's thinkpad T520
+
+ShardKV:
+cjoseph only: 39.459s
+dvorak42 only: 57.825s
+delpreto only: DNF
+pranjal only: 
+
+Shardmaster:
+
+Paxos:

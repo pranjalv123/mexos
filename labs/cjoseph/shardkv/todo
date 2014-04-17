@@ -1,0 +1,38 @@
+Need to reduce overhead by making sure that moving/creating shard actions do nothing if they already exists. Need to make sure that we don't overlook/do something (TA pointed it out, I had it on a post-it, i lost it).
+
+--- FAIL: TestBasic (1.43 seconds)
+	test_test.go:37: wanted 10 groups, got 11, [1 2 3 4 5 6 7 8 9 10] vs map[2:[a b c] 10:[a b c] 6:[a b c] 4:[a b c] 8:[a b c] 9:[a b c] 1:[a b c] 3:[a b c] 7:[a b c] 1002:[a b c] 5:[a b c]]
+
+--how to handle duplicate removal? a two step parser function of the GetArgs, PutARgs, etc. so we don't have to extract em?
+
+-write retry loop in server
+
+-write reconfigure(). reconfiguration is lazy--a server only has to do something if it is getting new shards, not if it is losing them
+--because of this "lazy" system plus the guarantee that only one server is in charge at a time plus the paxos log ordering guarantee, the "old" owner doesn't have to do any special preservation except not delete the old ones and reject incoming requests 
+--the new server will not mistakenly reject requests, since the rejection stage is in the apply step, so all ops before that point are guaranteed to have been applied
+--getShard RPC figures out which server to ask for a shard, and then loops until it gets a response
+---should server send whole DB....or should there be separate DBs for each shard? Need to fix puts and gets if we do this
+
+-figure out what changes are  needed in client.go (at least the From and CliSeq...anything else?)
+
+-your server should respond with an ErrWrongGroup error to a client RPC with a key that the server isn't responsible for (i.e. for a key whose shard is not assigned to the server's group).
+---reply with ErrWrongGroup in the apply phase (post-paxos). The client will then have to re-sent to the right server
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+When a server sends shards to another, the server needs to send the clients state as well. Think about how the receiver of the shards should update its own clients state. Is it ok for the receiver to replace its clients state with the received one?
+
+Yes, it can be replaced. The only thing that will be overwritten is ErrWrongGroup , which is fine to overwrite.
+
+Q: Should the client change the sequence number if it receives ErrWrongGroup?
+Should the server update the client state if it returns ErrWrongGroup when executing a Get/Put request?
+
+I don't think the client should change the sequence number, otherwise if the packet gets lost and then eventually arrives somewhere? Well, it should actu
+Client state per shard? If this is done, then will having errwronggroup responses logged be harmful? I don't think so, since this client state safely be overwritten. Which is more effort...logging it or not logging it? It seems either way will work
+
+Should client state requests be put through paxos? The remote server cannot serve any additional requests once the config change has committed...but what's to guarantee that the view change has been applied to the remote by the time the GetShard rpc arrives? Making GetShard be paxos requires the Config op to finish applying beforehand, though.
+
+How to store "snapshots" of the data?
+-a map of maps, mapping from config number to the db state at that time
+-this requires the recipient of a getShard request to know when it is not ok to respond (namely, if the configuration has moved beyond the one the requester is looking for). Then the requester has to ask its fellow servers for a copy from their history. Ugh.
+
+

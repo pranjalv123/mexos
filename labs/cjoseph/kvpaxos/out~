@@ -1,0 +1,618 @@
+2014/03/14 20:29:08 method Done has wrong number of ins: 2
+2014/03/14 20:29:08 method Kill has wrong number of ins: 1
+2014/03/14 20:29:08 method Max has wrong number of ins: 1
+2014/03/14 20:29:08 method Min has wrong number of ins: 1
+2014/03/14 20:29:08 method Start reply type not a pointer: interface {}
+2014/03/14 20:29:08 method Status has wrong number of ins: 2
+2014/03/14 20:29:08 method Done has wrong number of ins: 2
+2014/03/14 20:29:08 method Kill has wrong number of ins: 1
+2014/03/14 20:29:08 method Max has wrong number of ins: 1
+2014/03/14 20:29:08 method Min has wrong number of ins: 1
+2014/03/14 20:29:08 method Start reply type not a pointer: interface {}
+2014/03/14 20:29:08 method Status has wrong number of ins: 2
+2014/03/14 20:29:08 method Done has wrong number of ins: 2
+2014/03/14 20:29:08 method Kill has wrong number of ins: 1
+2014/03/14 20:29:08 method Max has wrong number of ins: 1
+2014/03/14 20:29:08 method Min has wrong number of ins: 1
+2014/03/14 20:29:08 method Start reply type not a pointer: interface {}
+2014/03/14 20:29:08 method Status has wrong number of ins: 2
+Test: Basic put/get, unreliable ...
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+2014/03/14 20:29:08 0 applied 0 &{3294737855493311647 0 0 0 Put a aa  }
+2014/03/14 20:29:08 2 applied 0 &{3294737855493311647 0 0 0 Put a aa  }
+2014/03/14 20:29:08 0 put paxos success for 0 &{3294737855493311647 0 0 0 Put a aa  } vs {3294737855493311647 0 0 0 Put a aa  }
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+unexpected EOF
+2014/03/14 20:29:08 0 applied 1 &{3294737855493311647 1 1 1 Get a aa  }
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+unexpected EOF
+2014/03/14 20:29:08 1 applied 0 &{3294737855493311647 0 0 0 Put a aa  }
+2014/03/14 20:29:08 1 applied 1 &{3294737855493311647 1 1 1 Get a aa  }
+2014/03/14 20:29:08 2 applied 1 &{3294737855493311647 1 1 1 Get a aa  }
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+unexpected EOF
+2014/03/14 20:29:08 0 noop for 2
+2014/03/14 20:29:08 0 applied 3 &{3050660546144643154 0 3 1 Put a aaa aa }
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+unexpected EOF
+2014/03/14 20:29:08 2 noop for 2
+2014/03/14 20:29:08 2 applied 3 &{3050660546144643154 0 3 1 Put a aaa aa }
+connection is shut down
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:08 1 noop for 2
+2014/03/14 20:29:08 1 applied 3 &{3050660546144643154 0 3 1 Put a aaa aa }
+2014/03/14 20:29:08 1 put paxos success for 3 &{3050660546144643154 0 3 1 Put a aaa aa } vs {3050660546144643154 0 3 1 Put a aaa  }
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:08 0 applied 4 &{4008482813304815457 0 4 2 Get a aaa  }
+2014/03/14 20:29:08 1 applied 4 &{4008482813304815457 0 4 2 Get a aaa  }
+2014/03/14 20:29:08 2 applied 4 &{4008482813304815457 0 4 2 Get a aaa  }
+2014/03/14 20:29:08 2 applied 5 &{3050660546144643154 1 5 1 Get a aaa  }
+2014/03/14 20:29:08 1 applied 5 &{3050660546144643154 1 5 1 Get a aaa  }
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+2014/03/14 20:29:08 0 applied 5 &{3050660546144643154 1 5 1 Get a aaa  }
+2014/03/14 20:29:08 0 applied 6 &{3294737855493311647 2 6 0 Get a aaa  }
+  ... Passed
+Test: Sequence of puts, unreliable ...
+2014/03/14 20:29:08 ****I am sitting in a room, debugging this stupid lab*********
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:08 1 applied 6 &{3294737855493311647 2 6 0 Get a aaa  }
+2014/03/14 20:29:08 1 applied 7 &{3579117460779343423 0 7 1 Get 2   ErrNoKey}
+2014/03/14 20:29:08 1 applied 8 &{703497829048904394 0 8 1 Get 0   ErrNoKey}
+2014/03/14 20:29:08 1 applied 9 &{818240784710572174 0 9 2 Get 3   ErrNoKey}
+2014/03/14 20:29:08 0 applied 7 &{3579117460779343423 0 7 1 Get 2   ErrNoKey}
+2014/03/14 20:29:08 0 applied 8 &{703497829048904394 0 8 1 Get 0   ErrNoKey}
+2014/03/14 20:29:08 0 applied 9 &{818240784710572174 0 9 2 Get 3   ErrNoKey}
+2014/03/14 20:29:08 0 got a seq  10  puthash( 2 , 0 )
+2014/03/14 20:29:08 2 got a seq  10  puthash( 0 , 0 )
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+2014/03/14 20:29:08 2 applied 6 &{3294737855493311647 2 6 0 Get a aaa  }
+2014/03/14 20:29:08 2 applied 7 &{3579117460779343423 0 7 1 Get 2   ErrNoKey}
+2014/03/14 20:29:08 2 applied 8 &{703497829048904394 0 8 1 Get 0   ErrNoKey}
+2014/03/14 20:29:08 2 applied 9 &{818240784710572174 0 9 2 Get 3   ErrNoKey}
+2014/03/14 20:29:08 0 got a seq  12  puthash( 3 , 0 )
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:08 1 applied 10 &{703497829048904394 1 10 2 PutHash 0 0  }
+2014/03/14 20:29:08 1 applied 11 &{2493410917034713460 0 11 1 Get 4   ErrNoKey}
+2014/03/14 20:29:08 1 got a seq  13  puthash( 4 , 0 )
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:08 2 applied 10 &{703497829048904394 1 10 2 PutHash 0 0  }
+2014/03/14 20:29:08 2 put paxos success for 10 &{703497829048904394 1 10 2 PutHash 0 0  } vs {703497829048904394 1 10 2 PutHash 0 0  }
+2014/03/14 20:29:08 2 applied 11 &{2493410917034713460 0 11 1 Get 4   ErrNoKey}
+2014/03/14 20:29:08 *****************passed puthash( 0 ,0) ***************
+unexpected EOF
+2014/03/14 20:29:08 0 got a seq  14  puthash( 0 , 1 )
+2014/03/14 20:29:08 1 got a seq  14  puthash( 0 , 1 )
+2014/03/14 20:29:08 0 applied 10 &{703497829048904394 1 10 2 PutHash 0 0  }
+2014/03/14 20:29:08 0 put paxos success for 10 &{703497829048904394 1 10 2 PutHash 0 0  } vs {3579117460779343423 1 10 0 PutHash 2 0  }
+2014/03/14 20:29:08 0 uh-oh! mismatch despite paxos success on 10 3579117460779343423 vs 703497829048904394 and 1 vs 1
+2014/03/14 20:29:08 0 applied 11 &{2493410917034713460 0 11 1 Get 4   ErrNoKey}
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+2014/03/14 20:29:08 2 got a seq  15  puthash( 2 , 0 )
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:08 0 applied 12 &{818240784710572174 1 12 0 PutHash 3 0  }
+2014/03/14 20:29:08 0 put paxos success for 12 &{818240784710572174 1 12 0 PutHash 3 0  } vs {818240784710572174 1 12 0 PutHash 3 0  }
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+2014/03/14 20:29:08 *****************passed puthash( 3 ,0) ***************
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+2014/03/14 20:29:08 1 got a seq  17  puthash( 3 , 1 )
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:08 1 applied 12 &{818240784710572174 1 12 0 PutHash 3 0  }
+2014/03/14 20:29:08 1 applied 13 &{2493410917034713460 1 13 1 PutHash 4 0  }
+2014/03/14 20:29:08 1 put paxos success for 13 &{2493410917034713460 1 13 1 PutHash 4 0  } vs {2493410917034713460 1 13 1 PutHash 4 0  }
+2014/03/14 20:29:08 1 applied 14 &{703497829048904394 2 14 0 PutHash 0 1 890022063 }
+2014/03/14 20:29:08 1 put paxos success for 14 &{703497829048904394 2 14 0 PutHash 0 1 890022063 } vs {703497829048904394 2 14 1 PutHash 0 1  }
+2014/03/14 20:29:08 1 applied 15 &{3579117460779343423 1 15 2 PutHash 2 0  }
+2014/03/14 20:29:08 1 applied 16 &{481818735686699098 0 16 2 Get 1   ErrNoKey}
+2014/03/14 20:29:08 *****************passed puthash( 4 ,0) ***************
+2014/03/14 20:29:08 ****************passed puthash( 0 ,1)*****************
+2014/03/14 20:29:08 0 got a seq  18  puthash( 4 , 1 )
+2014/03/14 20:29:08 1 got a seq  18  puthash( 0 , 2 )
+unexpected EOF
+2014/03/14 20:29:08 0 applied 13 &{2493410917034713460 1 13 1 PutHash 4 0  }
+2014/03/14 20:29:08 0 applied 14 &{703497829048904394 2 14 0 PutHash 0 1 890022063 }
+2014/03/14 20:29:08 0 put paxos success for 14 &{703497829048904394 2 14 0 PutHash 0 1 890022063 } vs {703497829048904394 2 14 0 PutHash 0 1  }
+2014/03/14 20:29:08 0 applied 15 &{3579117460779343423 1 15 2 PutHash 2 0  }
+2014/03/14 20:29:08 0 applied 16 &{481818735686699098 0 16 2 Get 1   ErrNoKey}
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+2014/03/14 20:29:08 2 applied 12 &{818240784710572174 1 12 0 PutHash 3 0  }
+2014/03/14 20:29:08 2 applied 13 &{2493410917034713460 1 13 1 PutHash 4 0  }
+2014/03/14 20:29:08 2 applied 14 &{703497829048904394 2 14 0 PutHash 0 1 890022063 }
+2014/03/14 20:29:08 2 applied 15 &{3579117460779343423 1 15 2 PutHash 2 0  }
+2014/03/14 20:29:08 2 put paxos success for 15 &{3579117460779343423 1 15 2 PutHash 2 0  } vs {3579117460779343423 1 15 2 PutHash 2 0  }
+2014/03/14 20:29:08 2 applied 16 &{481818735686699098 0 16 2 Get 1   ErrNoKey}
+2014/03/14 20:29:08 *****************passed puthash( 2 ,0) ***************
+unexpected EOF
+2014/03/14 20:29:08 1 got a seq  19  puthash( 1 , 0 )
+unexpected EOF
+2014/03/14 20:29:08 1 got a seq  20  puthash( 2 , 1 )
+unexpected EOF
+2014/03/14 20:29:08 2 got a seq  20  puthash( 2 , 1 )
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+2014/03/14 20:29:08 0 got a seq  21  puthash( 1 , 0 )
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+2014/03/14 20:29:08 0 applied 17 &{818240784710572174 2 17 1 PutHash 3 1 890022063 }
+2014/03/14 20:29:08 0 applied 18 &{703497829048904394 3 18 1 PutHash 0 2 78513644 }
+2014/03/14 20:29:08 0 put paxos success for 18 &{703497829048904394 3 18 1 PutHash 0 2 78513644 } vs {2493410917034713460 2 18 0 PutHash 4 1  }
+2014/03/14 20:29:08 0 uh-oh! mismatch despite paxos success on 18 2493410917034713460 vs 703497829048904394 and 2 vs 3
+2014/03/14 20:29:08 0 applied 19 &{481818735686699098 1 19 1 PutHash 1 0  }
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+2014/03/14 20:29:08 2 got a seq  22  puthash( 4 , 1 )
+unexpected EOF
+2014/03/14 20:29:08 2 got a seq  23  puthash( 4 , 1 )
+2014/03/14 20:29:08 0 got a seq  23  puthash( 4 , 1 )
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+2014/03/14 20:29:08 1 applied 17 &{818240784710572174 2 17 1 PutHash 3 1 890022063 }
+2014/03/14 20:29:08 1 put paxos success for 17 &{818240784710572174 2 17 1 PutHash 3 1 890022063 } vs {818240784710572174 2 17 1 PutHash 3 1  }
+2014/03/14 20:29:08 1 applied 18 &{703497829048904394 3 18 1 PutHash 0 2 78513644 }
+2014/03/14 20:29:08 1 put paxos success for 18 &{703497829048904394 3 18 1 PutHash 0 2 78513644 } vs {703497829048904394 3 18 1 PutHash 0 2  }
+2014/03/14 20:29:08 1 applied 19 &{481818735686699098 1 19 1 PutHash 1 0  }
+2014/03/14 20:29:08 1 put paxos success for 19 &{481818735686699098 1 19 1 PutHash 1 0  } vs {481818735686699098 1 19 1 PutHash 1 0  }
+2014/03/14 20:29:08 1 applied 20 &{3579117460779343423 2 20 1 PutHash 2 1 890022063 }
+2014/03/14 20:29:08 1 put paxos success for 20 &{3579117460779343423 2 20 1 PutHash 2 1 890022063 } vs {3579117460779343423 2 20 1 PutHash 2 1  }
+2014/03/14 20:29:08 ****************passed puthash( 3 ,1)*****************
+2014/03/14 20:29:08 1 replayed 481818735686699098 1 because &{481818735686699098 1 19 1 PutHash 1 0  }
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+2014/03/14 20:29:08 *****************passed puthash( 1 ,0) ***************
+2014/03/14 20:29:08 ******************passed puthash( 0 ,2)***************
+2014/03/14 20:29:08 ****************passed puthash( 2 ,1)*****************
+2014/03/14 20:29:08 0 got a seq  24  puthash( 3 , 2 )
+2014/03/14 20:29:08 1 got a seq  24  puthash( 1 , 1 )
+2014/03/14 20:29:08 1 got a seq  25  puthash( 2 , 2 )
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+2014/03/14 20:29:08 2 applied 17 &{818240784710572174 2 17 1 PutHash 3 1 890022063 }
+2014/03/14 20:29:08 2 applied 18 &{703497829048904394 3 18 1 PutHash 0 2 78513644 }
+2014/03/14 20:29:08 2 applied 19 &{481818735686699098 1 19 1 PutHash 1 0  }
+2014/03/14 20:29:08 2 applied 20 &{3579117460779343423 2 20 1 PutHash 2 1 890022063 }
+2014/03/14 20:29:08 2 put paxos success for 20 &{3579117460779343423 2 20 1 PutHash 2 1 890022063 } vs {3579117460779343423 2 20 2 PutHash 2 1  }
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+2014/03/14 20:29:08 0 applied 20 &{3579117460779343423 2 20 1 PutHash 2 1 890022063 }
+2014/03/14 20:29:08 0 replayed 481818735686699098 1 because &{481818735686699098 1 19 1 PutHash 1 0  }
+2014/03/14 20:29:08 0 put paxos success for 21 &{481818735686699098 1 19 1 PutHash 1 0  } vs {481818735686699098 1 21 0 PutHash 1 0  }
+2014/03/14 20:29:08 0 applied 22 &{2493410917034713460 2 22 2 PutHash 4 1 890022063 }
+2014/03/14 20:29:08 0 replayed 2493410917034713460 2 because &{2493410917034713460 2 22 2 PutHash 4 1 890022063 }
+2014/03/14 20:29:08 0 put paxos success for 23 &{2493410917034713460 2 22 2 PutHash 4 1 890022063 } vs {2493410917034713460 2 23 0 PutHash 4 1  }
+2014/03/14 20:29:08 0 applied 24 &{481818735686699098 2 24 1 PutHash 1 1 890022063 }
+2014/03/14 20:29:08 0 put paxos success for 24 &{481818735686699098 2 24 1 PutHash 1 1 890022063 } vs {818240784710572174 3 24 0 PutHash 3 2  }
+2014/03/14 20:29:08 0 uh-oh! mismatch despite paxos success on 24 818240784710572174 vs 481818735686699098 and 3 vs 2
+2014/03/14 20:29:08 0 applied 25 &{3579117460779343423 3 25 1 PutHash 2 2 78513644 }
+unexpected EOF
+2014/03/14 20:29:08 1 got a seq  26  puthash( 3 , 2 )
+2014/03/14 20:29:08 2 got a seq  26  puthash( 3 , 2 )
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+2014/03/14 20:29:08 0 applied 26 &{818240784710572174 3 26 1 PutHash 3 2 78513644 }
+unexpected EOF
+2014/03/14 20:29:08 ********************about to get 0 **************
+unexpected EOF
+2014/03/14 20:29:08 1 applied 22 &{2493410917034713460 2 22 2 PutHash 4 1 890022063 }
+2014/03/14 20:29:08 1 replayed 2493410917034713460 2 because &{2493410917034713460 2 22 2 PutHash 4 1 890022063 }
+2014/03/14 20:29:08 1 applied 24 &{481818735686699098 2 24 1 PutHash 1 1 890022063 }
+2014/03/14 20:29:08 2 replayed 481818735686699098 1 because &{481818735686699098 1 19 1 PutHash 1 0  }
+2014/03/14 20:29:08 2 applied 22 &{2493410917034713460 2 22 2 PutHash 4 1 890022063 }
+2014/03/14 20:29:08 1 put paxos success for 24 &{481818735686699098 2 24 1 PutHash 1 1 890022063 } vs {481818735686699098 2 24 1 PutHash 1 1  }
+2014/03/14 20:29:08 2 put paxos success for 22 &{2493410917034713460 2 22 2 PutHash 4 1 890022063 } vs {2493410917034713460 2 22 2 PutHash 4 1  }
+2014/03/14 20:29:08 1 applied 25 &{3579117460779343423 3 25 1 PutHash 2 2 78513644 }
+2014/03/14 20:29:08 1 put paxos success for 25 &{3579117460779343423 3 25 1 PutHash 2 2 78513644 } vs {3579117460779343423 3 25 1 PutHash 2 2  }
+2014/03/14 20:29:08 2 replayed 2493410917034713460 2 because &{2493410917034713460 2 22 2 PutHash 4 1 890022063 }
+2014/03/14 20:29:08 1 applied 26 &{818240784710572174 3 26 1 PutHash 3 2 78513644 }
+2014/03/14 20:29:08 2 put paxos success for 23 &{2493410917034713460 2 22 2 PutHash 4 1 890022063 } vs {2493410917034713460 2 23 2 PutHash 4 1  }
+2014/03/14 20:29:08 1 put paxos success for 26 &{818240784710572174 3 26 1 PutHash 3 2 78513644 } vs {818240784710572174 3 26 1 PutHash 3 2  }
+2014/03/14 20:29:08 ****************passed puthash( 1 ,1)*****************
+2014/03/14 20:29:08 2 applied 24 &{481818735686699098 2 24 1 PutHash 1 1 890022063 }
+2014/03/14 20:29:08 1 applied 27 &{703497829048904394 4 27 2 Get 0 3250269825  }
+2014/03/14 20:29:08 ****************passed puthash( 4 ,1)*****************
+2014/03/14 20:29:08 2 got a seq  28  puthash( 1 , 2 )
+2014/03/14 20:29:08 ******************passed puthash( 2 ,2)***************
+unexpected EOF
+2014/03/14 20:29:08 1 got a seq  28  puthash( 4 , 2 )
+unexpected EOF
+2014/03/14 20:29:08 2 got a seq  29  puthash( 4 , 2 )
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:08 0 applied 27 &{703497829048904394 4 27 2 Get 0 3250269825  }
+2014/03/14 20:29:08 0 applied 28 &{481818735686699098 3 28 2 PutHash 1 2 78513644 }
+2014/03/14 20:29:08 0 applied 29 &{2493410917034713460 3 29 2 PutHash 4 2 78513644 }
+2014/03/14 20:29:08 1 applied 28 &{481818735686699098 3 28 2 PutHash 1 2 78513644 }
+2014/03/14 20:29:08 1 put paxos success for 28 &{481818735686699098 3 28 2 PutHash 1 2 78513644 } vs {2493410917034713460 3 28 1 PutHash 4 2  }
+2014/03/14 20:29:08 1 uh-oh! mismatch despite paxos success on 28 2493410917034713460 vs 481818735686699098 and 3 vs 3
+2014/03/14 20:29:08 1 applied 29 &{2493410917034713460 3 29 2 PutHash 4 2 78513644 }
+2014/03/14 20:29:08 0 got a seq  30  puthash( 4 , 2 )
+2014/03/14 20:29:08 0 replayed 2493410917034713460 3 because &{2493410917034713460 3 29 2 PutHash 4 2 78513644 }
+unexpected EOF
+2014/03/14 20:29:08 2 applied 25 &{3579117460779343423 3 25 1 PutHash 2 2 78513644 }
+2014/03/14 20:29:08 2 applied 26 &{818240784710572174 3 26 1 PutHash 3 2 78513644 }
+2014/03/14 20:29:08 2 put paxos success for 26 &{818240784710572174 3 26 1 PutHash 3 2 78513644 } vs {818240784710572174 3 26 2 PutHash 3 2  }
+2014/03/14 20:29:08 2 applied 27 &{703497829048904394 4 27 2 Get 0 3250269825  }
+2014/03/14 20:29:08 2 applied 28 &{481818735686699098 3 28 2 PutHash 1 2 78513644 }
+2014/03/14 20:29:08 2 put paxos success for 28 &{481818735686699098 3 28 2 PutHash 1 2 78513644 } vs {481818735686699098 3 28 2 PutHash 1 2  }
+2014/03/14 20:29:08 2 applied 29 &{2493410917034713460 3 29 2 PutHash 4 2 78513644 }
+2014/03/14 20:29:08 ******************passed puthash( 3 ,2)***************
+2014/03/14 20:29:08 2 put paxos success for 29 &{2493410917034713460 3 29 2 PutHash 4 2 78513644 } vs {2493410917034713460 3 29 2 PutHash 4 2  }
+2014/03/14 20:29:08 ********************SUCCESSFUL get 0 **************
+2014/03/14 20:29:08 ******************passed puthash( 1 ,2)***************
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:09 ********************about to get 2 **************
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:09 1 noop for 30
+2014/03/14 20:29:09 2 noop for 30
+2014/03/14 20:29:09 2 applied 31 &{3579117460779343423 4 31 2 Get 2 3250269825  }
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:09 ********************about to get 3 **************
+2014/03/14 20:29:09 ********************about to get 1 **************
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:09 1 applied 31 &{3579117460779343423 4 31 2 Get 2 3250269825  }
+2014/03/14 20:29:09 2 applied 32 &{481818735686699098 4 32 1 Get 1 3250269825  }
+2014/03/14 20:29:09 1 applied 32 &{481818735686699098 4 32 1 Get 1 3250269825  }
+2014/03/14 20:29:09 ********************SUCCESSFUL get 2 **************
+2014/03/14 20:29:09 ********************SUCCESSFUL get 1 **************
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+2014/03/14 20:29:09 1 applied 33 &{481818735686699098 5 33 1 Get 1 3250269825  }
+2014/03/14 20:29:09 2 applied 33 &{481818735686699098 5 33 1 Get 1 3250269825  }
+2014/03/14 20:29:09 1 applied 34 &{3579117460779343423 5 34 1 Get 2 3250269825  }
+2014/03/14 20:29:09 2 applied 34 &{3579117460779343423 5 34 1 Get 2 3250269825  }
+2014/03/14 20:29:09 ********************another SUCCESSFUL get 2 **************
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+2014/03/14 20:29:09 1 noop for 35
+2014/03/14 20:29:09 2 noop for 35
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+unexpected EOF
+2014/03/14 20:29:09 1 noop for 36
+2014/03/14 20:29:09 2 noop for 36
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+connection is shut down
+2014/03/14 20:29:09 1 noop for 37
+2014/03/14 20:29:09 2 noop for 37
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+2014/03/14 20:29:09 1 noop for 38
+2014/03/14 20:29:09 2 noop for 38
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+2014/03/14 20:29:09 1 noop for 39
+2014/03/14 20:29:09 2 noop for 39
+2014/03/14 20:29:09 1 noop for 40
+2014/03/14 20:29:09 2 noop for 40
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+2014/03/14 20:29:09 2 noop for 41
+2014/03/14 20:29:09 1 noop for 41
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:09 2 noop for 42
+2014/03/14 20:29:09 1 noop for 42
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+2014/03/14 20:29:09 1 noop for 43
+2014/03/14 20:29:09 2 noop for 43
+2014/03/14 20:29:09 1 noop for 44
+2014/03/14 20:29:09 2 noop for 44
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:09 2 noop for 45
+2014/03/14 20:29:09 1 noop for 45
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+2014/03/14 20:29:09 2 noop for 46
+2014/03/14 20:29:09 1 noop for 46
+2014/03/14 20:29:10 1 noop for 47
+2014/03/14 20:29:10 2 noop for 47
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+2014/03/14 20:29:10 1 noop for 48
+2014/03/14 20:29:10 2 noop for 48
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:10 1 noop for 49
+2014/03/14 20:29:10 2 noop for 49
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+2014/03/14 20:29:10 1 noop for 50
+2014/03/14 20:29:10 2 noop for 50
+unexpected EOF
+2014/03/14 20:29:10 1 noop for 51
+2014/03/14 20:29:10 2 noop for 51
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+2014/03/14 20:29:10 2 noop for 52
+2014/03/14 20:29:10 1 noop for 52
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+unexpected EOF
+2014/03/14 20:29:10 2 noop for 53
+2014/03/14 20:29:10 1 noop for 53
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+2014/03/14 20:29:10 2 noop for 54
+2014/03/14 20:29:10 1 noop for 54
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:10 2 noop for 55
+2014/03/14 20:29:10 1 noop for 55
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:10 2 noop for 56
+2014/03/14 20:29:10 1 noop for 56
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+unexpected EOF
+2014/03/14 20:29:10 2 noop for 57
+2014/03/14 20:29:10 1 noop for 57
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:10 2 noop for 58
+2014/03/14 20:29:10 1 noop for 58
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+2014/03/14 20:29:10 2 noop for 59
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+2014/03/14 20:29:10 1 noop for 59
+unexpected EOF
+2014/03/14 20:29:10 2 noop for 60
+2014/03/14 20:29:11 1 noop for 60
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+2014/03/14 20:29:11 2 noop for 61
+2014/03/14 20:29:11 1 noop for 61
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 62
+2014/03/14 20:29:11 2 noop for 62
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 63
+2014/03/14 20:29:11 2 noop for 63
+read unix /var/tmp/824-1000/kv-23646-un-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 64
+2014/03/14 20:29:11 2 noop for 64
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 65
+2014/03/14 20:29:11 2 noop for 65
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 66
+2014/03/14 20:29:11 2 noop for 66
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 67
+2014/03/14 20:29:11 2 noop for 67
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-1: connection reset by peer
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 68
+2014/03/14 20:29:11 2 noop for 68
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 69
+2014/03/14 20:29:11 2 noop for 69
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 70
+2014/03/14 20:29:11 2 noop for 70
+write unix /var/tmp/824-1000/kv-23646-un-1: broken pipe
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 71
+2014/03/14 20:29:11 2 noop for 71
+unexpected EOF
+2014/03/14 20:29:11 1 noop for 72
+2014/03/14 20:29:11 2 noop for 72
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+2014/03/14 20:29:12 1 noop for 73
+2014/03/14 20:29:12 2 noop for 73
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:12 1 noop for 74
+2014/03/14 20:29:12 2 noop for 74
+unexpected EOF
+2014/03/14 20:29:12 1 noop for 75
+2014/03/14 20:29:12 2 noop for 75
+unexpected EOF
+2014/03/14 20:29:12 1 noop for 76
+2014/03/14 20:29:12 2 noop for 76
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+2014/03/14 20:29:12 1 noop for 77
+2014/03/14 20:29:12 2 noop for 77
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+2014/03/14 20:29:12 2 noop for 78
+2014/03/14 20:29:12 1 noop for 78
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+read unix /var/tmp/824-1000/kv-23646-un-2: connection reset by peer
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+2014/03/14 20:29:12 2 noop for 79
+2014/03/14 20:29:12 1 noop for 79
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+2014/03/14 20:29:12 2 noop for 80
+2014/03/14 20:29:12 1 noop for 80
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:12 2 noop for 81
+2014/03/14 20:29:12 1 noop for 81
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+unexpected EOF
+unexpected EOF
+2014/03/14 20:29:12 2 noop for 82
+2014/03/14 20:29:12 1 noop for 82
+unexpected EOF
+2014/03/14 20:29:12 2 noop for 83
+2014/03/14 20:29:12 1 noop for 83
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+2014/03/14 20:29:12 2 noop for 84
+2014/03/14 20:29:12 1 noop for 84
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-2: broken pipe
+2014/03/14 20:29:12 1 noop for 85
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-1000/kv-23646-un-0: broken pipe
+2014/03/14 20:29:12 2 noop for 85

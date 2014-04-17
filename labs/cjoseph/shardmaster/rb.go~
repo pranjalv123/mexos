@@ -1,0 +1,116 @@
+package main
+
+import "fmt"
+
+const (
+	NShards = 10
+	Add = "Add"
+	Remove = "Remove"
+)
+
+func main() {
+	n := redistribute(Remove, 1002)
+	fmt.Println(n)
+}
+
+func  redistribute(op string, GID int64) [10]int64 {
+	//current 
+	count := make(map[int64]int)
+        newShards := [10]int64{1001, 1003, 1001, 1003, 1001, 
+		1002, 1002, 1002, 1003, 1002}
+	
+	switch op {
+	case Add:
+		count[GID] = 0 
+		for i,v := range newShards {
+			if v == 0 {
+				newShards[i] = GID
+				count[GID] += 1
+			} else {
+				count[v] += 1
+			}
+		}
+	case Remove:
+		var random int64
+		//find a random group to xfer ownership to temporarily
+		for _,v := range newShards {
+			if v != GID {
+				random = v
+				break
+			} 
+		}
+		fmt.Println("random is ",random)
+		for i,v := range newShards {
+			if v == GID {
+				fmt.Println("removing")
+				newShards[i] = random
+			} 
+		}
+		fmt.Println("newshards is",newShards)
+		for _,v := range newShards {
+			count[v] += 1
+		}
+	}
+
+	return rebalance(count, newShards)	
+}
+
+
+func rebalance(count map[int64]int, newShards[10]int64) [10]int64 {
+        //Moves a shard from the group with the most shards to the
+        //group with the least shards until the group with the most
+        //shards has at most one shard more than the group with the
+        //least shards.                                                                                     
+        least := getLeast(count)
+        most := getMost(count)
+        for count[least]+1 < count[most] {
+		newShards = move(most, least, newShards)
+                count[most] -= 1
+                count[least] += 1
+                least = getLeast(count)
+                most = getMost(count)
+        }
+	return newShards
+}
+
+
+func move(from int64, to int64, a [10]int64) [10]int64{
+	//fmt.Println("got",a,"moving from",from,"to",to)
+        fi := -1
+        for i:=0; i<len(a); i++ {
+		if a[i] == from {
+                        fi = i
+                }
+        }
+        //do the moving                                                                                     
+        a[fi] = to
+        return a
+}
+
+func getLeast(count map[int64]int) int64{
+        var lowestKey int64
+        lowestValue := NShards+1
+        for k, v := range count {
+                if v < lowestValue {
+			lowestValue = v
+                        lowestKey = k
+                }
+        }
+	//fmt.Println("getLeast returning",lowestKey)
+        return lowestKey
+}
+
+func getMost(count map[int64]int) int64{
+
+        var highestKey int64
+        highestValue := 0
+        for k, v := range count {
+                if v >= highestValue {
+			//fmt.Println("new highest val", v,">",highestValue)
+			highestValue = v
+                        highestKey = k
+                }
+        }
+	//fmt.Println("getMost returning",highestKey)
+        return highestKey
+}

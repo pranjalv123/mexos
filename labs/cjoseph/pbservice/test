@@ -1,0 +1,122 @@
+2014/02/20 17:48:17 method Kill has wrong number of ins: 1
+Test: Repeated failures/restarts; unreliable ...
+2014/02/20 17:48:18 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:18 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:18 method Sync has wrong number of ins: 2
+2014/02/20 17:48:18 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:18 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:18 method Sync has wrong number of ins: 2
+2014/02/20 17:48:18 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:18 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:18 method Sync has wrong number of ins: 2
+2014/02/20 17:48:18 Adding the  first primary.
+2014/02/20 17:48:18 View changed from 0 to 1  P,B is /var/tmp/824-1000/pb-15013-rcu-2  and I am /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:18 validated first primary /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:18 Syncing /var/tmp/824-1000/pb-15013-rcu-2 to /var/tmp/824-1000/pb-15013-rcu-1
+2014/02/20 17:48:18 /var/tmp/824-1000/pb-15013-rcu-1 validated
+2014/02/20 17:48:18 Sync done!
+2014/02/20 17:48:18 View changed from 1 to 2  P,B is /var/tmp/824-1000/pb-15013-rcu-2 /var/tmp/824-1000/pb-15013-rcu-1 and I am /var/tmp/824-1000/pb-15013-rcu-2
+unexpected EOF
+Backup nonresponsive while forwarding Put
+unexpected EOF
+Backup nonresponsive while forwarding Put
+write unix /var/tmp/824-1000/pb-15013-rcu-2: broken pipe
+Backup nonresponsive while forwarding Put
+Backup nonresponsive while forwarding Put
+Backup nonresponsive while forwarding Put
+write unix /var/tmp/824-1000/pb-15013-rcu-2: broken pipe
+Backup nonresponsive while forwarding Put
+2014/02/20 17:48:19 View changed from 2 to 3  P,B is /var/tmp/824-1000/pb-15013-rcu-2  and I am /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:19 Inserted k/v 1 3987581226
+2014/02/20 17:48:19 Inserted k/v 0 1259596266
+2014/02/20 17:48:19 Syncing /var/tmp/824-1000/pb-15013-rcu-2 to /var/tmp/824-1000/pb-15013-rcu-3
+unexpected EOF
+2014/02/20 17:48:19 Cannot sync to me ( /var/tmp/824-1000/pb-15013-rcu-3 from  /var/tmp/824-1000/pb-15013-rcu-2 ! Current view is &{3 /var/tmp/824-1000/pb-15013-rcu-2 }
+2014/02/20 17:48:19 Syncing /var/tmp/824-1000/pb-15013-rcu-2 to /var/tmp/824-1000/pb-15013-rcu-3
+write unix /var/tmp/824-1000/pb-15013-rcu-3: broken pipe
+2014/02/20 17:48:19 Syncing /var/tmp/824-1000/pb-15013-rcu-2 to /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:19 /var/tmp/824-1000/pb-15013-rcu-3 validated
+2014/02/20 17:48:19 Sync done!
+2014/02/20 17:48:19 View changed from 3 to 4  P,B is /var/tmp/824-1000/pb-15013-rcu-2 /var/tmp/824-1000/pb-15013-rcu-3 and I am /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:19 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:19 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:19 method Sync has wrong number of ins: 2
+2014/02/20 17:48:21 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:21 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:21 method Sync has wrong number of ins: 2
+2014/02/20 17:48:23 Syncing /var/tmp/824-1000/pb-15013-rcu-2 to /var/tmp/824-1000/pb-15013-rcu-1
+2014/02/20 17:48:23 /var/tmp/824-1000/pb-15013-rcu-1 validated
+2014/02/20 17:48:23 Sync done!
+2014/02/20 17:48:23 View changed from 4 to 5  P,B is /var/tmp/824-1000/pb-15013-rcu-3 /var/tmp/824-1000/pb-15013-rcu-1 and I am /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:23 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:23 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:23 method Sync has wrong number of ins: 2
+2014/02/20 17:48:25 Syncing /var/tmp/824-1000/pb-15013-rcu-3 to /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:25 /var/tmp/824-1000/pb-15013-rcu-2 validated
+2014/02/20 17:48:25 Sync done!
+2014/02/20 17:48:25 View changed from 5 to 6  P,B is /var/tmp/824-1000/pb-15013-rcu-1 /var/tmp/824-1000/pb-15013-rcu-2 and I am /var/tmp/824-1000/pb-15013-rcu-1
+2014/02/20 17:48:25 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:25 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:25 method Sync has wrong number of ins: 2
+2014/02/20 17:48:27 Syncing /var/tmp/824-1000/pb-15013-rcu-1 to /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:27 /var/tmp/824-1000/pb-15013-rcu-3 validated
+2014/02/20 17:48:27 Sync done!
+2014/02/20 17:48:27 View changed from 6 to 7  P,B is /var/tmp/824-1000/pb-15013-rcu-2 /var/tmp/824-1000/pb-15013-rcu-3 and I am /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:27 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:27 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:27 method Sync has wrong number of ins: 2
+2014/02/20 17:48:29 Syncing /var/tmp/824-1000/pb-15013-rcu-2 to /var/tmp/824-1000/pb-15013-rcu-1
+2014/02/20 17:48:29 /var/tmp/824-1000/pb-15013-rcu-1 validated
+2014/02/20 17:48:29 Sync done!
+2014/02/20 17:48:29 View changed from 7 to 8  P,B is /var/tmp/824-1000/pb-15013-rcu-3 /var/tmp/824-1000/pb-15013-rcu-1 and I am /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:29 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:29 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:29 method Sync has wrong number of ins: 2
+2014/02/20 17:48:31 View changed from 8 to 9  P,B is /var/tmp/824-1000/pb-15013-rcu-3  and I am /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:31 Syncing /var/tmp/824-1000/pb-15013-rcu-3 to /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:31 Cannot sync to me ( /var/tmp/824-1000/pb-15013-rcu-2 from  /var/tmp/824-1000/pb-15013-rcu-3 ! Current view is &{9 /var/tmp/824-1000/pb-15013-rcu-3 }
+ErrWrongServer
+2014/02/20 17:48:31 Syncing /var/tmp/824-1000/pb-15013-rcu-3 to /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:31 /var/tmp/824-1000/pb-15013-rcu-2 validated
+2014/02/20 17:48:31 Sync done!
+2014/02/20 17:48:31 View changed from 9 to 10  P,B is /var/tmp/824-1000/pb-15013-rcu-3 /var/tmp/824-1000/pb-15013-rcu-2 and I am /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:31 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:31 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:31 method Sync has wrong number of ins: 2
+2014/02/20 17:48:33 View changed from 10 to 11  P,B is /var/tmp/824-1000/pb-15013-rcu-3  and I am /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:33 Syncing /var/tmp/824-1000/pb-15013-rcu-3 to /var/tmp/824-1000/pb-15013-rcu-1
+2014/02/20 17:48:33 Cannot sync to me ( /var/tmp/824-1000/pb-15013-rcu-1 from  /var/tmp/824-1000/pb-15013-rcu-3 ! Current view is &{11 /var/tmp/824-1000/pb-15013-rcu-3 }
+ErrWrongServer
+2014/02/20 17:48:33 Syncing /var/tmp/824-1000/pb-15013-rcu-3 to /var/tmp/824-1000/pb-15013-rcu-1
+2014/02/20 17:48:33 /var/tmp/824-1000/pb-15013-rcu-1 validated
+2014/02/20 17:48:33 Sync done!
+2014/02/20 17:48:33 View changed from 11 to 12  P,B is /var/tmp/824-1000/pb-15013-rcu-3 /var/tmp/824-1000/pb-15013-rcu-1 and I am /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:33 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:33 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:33 method Sync has wrong number of ins: 2
+2014/02/20 17:48:35 View changed from 12 to 13  P,B is /var/tmp/824-1000/pb-15013-rcu-3  and I am /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:35 Syncing /var/tmp/824-1000/pb-15013-rcu-3 to /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:35 Cannot sync to me ( /var/tmp/824-1000/pb-15013-rcu-2 from  /var/tmp/824-1000/pb-15013-rcu-3 ! Current view is &{13 /var/tmp/824-1000/pb-15013-rcu-3 }
+ErrWrongServer
+2014/02/20 17:48:35 Syncing /var/tmp/824-1000/pb-15013-rcu-3 to /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:35 /var/tmp/824-1000/pb-15013-rcu-2 validated
+2014/02/20 17:48:35 Sync done!
+2014/02/20 17:48:35 View changed from 13 to 14  P,B is /var/tmp/824-1000/pb-15013-rcu-3 /var/tmp/824-1000/pb-15013-rcu-2 and I am /var/tmp/824-1000/pb-15013-rcu-3
+2014/02/20 17:48:35 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:35 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:35 method Sync has wrong number of ins: 2
+2014/02/20 17:48:37 Syncing /var/tmp/824-1000/pb-15013-rcu-3 to /var/tmp/824-1000/pb-15013-rcu-1
+2014/02/20 17:48:37 /var/tmp/824-1000/pb-15013-rcu-1 validated
+2014/02/20 17:48:37 Sync done!
+2014/02/20 17:48:37 View changed from 14 to 15  P,B is /var/tmp/824-1000/pb-15013-rcu-2 /var/tmp/824-1000/pb-15013-rcu-1 and I am /var/tmp/824-1000/pb-15013-rcu-2
+2014/02/20 17:48:37 method FwdGet has wrong number of ins: 4
+2014/02/20 17:48:37 method FwdPut has wrong number of ins: 4
+2014/02/20 17:48:37 method Sync has wrong number of ins: 2
+  ... Put/Gets done ... 
+--- FAIL: TestRepeatedCrashUnreliable (21.61 seconds)
+	test_test.go:662: ck.Puthash(1) returned 3750300610 but expected  at iter 0
+	test_test.go:662: ck.Puthash(0) returned 152569386 but expected  at iter 0
+	test_test.go:688: child failed
+FAIL
+exit status 1
+FAIL	pbservice	21.617s
