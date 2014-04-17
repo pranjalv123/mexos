@@ -1,0 +1,728 @@
+Test: Basic Join/Leave ...
+  ... Passed
+Test: Shards really move ...
+  ... Passed
+connection is shut down
+Test: Reconfiguration with some dead replicas ...
+  ... Passed
+Test: Concurrent Put/Get/Move ...
+  ... Passed
+Test: Concurrent Put/Get/Move (unreliable) ...
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-3: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-3: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-3: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+connection is shut down
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+connection is shut down
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+connection is shut down
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-3: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-0: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+connection is shut down
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-0: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-6: broken pipe
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+unexpected EOF
+connection is shut down
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+connection is shut down
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+unexpected EOF
+unexpected EOF
+connection is shut down
+write unix /var/tmp/824-123786/skv-10563-conctrues-3: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-6: broken pipe
+connection is shut down
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-0: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-6: broken pipe
+unexpected EOF
+unexpected EOF
+connection is shut down
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-0: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-6: broken pipe
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-6: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-3: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-6: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-5: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+unexpected EOF
+connection is shut down
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-6: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-8: broken pipe
+unexpected EOF
+connection is shut down
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-6: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-0: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-3: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-0: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+connection is shut down
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-7: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+connection is shut down
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-5: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-8: connection reset by peer
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-1: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-3: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-1: broken pipe
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-6: connection reset by peer
+read unix /var/tmp/824-123786/skv-10563-conctrues-0: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+read unix /var/tmp/824-123786/skv-10563-conctrues-4: connection reset by peer
+unexpected EOF
+unexpected EOF
+connection is shut down
+write unix /var/tmp/824-123786/skv-10563-conctrues-7: broken pipe
+write unix /var/tmp/824-123786/skv-10563-conctrues-4: broken pipe
+read unix /var/tmp/824-123786/skv-10563-conctrues-2: connection reset by peer
+unexpected EOF
+unexpected EOF
+unexpected EOF
+write unix /var/tmp/824-123786/skv-10563-conctrues-2: broken pipe
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+unexpected EOF
+  ... Passed
+PASS
+ok  	_/afs/athena.mit.edu/user/d/e/delpreto/6.824/test4b/src/shardkv	136.838s

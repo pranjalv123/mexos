@@ -1,0 +1,111 @@
+#!/bin/sh
+
+# runLabTests numTrials targetPasses startNum
+# Runs the lab tests a given number of times
+# Use "dos2unix runLabTests" to convert this from windows to linux
+# Use "chmod 755 runLabTests" to get permission to run it
+
+numTests=$1
+targetPasses=$2
+startNum=$3
+
+if [ -z "$numTests" ]
+  then
+    echo "No number of tests supplied!"
+    numTests=100
+fi
+
+if [ -z "$startNum" ]
+  then
+    startNum=0
+fi
+
+endNum=`expr $startNum + $numTests - 1`
+
+if [ -z "$targetPasses" ]
+  then
+    haveTargetPasses=0
+  else
+    haveTargetPasses=1
+fi
+
+rm -rf failures
+rm -rf successes
+rm -f failCount.txt
+rm -f successCount.txt
+mkdir failures
+mkdir successes
+
+successes=0
+failures=0
+for num in $(seq $startNum $endNum)
+do
+  if [ $num -lt 10 ]
+    then
+      zero="00"
+    else
+      if [ $num -lt 100 ]
+        then
+          zero="0"
+        else
+          zero=""
+      fi
+  fi
+  filename="output_$zero$num"
+  echo ""
+  echo "**** Trial $zero$num ****"
+  echo ""
+  go test > $filename.txt 2> $filename-log.txt
+  echo ""
+  numPassed=`grep -c -ir "... pass" $filename.txt`
+  passed=`grep -c "PASS" $filename.txt`
+  if [ $haveTargetPasses -eq 0 ]
+    then
+      if [ $passed -ge 1 ]
+        then
+          successes=`expr $successes + 1`
+          temp="_success_passed_"
+          newname=$filename$temp$numPassed
+	  mv $filename.txt "successes/$newname.txt"
+	  mv $filename-log.txt "successes/$newname-log.txt"
+          rm -f successCount.txt
+          echo "$successes/`expr $num + 1`" >> successCount.txt
+          echo "    Trial $zero$num succeeded!"
+        else
+          failures=`expr $failures + 1`
+          temp="_failure_passed_"
+          newname=$filename$temp$numPassed
+	  mv $filename.txt "failures/$newname.txt"
+	  mv $filename-log.txt "failures/$newname-log.txt"
+          rm -f failCount.txt
+          echo "$failures/`expr $num + 1`" >> failCount.txt
+      fi
+  else
+    if [ $numPassed -ge $targetPasses ]
+      then
+          successes=`expr $successes + 1`
+          temp="_success_passed_"
+          newname=$filename$temp$numPassed
+	  mv $filename.txt "successes/$newname.txt"
+	  mv $filename-log.txt "successes/$newname-log.txt"
+          rm -f successCount.txt
+          echo "$successes/`expr $num + 1`" >> successCount.txt
+          echo "    Trial $zero$num succeeded!"
+      else
+          failures=`expr $failures + 1`
+          temp="_failure_passed_"
+          newname=$filename$temp$numPassed
+	  mv $filename.txt "failures/$newname.txt"
+	  mv $filename-log.txt "failures/$newname-log.txt"
+          rm -f failCount.txt
+          echo "$failures/`expr $num + 1`" >> failCount.txt
+    fi
+  fi
+  echo "    Trial $zero$num passes: $numPassed"
+  echo "    Total successes: $successes/`expr $num + 1`"
+  echo ""
+done
+
+echo ""
+echo "Done!"
+echo ""
