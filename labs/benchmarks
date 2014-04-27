@@ -4,20 +4,21 @@ ShardKV:
 cjoseph only: 39.459s
 dvorak42 only: 57.825s, hangs sometimes (deadlock?), 39.081s
 delpreto only: DNF
-pranjal only: 
-c,dv,c: 39.698s
-c,dv,dv: 42.311s
+pranjal only: DNF
+c,dv,c: 39.698s, 36.257s, 42.549s, hangs sometimes
+dv, dv, c: 
+c,dv,dv: 42.311s 
 
 Shardmaster:
 cjoseph only: 2.200s
 dvorak42 only: 1.932s
 delpreto only: 7.198s
-pranjal only: 
+pranjal only: fails sometimes
 
 Paxos:
 cjoseph only: 52.181s
 dvorak42 only: 55.858s
 delpreto only: 73.560s
-pranjal only: 
+pranjal only: fails
 
 
