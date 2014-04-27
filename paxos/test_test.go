@@ -101,7 +101,11 @@ func noTestSpeed(t *testing.T) {
   fmt.Printf("20 agreements %v seconds\n", d.Seconds())
 }
 
-func TestBasic(t *testing.T) {
+func TestFileBasic(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
+  
   runtime.GOMAXPROCS(4)
 
   const npaxos = 3
@@ -161,7 +165,10 @@ func TestBasic(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestDeaf(t *testing.T) {
+func TestFileDeaf(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   const npaxos = 5
@@ -204,7 +211,10 @@ func TestDeaf(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestForget(t *testing.T) {
+func TestFileForget(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   const npaxos = 6
@@ -286,7 +296,10 @@ func TestForget(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestManyForget(t *testing.T) {
+func TestFileManyForget(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   const npaxos = 3
@@ -353,7 +366,10 @@ func TestManyForget(t *testing.T) {
 //
 // does paxos forgetting actually free the memory?
 //
-func TestForgetMem(t *testing.T) {
+func TestFileForgetMem(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Paxos frees forgotten instance memory ...\n")
@@ -417,7 +433,10 @@ func TestForgetMem(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestRPCCount(t *testing.T) {
+func TestFileRPCCount(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: RPC counts aren't too high ...\n")
@@ -492,7 +511,10 @@ func TestRPCCount(t *testing.T) {
 //
 // many agreements (without failures)
 //
-func TestMany(t *testing.T) {
+func TestFileMany(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many instances ...\n")
@@ -542,7 +564,10 @@ func TestMany(t *testing.T) {
 // a peer starts up, with proposal, after others decide.
 // then another peer starts, without a proposal.
 // 
-func TestOld(t *testing.T) {
+func TestFileOld(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Minority proposal ignored ...\n")
@@ -579,7 +604,10 @@ func TestOld(t *testing.T) {
 //
 // many agreements, with unreliable RPC
 //
-func TestManyUnreliable(t *testing.T) {
+func TestFileManyUnreliable(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many instances, unreliable RPC ...\n")
@@ -667,7 +695,10 @@ func part(t *testing.T, tag string, npaxos int, p1 []int, p2 []int, p3 []int) {
   }
 }
 
-func TestPartition(t *testing.T) {
+func TestFilePartition(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   tag := "partition"
@@ -767,7 +798,10 @@ func TestPartition(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestLots(t *testing.T) {
+func TestFileLots(t *testing.T) {
+	if network {
+		t.Fatalf("need to unset network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many requests, changing partitions ...\n")

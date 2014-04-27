@@ -30,6 +30,8 @@ import "fmt"
 import "math/rand"
 import "time"
 
+const network = false
+
 type Proposal struct {
   prepare int
   accept int
@@ -101,24 +103,45 @@ type DecideReply struct {
 // please use call() to send all RPCs, in client.go and server.go.
 // please do not change this function.
 //
+
 func call(srv string, name string, args interface{}, reply interface{}) bool {
-  c, err := rpc.Dial("unix", srv)
-  if err != nil {
-    err1 := err.(*net.OpError)
-    if err1.Err != syscall.ENOENT && err1.Err != syscall.ECONNREFUSED {
-      fmt.Printf("paxos Dial() failed: %v\n", err1)
-    }
-    return false
-  }
-  defer c.Close()
-
-  err = c.Call(name, args, reply)
-  if err == nil {
-    return true
-  }
-
-  fmt.Println(err)
-  return false
+	if network {
+		c, err := rpc.Dial("unix", srv)
+		if err != nil {
+			err1 := err.(*net.OpError)
+			if err1.Err != syscall.ENOENT && err1.Err != syscall.ECONNREFUSED {
+				fmt.Printf("paxos Dial() failed: %v\n", err1)
+			}
+			return false
+		}
+		defer c.Close()
+		
+		err = c.Call(name, args, reply)
+		if err == nil {
+			return true
+		}
+		
+		fmt.Println(err)
+		return false
+	} else {
+		c, err := rpc.Dial("unix", srv)
+		if err != nil {
+			err1 := err.(*net.OpError)
+			if err1.Err != syscall.ENOENT && err1.Err != syscall.ECONNREFUSED {
+				fmt.Printf("paxos Dial() failed: %v\n", err1)
+			}
+			return false
+		}
+		defer c.Close()
+		
+		err = c.Call(name, args, reply)
+		if err == nil {
+			return true
+		}
+		
+		fmt.Println(err)
+		return false
+	}
 }
 
 func (px *Paxos) callAcceptor(index int, name string, args interface{}, reply interface{}) bool {
@@ -396,12 +419,20 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 
     // prepare to receive connections from clients.
     // change "unix" to "tcp" to use over a network.
-    os.Remove(peers[me]) // only needed for "unix"
-    l, e := net.Listen("unix", peers[me]);
-    if e != nil {
-      log.Fatal("listen error: ", e);
-    }
-    px.l = l
+	  if network {
+		  l, e := net.Listen("tcp", 1000+peers[me]);
+		  if e != nil {
+			  log.Fatal("listen error: ", e);
+		  }
+		  px.l = l
+	  } else {
+		  os.Remove(peers[me]) // only needed for "unix"
+		  l, e := net.Listen("unix", peers[me]);
+		  if e != nil {
+			  log.Fatal("listen error: ", e);
+		  }
+		  px.l = l
+	  }
 
     // please do not change any of the following code,
     // or do anything to subvert it.
@@ -416,7 +447,7 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
             conn.Close()
           } else if px.unreliable && (rand.Int63() % 1000) < 200 {
             // process the request but force discard of reply.
-            c1 := conn.(*net.UnixConn)
+            c1 := conn.(*net.UnixConn) //does this need to change for tcp too?
             f, _ := c1.File()
             err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
             if err != nil {
