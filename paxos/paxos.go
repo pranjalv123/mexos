@@ -29,8 +29,9 @@ import "sync"
 import "fmt"
 import "math/rand"
 import "time"
+import "strconv"
 
-const network = false
+const network = true
 
 type Proposal struct {
   prepare int
@@ -106,7 +107,7 @@ type DecideReply struct {
 
 func call(srv string, name string, args interface{}, reply interface{}) bool {
 	if network {
-		c, err := rpc.Dial("unix", srv)
+		c, err := rpc.Dial("tcp", srv)
 		if err != nil {
 			err1 := err.(*net.OpError)
 			if err1.Err != syscall.ENOENT && err1.Err != syscall.ECONNREFUSED {
@@ -420,7 +421,7 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
     // prepare to receive connections from clients.
     // change "unix" to "tcp" to use over a network.
 	  if network {
-		  l, e := net.Listen("tcp", 1000+peers[me]);
+		  l, e := net.Listen("tcp", ":"+strconv.Itoa(2000+me));
 		  if e != nil {
 			  log.Fatal("listen error: ", e);
 		  }
@@ -447,12 +448,14 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
             conn.Close()
           } else if px.unreliable && (rand.Int63() % 1000) < 200 {
             // process the request but force discard of reply.
-            c1 := conn.(*net.UnixConn) //does this need to change for tcp too?
-            f, _ := c1.File()
-            err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
-            if err != nil {
-              fmt.Printf("shutdown: %v\n", err)
-            }
+		  if !network {
+			  c1 := conn.(*net.UnixConn) 
+			  f, _ := c1.File()
+			  err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
+			  if err != nil {
+				  fmt.Printf("shutdown: %v\n", err)
+			  }
+		  }
             px.rpcCount++
             go rpcs.ServeConn(conn)
           } else {

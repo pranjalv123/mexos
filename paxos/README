@@ -1,0 +1,12 @@
+To run normal tests, make sure that the network const at the top of paxos.go is set to 'false', and then execute:
+
+go test --run TestFile
+
+To run network tests, set the network const to 'true' and execute:
+
+go test --run TestNetwork
+
+
+TODO:
+-TestNetworkDeaf
+-TestNetworkPartitions
