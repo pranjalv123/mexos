@@ -4,7 +4,7 @@ echo $1
 echo $2
 echo $a
 echo $b
-for (( i=$1; i<=$2; i++ ))
+for (( i=a; i<=b; i++ ))
 do
     echo $i
     bash setup-node.sh $i
