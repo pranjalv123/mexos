@@ -79,6 +79,9 @@ func TestNetworkBasic(t *testing.T) {
 }
 
 func TestNetworkDeaf(t *testing.T) {
+	if !network {
+		t.Fatalf("need to set network flag!")
+	}
   runtime.GOMAXPROCS(4)
 
   const npaxos = 5
@@ -125,6 +128,9 @@ func TestNetworkDeaf(t *testing.T) {
 }
 
 func TestNetworkForget(t *testing.T) {
+  if !network {
+    t.Fatalf("need to set network flag!")
+  }
   runtime.GOMAXPROCS(4)
 
   const npaxos = 6
@@ -207,6 +213,9 @@ func TestNetworkForget(t *testing.T) {
 }
 
 func TestNetworkManyForget(t *testing.T) {
+  if !network {
+    t.Fatalf("need to set network flag!")
+  }
   runtime.GOMAXPROCS(4)
 
   const npaxos = 3
@@ -274,6 +283,9 @@ func TestNetworkManyForget(t *testing.T) {
 // does paxos forgetting actually free the memory?
 //
 func TestNetworkForgetMem(t *testing.T) {
+  if !network {
+    t.Fatalf("need to set network flag!")
+  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Paxos frees forgotten instance memory ...\n")
@@ -338,6 +350,9 @@ func TestNetworkForgetMem(t *testing.T) {
 }
 
 func TestNetworkRPCCount(t *testing.T) {
+  if !network {
+    t.Fatalf("need to set network flag!")
+  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: RPC counts aren't too high ...\n")
@@ -413,6 +428,9 @@ func TestNetworkRPCCount(t *testing.T) {
 // many agreements (without failures)
 //
 func TestNetworkMany(t *testing.T) {
+  if !network {
+    t.Fatalf("need to set network flag!")
+  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many instances ...\n")
@@ -463,6 +481,9 @@ func TestNetworkMany(t *testing.T) {
 // then another peer starts, without a proposal.
 // 
 func TestNetworkOld(t *testing.T) {
+  if !network {
+    t.Fatalf("need to set network flag!")
+  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Minority proposal ignored ...\n")
@@ -500,6 +521,9 @@ func TestNetworkOld(t *testing.T) {
 // many agreements, with unreliable RPC
 //
 func TestNetworkManyUnreliable(t *testing.T) {
+  if !network {
+    t.Fatalf("need to set network flag!")
+  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many instances, unreliable RPC ...\n")
@@ -545,6 +569,7 @@ func TestNetworkManyUnreliable(t *testing.T) {
   
   fmt.Printf("  ... Passed\n")
 }
+
 /*
 func pp(tag string, src int, dst int) string {
   s := "/var/tmp/824-"
@@ -563,237 +588,226 @@ func cleanpp(tag string, n int) {
       os.Remove(ij)
     }
   }
-}
+}*/
 
-func part(t *testing.T, tag string, npaxos int, p1 []int, p2 []int, p3 []int) {
-  cleanpp(tag, npaxos)
+func part(t *testing.T, pxa []*Paxos , p1 []int, p2 []int, p3 []int) {
+	//set all inititally unreachable
+	for _,p := range pxa {
+		for i,_ := range p.reachable {
+			p.reachable[i] = false
+		}
+	}
 
-  pa := [][]int{p1, p2, p3}
-  for pi := 0; pi < len(pa); pi++ {
-    p := pa[pi]
-    for i := 0; i < len(p); i++ {
-      for j := 0; j < len(p); j++ {
-        ij := pp(tag, p[i], p[j])
-        //pj := netport(tag, p[j])
-	pj := netport(p[j]) //TODO: fixme
-        err := os.Link(pj, ij)
-        if err != nil {
-          // one reason this link can fail is if the
-          // corresponding Paxos peer has prematurely quit and
-          // deleted its socket file (e.g., called px.Kill()).
-          t.Fatalf("os.Link(%v, %v): %v\n", pj, ij, err)
-        }
-      }
-    }
-  }
+	//then create connections
+	for _, h := range p1 {
+		for _, r := range p1 {
+			pxa[h].reachable[r] = true
+		}
+	}
+	for _, h := range p2 {
+		for _, r := range p2 {
+			pxa[h].reachable[r] = true
+		}
+	}
+	for _, h := range p3 {
+		for _, r := range p3 {
+			pxa[h].reachable[r] = true
+		}
+	}
 }
 
 func TestNetworkPartition(t *testing.T) {
-  runtime.GOMAXPROCS(4)
+	if !network {
+		t.Fatalf("need to set network flag!")
+	}
+	runtime.GOMAXPROCS(4)
 
-  tag := "partition"
-  const npaxos = 5
-  var pxa []*Paxos = make([]*Paxos, npaxos)
-  defer cleanup(pxa)
-  defer cleanpp(tag, npaxos)
+	//tag := "partition"
+	const npaxos = 5
+	//defer cleanpp(tag, npaxos)
+	var pxa []*Paxos = make([]*Paxos, npaxos)
+	var pxh []string = make([]string, npaxos)
+	defer cleanup(pxa)
 
-  for i := 0; i < npaxos; i++ {
-    var pxh []string = make([]string, npaxos)
-    for j := 0; j < npaxos; j++ {
-      if j == i {
-        //pxh[j] = netport(tag, i)
-	pxh[j] = netport(i) //TODO: fixme
-      } else {
-        pxh[j] = pp(tag, i, j)
-      }
-    }
-    pxa[i] = Make(pxh, i, nil)
-  }
-  defer part(t, tag, npaxos, []int{}, []int{}, []int{})
+	for i := 0; i < npaxos; i++ {
+		pxh[i] = netport(i) //TODO: fixme
+	}
+	for i := 0; i < npaxos; i++ {
+		pxa[i] = Make(pxh, i, nil)
+	}
+	
+	//defer part(t, tag, npaxos, []int{}, []int{}, []int{})
+	seq := 0
+	
+	fmt.Printf("Test: No decision if partitioned ...\n")
 
-  seq := 0
+	part(t, pxa, []int{0,2}, []int{1,3}, []int{4})
+	pxa[1].Start(seq, 111)
+	checkMaxDecided(t, pxa, seq, 0)
+	
+	fmt.Printf("  ... Passed\n")
+	
+	fmt.Printf("Test: Decision in majority partition ...\n")
+	
+	part(t, pxa, []int{0}, []int{1,2,3}, []int{4})
+	time.Sleep(2 * time.Second)
+	waitForDecisionMajority(t, pxa, seq)
+	fmt.Printf("  ... Passed\n")
+	
+	fmt.Printf("Test: All agree after full heal ...\n")
+	pxa[0].Start(seq, 1000) // poke them
+	pxa[4].Start(seq, 1004)
+	part(t, pxa, []int{0,1,2,3,4}, []int{}, []int{})
+	
+	waitForDecision(t, pxa, seq, npaxos)
+	fmt.Printf("  ... Passed\n")
 
-  fmt.Printf("Test: No decision if partitioned ...\n")
+	fmt.Printf("Test: One peer switches partitions ...\n")
+	for iters := 0; iters < 20; iters++ {
+		seq++
 
-  part(t, tag, npaxos, []int{0,2}, []int{1,3}, []int{4})
-  pxa[1].Start(seq, 111)
-  checkmax(t, pxa, seq, 0)
-  
-  fmt.Printf("  ... Passed\n")
-
-  fmt.Printf("Test: Decision in majority partition ...\n")
-
-  part(t, tag, npaxos, []int{0}, []int{1,2,3}, []int{4})
-  time.Sleep(2 * time.Second)
-  waitForDecisionMajority(t, pxa, seq)
-
-  fmt.Printf("  ... Passed\n")
-
-  fmt.Printf("Test: All agree after full heal ...\n")
-
-  pxa[0].Start(seq, 1000) // poke them
-  pxa[4].Start(seq, 1004)
-  part(t, tag, npaxos, []int{0,1,2,3,4}, []int{}, []int{})
-
-  waitForDecision(t, pxa, seq, npaxos)
-
-  fmt.Printf("  ... Passed\n")
-
-  fmt.Printf("Test: One peer switches partitions ...\n")
-
-  for iters := 0; iters < 20; iters++ {
-    seq++
-
-    part(t, tag, npaxos, []int{0,1,2}, []int{3,4}, []int{})
-    pxa[0].Start(seq, seq * 10)
-    pxa[3].Start(seq, (seq * 10) + 1)
-    waitForDecisionMajority(t, pxa, seq)
-    if numDecided(t, pxa, seq) > 3 {
-      t.Fatalf("too many decided")
-    }
-    
-    part(t, tag, npaxos, []int{0,1}, []int{2,3,4}, []int{})
-    waitForDecision(t, pxa, seq, npaxos)
-  }
-
-  fmt.Printf("  ... Passed\n")
-
-  fmt.Printf("Test: One peer switches partitions, unreliable ...\n")
-
-
-  for iters := 0; iters < 20; iters++ {
-    seq++
-
-    for i := 0; i < npaxos; i++ {
-      pxa[i].unreliable = true
-    }
-
-    part(t, tag, npaxos, []int{0,1,2}, []int{3,4}, []int{})
-    for i := 0; i < npaxos; i++ {
-      pxa[i].Start(seq, (seq * 10) + i)
-    }
-    waitForDecision(t, pxa, seq, 3)
-    if numDecided(t, pxa, seq) > 3 {
-      t.Fatalf("too many decided")
-    }
-    
-    part(t, tag, npaxos, []int{0,1}, []int{2,3,4}, []int{})
-
-    for i := 0; i < npaxos; i++ {
-      pxa[i].unreliable = false
-    }
-
-    waitForDecision(t, pxa, seq, 5)
-  }
-
-  fmt.Printf("  ... Passed\n")
+		part(t, pxa, []int{0,1,2}, []int{3,4}, []int{})
+		pxa[0].Start(seq, seq * 10)
+		pxa[3].Start(seq, (seq * 10) + 1)
+		waitForDecisionMajority(t, pxa, seq)
+		if numDecided(t, pxa, seq) > 3 {
+			t.Fatalf("too many decided")
+		}
+		
+		part(t, pxa, []int{0,1}, []int{2,3,4}, []int{})
+		waitForDecision(t, pxa, seq, npaxos)
+	}
+	fmt.Printf("  ... Passed\n")
+	
+	fmt.Printf("Test: One peer switches partitions, unreliable ...\n")
+	for iters := 0; iters < 20; iters++ {
+		seq++
+		
+		for i := 0; i < npaxos; i++ {
+			pxa[i].unreliable = true
+		}
+		
+		part(t, pxa, []int{0,1,2}, []int{3,4}, []int{})
+		for i := 0; i < npaxos; i++ {
+			pxa[i].Start(seq, (seq * 10) + i)
+		}
+		waitForDecision(t, pxa, seq, 3)
+		if numDecided(t, pxa, seq) > 3 {
+			t.Fatalf("too many decided")
+		}
+		
+		part(t, pxa, []int{0,1}, []int{2,3,4}, []int{})
+		
+		for i := 0; i < npaxos; i++ {
+			pxa[i].unreliable = false
+		}
+		
+		waitForDecision(t, pxa, seq, 5)
+	}
+	fmt.Printf("  ... Passed\n")
 }
 
 func TestNetworkLots(t *testing.T) {
-  runtime.GOMAXPROCS(4)
+	if !network {
+	  t.Fatalf("need to set network flag!")
+	}
+	runtime.GOMAXPROCS(4)
+	
+	fmt.Printf("Test: Many requests, changing partitions ...\n")
 
-  fmt.Printf("Test: Many requests, changing partitions ...\n")
+	//tag := "lots"
+	const npaxos = 5
+	//defer cleanpp(tag, npaxos)
+	var pxa []*Paxos = make([]*Paxos, npaxos)
+	var pxh []string = make([]string, npaxos)
+	defer cleanup(pxa)
 
-  tag := "lots"
-  const npaxos = 5
-  var pxa []*Paxos = make([]*Paxos, npaxos)
-  defer cleanup(pxa)
-  defer cleanpp(tag, npaxos)
+	for i := 0; i < npaxos; i++ {
+		pxh[i] = netport(i) 
+	}
+	for i := 0; i < npaxos; i++ {
+		pxa[i] = Make(pxh, i, nil)
+		pxa[i].unreliable = true
+	}
+	//defer part(t, tag, npaxos, []int{}, []int{}, []int{})
+	
+	done := false
+	
+	// re-partition periodically
+	ch1 := make(chan bool)
+	go func() {
+		defer func(){ ch1 <- true }()
+		for done == false {
+			var a [npaxos]int
+			for i := 0; i < npaxos; i++ {
+				a[i] = (rand.Int() % 3)
+			}
+			pa := make([][]int, 3)
+			for i := 0; i < 3; i++ {
+				pa[i] = make([]int, 0)
+				for j := 0; j < npaxos; j++ {
+					if a[j] == i {
+						pa[i] = append(pa[i], j)
+					}
+				}
+			}
+			part(t, pxa, pa[0], pa[1], pa[2])
+			time.Sleep(time.Duration(rand.Int63() % 200) * time.Millisecond)
+		}
+	}()
+	seq := 0
 
-  for i := 0; i < npaxos; i++ {
-    var pxh []string = make([]string, npaxos)
-    for j := 0; j < npaxos; j++ {
-      if j == i {
-        //pxh[j] = netport(tag, i)
-	pxh[j] = netport(i) //TODO: fixme
-      } else {
-        pxh[j] = pp(tag, i, j)
-      }
-    }
-    pxa[i] = Make(pxh, i, nil)
-    pxa[i].unreliable = true
-  }
-  defer part(t, tag, npaxos, []int{}, []int{}, []int{})
+	// periodically start a new instance
+	ch2 := make(chan bool)
+	go func () {
+		defer func() { ch2 <- true } ()
+		for done == false {
+			// how many instances are in progress?
+			nd := 0
+			for i := 0; i < seq; i++ {
+				if numDecided(t, pxa, i) == npaxos {
+					nd++
+				}
+			}
+			if seq - nd < 10 {
+				for i := 0; i < npaxos; i++ {
+					pxa[i].Start(seq, rand.Int() % 10)
+				}
+				seq++
+			}
+			time.Sleep(time.Duration(rand.Int63() % 300) * time.Millisecond)
+		}
+	}()
+	
+	// periodically check that decisions are consistent
+	ch3 := make(chan bool)
+	go func() {
+		defer func() { ch3 <- true }()
+		for done == false {
+			for i := 0; i < seq; i++ {
+				numDecided(t, pxa, i)
+			}
+			time.Sleep(time.Duration(rand.Int63() % 300) * time.Millisecond)
+		}
+	}()
 
-  done := false
-
-  // re-partition periodically
-  ch1 := make(chan bool)
-  go func() {
-    defer func(){ ch1 <- true }()
-    for done == false {
-      var a [npaxos]int
-      for i := 0; i < npaxos; i++ {
-        a[i] = (rand.Int() % 3)
-      }
-      pa := make([][]int, 3)
-      for i := 0; i < 3; i++ {
-        pa[i] = make([]int, 0)
-        for j := 0; j < npaxos; j++ {
-          if a[j] == i {
-            pa[i] = append(pa[i], j)
-          }
-        }
-      }
-      part(t, tag, npaxos, pa[0], pa[1], pa[2])
-      time.Sleep(time.Duration(rand.Int63() % 200) * time.Millisecond)
-    }
-  }()
-
-  seq := 0
-
-  // periodically start a new instance
-  ch2 := make(chan bool)
-  go func () {
-    defer func() { ch2 <- true } ()
-    for done == false {
-      // how many instances are in progress?
-      nd := 0
-      for i := 0; i < seq; i++ {
-        if numDecided(t, pxa, i) == npaxos {
-          nd++
-        }
-      }
-      if seq - nd < 10 {
-        for i := 0; i < npaxos; i++ {
-          pxa[i].Start(seq, rand.Int() % 10)
-        }
-        seq++
-      }
-      time.Sleep(time.Duration(rand.Int63() % 300) * time.Millisecond)
-    }
-  }()
-
-  // periodically check that decisions are consistent
-  ch3 := make(chan bool)
-  go func() {
-    defer func() { ch3 <- true }()
-    for done == false {
-      for i := 0; i < seq; i++ {
-        numDecided(t, pxa, i)
-      }
-      time.Sleep(time.Duration(rand.Int63() % 300) * time.Millisecond)
-    }
-  }()
-
-  time.Sleep(20 * time.Second)
-  done = true
-  <- ch1
-  <- ch2
-  <- ch3
-
-  // repair, then check that all instances decided.
-  for i := 0; i < npaxos; i++ {
-    pxa[i].unreliable = false
-  }
-  part(t, tag, npaxos, []int{0,1,2,3,4}, []int{}, []int{})
-  time.Sleep(5 * time.Second)
-
-  for i := 0; i < seq; i++ {
-    waitForDecisionMajority(t, pxa, i)
-  }
-
+	time.Sleep(20 * time.Second)
+	done = true
+	<- ch1
+	<- ch2
+	<- ch3
+	
+	// repair, then check that all instances decided.
+	for i := 0; i < npaxos; i++ {
+		pxa[i].unreliable = false
+	}
+	part(t, pxa, []int{0,1,2,3,4}, []int{}, []int{})
+	time.Sleep(5 * time.Second)
+	
+	for i := 0; i < seq; i++ {
+		waitForDecisionMajority(t, pxa, i)
+	}
+	
   fmt.Printf("  ... Passed\n")
 }
-
-*/
+	
