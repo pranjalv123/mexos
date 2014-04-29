@@ -13,6 +13,7 @@ import "math/rand"
 import "time"
 
 const Debug = 0
+const printRPCerrors = false
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -370,7 +371,13 @@ func StartServer(servers []string, me int) *ShardMaster {
 	sm.maxConfig = 0
 
 	rpcs := rpc.NewServer()
-	rpcs.Register(sm)
+	if !printRPCerrors {
+		disableLog()
+		rpcs.Register(sm)
+		enableLog()
+	} else {
+		rpcs.Register(sm)
+	}
 
 	sm.px = paxos.Make(servers, me, rpcs)
 
@@ -414,4 +421,16 @@ func StartServer(servers []string, me int) *ShardMaster {
 	}()
 
 	return sm
+}
+
+type NullWriter int
+
+func (NullWriter) Write([]byte) (int, error) { return 0, nil }
+
+func enableLog() {
+	log.SetOutput(os.Stderr)
+}
+
+func disableLog() {
+	log.SetOutput(new(NullWriter))
 }
