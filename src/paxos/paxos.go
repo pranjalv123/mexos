@@ -31,7 +31,7 @@ import "math/rand"
 import "time"
 import "strconv"
 
-const network = true
+const network = false
 const printRPCerrors = false
 
 type Proposal struct {
@@ -49,6 +49,7 @@ type Paxos struct {
 	deaf         bool
 	rpcCount     int
 	peers        []string
+	reachable    []bool
 	me           int // index into peers[]
 	instances    map[int]Proposal
 	maxInstance  int
@@ -107,9 +108,19 @@ type DecideReply struct {
 // please use call() to send all RPCs, in client.go and server.go.
 // please do not change this function.
 //
+func (px *Paxos) callWrap(srv string, name string, args interface{}, 
+	reply interface{}) bool {
+	//check if unreachable, for partition tests
+	for i,p := range px.peers {
+		if p == srv && !px.reachable[i] {
+			return false
+		}
+	}
+	return call(srv, name, args, reply)
+}
+
 func call(srv string, name string, args interface{}, reply interface{}) bool {
 	if network {
-
 		c, err := rpc.Dial("tcp", srv)
 		if err != nil {
 			err1 := err.(*net.OpError)
@@ -162,7 +173,7 @@ func (px *Paxos) callAcceptor(index int, name string, args interface{}, reply in
 			return px.Decide(args.(*DecideArgs), reply.(*DecideReply)) == nil
 		}
 	}
-	return call(px.peers[index], name, args, reply)
+	return px.callWrap(px.peers[index], name, args, reply)
 }
 
 func (px *Paxos) getInstance(seq int) Proposal {
@@ -415,6 +426,10 @@ func (px *Paxos) Kill() {
 func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 	px := &Paxos{}
 	px.peers = peers
+	px.reachable = make([]bool, len(px.peers))
+	for i, _ := range px.peers {
+		px.reachable[i] = true
+	}
 	px.me = me
 	px.deaf = false
 	px.instances = make(map[int]Proposal)
