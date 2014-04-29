@@ -1,4 +1,4 @@
-for (( i=1; i<=10; i++ ))
+for (( i=101; i<=110; i++ ))
 do
     ip=10.0.0.$i
     ssh ubuntu@$ip $@ &
