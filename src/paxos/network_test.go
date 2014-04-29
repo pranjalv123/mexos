@@ -4,7 +4,7 @@ import "testing"
 import "runtime"
 import "fmt"
 import "strconv"
-import "os"
+//import "os"
 import "time"
 import "math/rand"
 
@@ -36,7 +36,7 @@ func TestNetworkBasic(t *testing.T) {
   fmt.Printf("Test: Single proposer ...\n")
 
   pxa[0].Start(0, "hello")
-  waitn(t, pxa, 0, npaxos)
+  waitForDecision(t, pxa, 0, npaxos)
 
   fmt.Printf("  ... Passed\n")
 
@@ -45,7 +45,7 @@ func TestNetworkBasic(t *testing.T) {
   for i := 0; i < npaxos; i++ {
     pxa[i].Start(1, 77)
   }
-  waitn(t, pxa, 1, npaxos)
+  waitForDecision(t, pxa, 1, npaxos)
 
   fmt.Printf("  ... Passed\n")
 
@@ -54,7 +54,7 @@ func TestNetworkBasic(t *testing.T) {
   pxa[0].Start(2, 100)
   pxa[1].Start(2, 101)
   pxa[2].Start(2, 102)
-  waitn(t, pxa, 2, npaxos)
+  waitForDecision(t, pxa, 2, npaxos)
 
   fmt.Printf("  ... Passed\n")
 
@@ -63,13 +63,13 @@ func TestNetworkBasic(t *testing.T) {
   pxa[0].Start(7, 700)
   pxa[0].Start(6, 600)
   pxa[1].Start(5, 500)
-  waitn(t, pxa, 7, npaxos)
+  waitForDecision(t, pxa, 7, npaxos)
   pxa[0].Start(4, 400)
   pxa[1].Start(3, 300)
-  waitn(t, pxa, 6, npaxos)
-  waitn(t, pxa, 5, npaxos)
-  waitn(t, pxa, 4, npaxos)
-  waitn(t, pxa, 3, npaxos)
+  waitForDecision(t, pxa, 6, npaxos)
+  waitForDecision(t, pxa, 5, npaxos)
+  waitForDecision(t, pxa, 4, npaxos)
+  waitForDecision(t, pxa, 3, npaxos)
 
   if pxa[0].Max() != 7 {
     t.Fatalf("wrong Max()")
@@ -96,27 +96,30 @@ func TestNetworkDeaf(t *testing.T) {
   fmt.Printf("Test: Deaf proposer ...\n")
 
   pxa[0].Start(0, "hello")
-  waitn(t, pxa, 0, npaxos)
+  waitForDecision(t, pxa, 0, npaxos)
 
-  os.Remove(pxh[0])
-  os.Remove(pxh[npaxos-1])
+
+  //os.Remove(pxh[0])
+  //os.Remove(pxh[
+	pxa[0].deaf = true
+	pxa[npaxos-1].deaf = true
 
   pxa[1].Start(1, "goodbye")
-  waitmajority(t, pxa, 1)
+  waitForDecisionMajority(t, pxa, 1)
   time.Sleep(1 * time.Second)
-  if ndecided(t, pxa, 1) != npaxos - 2 {
+  if numDecided(t, pxa, 1) != npaxos - 2 {
     t.Fatalf("a deaf peer heard about a decision")
   }
 
   pxa[0].Start(1, "xxx")
-  waitn(t, pxa, 1, npaxos-1)
+  waitForDecision(t, pxa, 1, npaxos-1)
   time.Sleep(1 * time.Second)
-  if ndecided(t, pxa, 1) != npaxos - 1 {
+  if numDecided(t, pxa, 1) != npaxos - 1 {
     t.Fatalf("a deaf peer heard about a decision")
   }
 
   pxa[npaxos-1].Start(1, "yyy")
-  waitn(t, pxa, 1, npaxos)
+  waitForDecision(t, pxa, 1, npaxos)
 
   fmt.Printf("  ... Passed\n")
 }
@@ -152,7 +155,7 @@ func TestNetworkForget(t *testing.T) {
   pxa[0].Start(6, "66")
   pxa[1].Start(7, "77")
 
-  waitn(t, pxa, 0, npaxos)
+  waitForDecision(t, pxa, 0, npaxos)
 
   // Min() correct?
   for i := 0; i < npaxos; i++ {
@@ -162,7 +165,7 @@ func TestNetworkForget(t *testing.T) {
     }
   }
 
-  waitn(t, pxa, 1, npaxos)
+  waitForDecision(t, pxa, 1, npaxos)
 
   // Min() correct?
   for i := 0; i < npaxos; i++ {
@@ -288,7 +291,7 @@ func TestNetworkForgetMem(t *testing.T) {
   }
 
   pxa[0].Start(0, "x")
-  waitn(t, pxa, 0, npaxos)
+  waitForDecision(t, pxa, 0, npaxos)
 
   runtime.GC()
   var m0 runtime.MemStats
@@ -301,7 +304,7 @@ func TestNetworkForgetMem(t *testing.T) {
       big[j] = byte('a' + rand.Int() % 26)
     }
     pxa[0].Start(i, string(big))
-    waitn(t, pxa, i, npaxos)
+    waitForDecision(t, pxa, i, npaxos)
   }
 
   runtime.GC()
@@ -355,7 +358,7 @@ func TestNetworkRPCCount(t *testing.T) {
   seq := 0
   for i := 0; i < ninst1; i++ {
     pxa[0].Start(seq, "x")
-    waitn(t, pxa, seq, npaxos)
+    waitForDecision(t, pxa, seq, npaxos)
     seq++
   }
 
@@ -381,7 +384,7 @@ func TestNetworkRPCCount(t *testing.T) {
     for j := 0; j < npaxos; j++ {
       go pxa[j].Start(seq, j + (i * 10))
     }
-    waitn(t, pxa, seq, npaxos)
+    waitForDecision(t, pxa, seq, npaxos)
     seq++
   }
 
@@ -431,7 +434,7 @@ func TestNetworkMany(t *testing.T) {
   for seq := 1; seq < ninst; seq++ {
     // only 5 active instances, to limit the
     // number of file descriptors.
-    for seq >= 5 && ndecided(t, pxa, seq - 5) < npaxos {
+    for seq >= 5 && numDecided(t, pxa, seq - 5) < npaxos {
       time.Sleep(20 * time.Millisecond)
     }
     for i := 0; i < npaxos; i++ {
@@ -442,7 +445,7 @@ func TestNetworkMany(t *testing.T) {
   for {
     done := true
     for seq := 1; seq < ninst; seq++ {
-      if ndecided(t, pxa, seq) < npaxos {
+      if numDecided(t, pxa, seq) < npaxos {
         done = false
       }
     }
@@ -478,16 +481,16 @@ func TestNetworkOld(t *testing.T) {
   pxa[3] = Make(pxh, 3, nil)
   pxa[1].Start(1, 111)
 
-  waitmajority(t, pxa, 1)
+  waitForDecisionMajority(t, pxa, 1)
 
   pxa[0] = Make(pxh, 0, nil)
   pxa[0].Start(1, 222)
 
-  waitn(t, pxa, 1, 4)
+  waitForDecision(t, pxa, 1, 4)
 
   if false {
     pxa[4] = Make(pxh, 4, nil)
-    waitn(t, pxa, 1, npaxos)
+    waitForDecision(t, pxa, 1, npaxos)
   }
 
   fmt.Printf("  ... Passed\n")
@@ -519,7 +522,7 @@ func TestNetworkManyUnreliable(t *testing.T) {
   for seq := 1; seq < ninst; seq++ {
     // only 3 active instances, to limit the
     // number of file descriptors.
-    for seq >= 3 && ndecided(t, pxa, seq - 3) < npaxos {
+    for seq >= 3 && numDecided(t, pxa, seq - 3) < npaxos {
       time.Sleep(20 * time.Millisecond)
     }
     for i := 0; i < npaxos; i++ {
@@ -530,7 +533,7 @@ func TestNetworkManyUnreliable(t *testing.T) {
   for {
     done := true
     for seq := 1; seq < ninst; seq++ {
-      if ndecided(t, pxa, seq) < npaxos {
+      if numDecided(t, pxa, seq) < npaxos {
         done = false
       }
     }
@@ -622,7 +625,7 @@ func TestNetworkPartition(t *testing.T) {
 
   part(t, tag, npaxos, []int{0}, []int{1,2,3}, []int{4})
   time.Sleep(2 * time.Second)
-  waitmajority(t, pxa, seq)
+  waitForDecisionMajority(t, pxa, seq)
 
   fmt.Printf("  ... Passed\n")
 
@@ -632,7 +635,7 @@ func TestNetworkPartition(t *testing.T) {
   pxa[4].Start(seq, 1004)
   part(t, tag, npaxos, []int{0,1,2,3,4}, []int{}, []int{})
 
-  waitn(t, pxa, seq, npaxos)
+  waitForDecision(t, pxa, seq, npaxos)
 
   fmt.Printf("  ... Passed\n")
 
@@ -644,13 +647,13 @@ func TestNetworkPartition(t *testing.T) {
     part(t, tag, npaxos, []int{0,1,2}, []int{3,4}, []int{})
     pxa[0].Start(seq, seq * 10)
     pxa[3].Start(seq, (seq * 10) + 1)
-    waitmajority(t, pxa, seq)
-    if ndecided(t, pxa, seq) > 3 {
+    waitForDecisionMajority(t, pxa, seq)
+    if numDecided(t, pxa, seq) > 3 {
       t.Fatalf("too many decided")
     }
     
     part(t, tag, npaxos, []int{0,1}, []int{2,3,4}, []int{})
-    waitn(t, pxa, seq, npaxos)
+    waitForDecision(t, pxa, seq, npaxos)
   }
 
   fmt.Printf("  ... Passed\n")
@@ -669,8 +672,8 @@ func TestNetworkPartition(t *testing.T) {
     for i := 0; i < npaxos; i++ {
       pxa[i].Start(seq, (seq * 10) + i)
     }
-    waitn(t, pxa, seq, 3)
-    if ndecided(t, pxa, seq) > 3 {
+    waitForDecision(t, pxa, seq, 3)
+    if numDecided(t, pxa, seq) > 3 {
       t.Fatalf("too many decided")
     }
     
@@ -680,7 +683,7 @@ func TestNetworkPartition(t *testing.T) {
       pxa[i].unreliable = false
     }
 
-    waitn(t, pxa, seq, 5)
+    waitForDecision(t, pxa, seq, 5)
   }
 
   fmt.Printf("  ... Passed\n")
@@ -747,7 +750,7 @@ func TestNetworkLots(t *testing.T) {
       // how many instances are in progress?
       nd := 0
       for i := 0; i < seq; i++ {
-        if ndecided(t, pxa, i) == npaxos {
+        if numDecided(t, pxa, i) == npaxos {
           nd++
         }
       }
@@ -767,7 +770,7 @@ func TestNetworkLots(t *testing.T) {
     defer func() { ch3 <- true }()
     for done == false {
       for i := 0; i < seq; i++ {
-        ndecided(t, pxa, i)
+        numDecided(t, pxa, i)
       }
       time.Sleep(time.Duration(rand.Int63() % 300) * time.Millisecond)
     }
@@ -787,7 +790,7 @@ func TestNetworkLots(t *testing.T) {
   time.Sleep(5 * time.Second)
 
   for i := 0; i < seq; i++ {
-    waitmajority(t, pxa, i)
+    waitForDecisionMajority(t, pxa, i)
   }
 
   fmt.Printf("  ... Passed\n")

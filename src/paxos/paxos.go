@@ -31,7 +31,7 @@ import "math/rand"
 import "time"
 import "strconv"
 
-const network = false
+const network = true
 const printRPCerrors = false
 
 type Proposal struct {
@@ -46,6 +46,7 @@ type Paxos struct {
 	l            net.Listener
 	dead         bool
 	unreliable   bool
+	deaf         bool
 	rpcCount     int
 	peers        []string
 	me           int // index into peers[]
@@ -108,6 +109,7 @@ type DecideReply struct {
 //
 func call(srv string, name string, args interface{}, reply interface{}) bool {
 	if network {
+
 		c, err := rpc.Dial("tcp", srv)
 		if err != nil {
 			err1 := err.(*net.OpError)
@@ -414,6 +416,7 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 	px := &Paxos{}
 	px.peers = peers
 	px.me = me
+	px.deaf = false
 	px.instances = make(map[int]Proposal)
 	px.maxInstance = -1
 	px.done = make(map[int]int)
@@ -468,13 +471,22 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 			for px.dead == false {
 				conn, err := px.l.Accept()
 				if err == nil && px.dead == false {
-					if px.unreliable && (rand.Int63()%1000) < 100 {
+					if px.deaf || (px.unreliable && (rand.Int63()%1000) < 100) {
 						// discard the request.
 						conn.Close()
 					} else if px.unreliable && (rand.Int63()%1000) < 200 {
 						// process the request but force discard of reply.
 						if !network {
 							c1 := conn.(*net.UnixConn)
+							f, _ := c1.File()
+							err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
+							if err != nil {
+								fmt.Printf("shutdown: %v\n", err)
+							}
+
+						} else {
+							//respond to imaginary port?
+							c1 := conn.(*net.TCPConn)
 							f, _ := c1.File()
 							err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
 							if err != nil {
