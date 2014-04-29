@@ -2,80 +2,23 @@ package paxos
 
 import "testing"
 import "runtime"
-import "strconv"
-import "os"
-import "time"
 import "fmt"
+import "strconv"
+//import "os"
+import "time"
 import "math/rand"
 
-func port(tag string, host int) string {
-  s := "/var/tmp/824-"
-  s += strconv.Itoa(os.Getuid()) + "/"
-  os.Mkdir(s, 0777)
-  s += "px-"
-  s += strconv.Itoa(os.Getpid()) + "-"
-  s += tag + "-"
-  s += strconv.Itoa(host)
-  return s
+func netport(port int) string {
+	s := "127.0.0.1:"
+	s += strconv.Itoa(2000+port)
+	return s
 }
 
-func ndecided(t *testing.T, pxa []*Paxos, seq int) int {
-  count := 0
-  var v interface{}
-  for i := 0; i < len(pxa); i++ {
-    if pxa[i] != nil {
-      decided, v1 := pxa[i].Status(seq)
-      if decided {
-        if count > 0 && v != v1 {
-          t.Fatalf("decided values do not match; seq=%v i=%v v=%v v1=%v",
-            seq, i, v, v1)
-        }
-        count++
-        v = v1
-      }
-    }
+func TestNetworkBasic(t *testing.T) {
+  if !network {
+    t.Fatalf("need to set network flag!")
   }
-  return count
-}
 
-func waitn(t *testing.T, pxa[]*Paxos, seq int, wanted int) {
-  to := 10 * time.Millisecond
-  for iters := 0; iters < 30; iters++ {
-    if ndecided(t, pxa, seq) >= wanted {
-      break
-    }
-    time.Sleep(to)
-    if to < time.Second {
-      to *= 2
-    }
-  }
-  nd := ndecided(t, pxa, seq)
-  if nd < wanted {
-    t.Fatalf("too few decided; seq=%v ndecided=%v wanted=%v", seq, nd, wanted)
-  }
-}
-
-func waitmajority(t *testing.T, pxa[]*Paxos, seq int) {
-  waitn(t, pxa, seq, (len(pxa) / 2) + 1)
-}
-
-func checkmax(t *testing.T, pxa[]*Paxos, seq int, max int) {
-  time.Sleep(3 * time.Second)
-  nd := ndecided(t, pxa, seq)
-  if nd > max {
-    t.Fatalf("too many decided; seq=%v ndecided=%v max=%v", seq, nd, max)
-  }
-}
-
-func cleanup(pxa []*Paxos) {
-  for i := 0; i < len(pxa); i++ {
-    if pxa[i] != nil {
-      pxa[i].Kill()
-    }
-  }
-}
-
-func noTestSpeed(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   const npaxos = 3
@@ -84,37 +27,7 @@ func noTestSpeed(t *testing.T) {
   defer cleanup(pxa)
 
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("time", i)
-  }
-  for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
-  }
-
-  t0 := time.Now()
-
-  for i := 0; i < 20; i++ {
-    pxa[0].Start(i, "x")
-    waitn(t, pxa, i, npaxos)
-  }
-
-  d := time.Since(t0)
-  fmt.Printf("20 agreements %v seconds\n", d.Seconds())
-}
-
-func TestFileBasic(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
-  
-  runtime.GOMAXPROCS(4)
-
-  const npaxos = 3
-  var pxa []*Paxos = make([]*Paxos, npaxos)
-  var pxh []string = make([]string, npaxos)
-  defer cleanup(pxa)
-
-  for i := 0; i < npaxos; i++ {
-    pxh[i] = port("basic", i)
+    pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
     pxa[i] = Make(pxh, i, nil)
@@ -123,7 +36,7 @@ func TestFileBasic(t *testing.T) {
   fmt.Printf("Test: Single proposer ...\n")
 
   pxa[0].Start(0, "hello")
-  waitn(t, pxa, 0, npaxos)
+  waitForDecision(t, pxa, 0, npaxos)
 
   fmt.Printf("  ... Passed\n")
 
@@ -132,7 +45,7 @@ func TestFileBasic(t *testing.T) {
   for i := 0; i < npaxos; i++ {
     pxa[i].Start(1, 77)
   }
-  waitn(t, pxa, 1, npaxos)
+  waitForDecision(t, pxa, 1, npaxos)
 
   fmt.Printf("  ... Passed\n")
 
@@ -141,7 +54,7 @@ func TestFileBasic(t *testing.T) {
   pxa[0].Start(2, 100)
   pxa[1].Start(2, 101)
   pxa[2].Start(2, 102)
-  waitn(t, pxa, 2, npaxos)
+  waitForDecision(t, pxa, 2, npaxos)
 
   fmt.Printf("  ... Passed\n")
 
@@ -150,13 +63,13 @@ func TestFileBasic(t *testing.T) {
   pxa[0].Start(7, 700)
   pxa[0].Start(6, 600)
   pxa[1].Start(5, 500)
-  waitn(t, pxa, 7, npaxos)
+  waitForDecision(t, pxa, 7, npaxos)
   pxa[0].Start(4, 400)
   pxa[1].Start(3, 300)
-  waitn(t, pxa, 6, npaxos)
-  waitn(t, pxa, 5, npaxos)
-  waitn(t, pxa, 4, npaxos)
-  waitn(t, pxa, 3, npaxos)
+  waitForDecision(t, pxa, 6, npaxos)
+  waitForDecision(t, pxa, 5, npaxos)
+  waitForDecision(t, pxa, 4, npaxos)
+  waitForDecision(t, pxa, 3, npaxos)
 
   if pxa[0].Max() != 7 {
     t.Fatalf("wrong Max()")
@@ -165,10 +78,7 @@ func TestFileBasic(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestFileDeaf(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkDeaf(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   const npaxos = 5
@@ -177,7 +87,7 @@ func TestFileDeaf(t *testing.T) {
   defer cleanup(pxa)
 
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("deaf", i)
+    pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
     pxa[i] = Make(pxh, i, nil)
@@ -186,35 +96,35 @@ func TestFileDeaf(t *testing.T) {
   fmt.Printf("Test: Deaf proposer ...\n")
 
   pxa[0].Start(0, "hello")
-  waitn(t, pxa, 0, npaxos)
+  waitForDecision(t, pxa, 0, npaxos)
 
-  os.Remove(pxh[0])
-  os.Remove(pxh[npaxos-1])
+
+  //os.Remove(pxh[0])
+  //os.Remove(pxh[
+	pxa[0].deaf = true
+	pxa[npaxos-1].deaf = true
 
   pxa[1].Start(1, "goodbye")
-  waitmajority(t, pxa, 1)
+  waitForDecisionMajority(t, pxa, 1)
   time.Sleep(1 * time.Second)
-  if ndecided(t, pxa, 1) != npaxos - 2 {
+  if numDecided(t, pxa, 1) != npaxos - 2 {
     t.Fatalf("a deaf peer heard about a decision")
   }
 
   pxa[0].Start(1, "xxx")
-  waitn(t, pxa, 1, npaxos-1)
+  waitForDecision(t, pxa, 1, npaxos-1)
   time.Sleep(1 * time.Second)
-  if ndecided(t, pxa, 1) != npaxos - 1 {
+  if numDecided(t, pxa, 1) != npaxos - 1 {
     t.Fatalf("a deaf peer heard about a decision")
   }
 
   pxa[npaxos-1].Start(1, "yyy")
-  waitn(t, pxa, 1, npaxos)
+  waitForDecision(t, pxa, 1, npaxos)
 
   fmt.Printf("  ... Passed\n")
 }
 
-func TestFileForget(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkForget(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   const npaxos = 6
@@ -223,7 +133,7 @@ func TestFileForget(t *testing.T) {
   defer cleanup(pxa)
   
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("gc", i)
+    pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
     pxa[i] = Make(pxh, i, nil)
@@ -245,7 +155,7 @@ func TestFileForget(t *testing.T) {
   pxa[0].Start(6, "66")
   pxa[1].Start(7, "77")
 
-  waitn(t, pxa, 0, npaxos)
+  waitForDecision(t, pxa, 0, npaxos)
 
   // Min() correct?
   for i := 0; i < npaxos; i++ {
@@ -255,7 +165,7 @@ func TestFileForget(t *testing.T) {
     }
   }
 
-  waitn(t, pxa, 1, npaxos)
+  waitForDecision(t, pxa, 1, npaxos)
 
   // Min() correct?
   for i := 0; i < npaxos; i++ {
@@ -296,10 +206,7 @@ func TestFileForget(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestFileManyForget(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkManyForget(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   const npaxos = 3
@@ -308,7 +215,7 @@ func TestFileManyForget(t *testing.T) {
   defer cleanup(pxa)
   
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("manygc", i)
+    pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
     pxa[i] = Make(pxh, i, nil)
@@ -366,10 +273,7 @@ func TestFileManyForget(t *testing.T) {
 //
 // does paxos forgetting actually free the memory?
 //
-func TestFileForgetMem(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkForgetMem(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Paxos frees forgotten instance memory ...\n")
@@ -380,14 +284,14 @@ func TestFileForgetMem(t *testing.T) {
   defer cleanup(pxa)
   
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("gcmem", i)
+    pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
     pxa[i] = Make(pxh, i, nil)
   }
 
   pxa[0].Start(0, "x")
-  waitn(t, pxa, 0, npaxos)
+  waitForDecision(t, pxa, 0, npaxos)
 
   runtime.GC()
   var m0 runtime.MemStats
@@ -400,7 +304,7 @@ func TestFileForgetMem(t *testing.T) {
       big[j] = byte('a' + rand.Int() % 26)
     }
     pxa[0].Start(i, string(big))
-    waitn(t, pxa, i, npaxos)
+    waitForDecision(t, pxa, i, npaxos)
   }
 
   runtime.GC()
@@ -433,10 +337,7 @@ func TestFileForgetMem(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestFileRPCCount(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkRPCCount(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: RPC counts aren't too high ...\n")
@@ -447,7 +348,7 @@ func TestFileRPCCount(t *testing.T) {
   defer cleanup(pxa)
 
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("count", i)
+    pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
     pxa[i] = Make(pxh, i, nil)
@@ -457,7 +358,7 @@ func TestFileRPCCount(t *testing.T) {
   seq := 0
   for i := 0; i < ninst1; i++ {
     pxa[0].Start(seq, "x")
-    waitn(t, pxa, seq, npaxos)
+    waitForDecision(t, pxa, seq, npaxos)
     seq++
   }
 
@@ -483,7 +384,7 @@ func TestFileRPCCount(t *testing.T) {
     for j := 0; j < npaxos; j++ {
       go pxa[j].Start(seq, j + (i * 10))
     }
-    waitn(t, pxa, seq, npaxos)
+    waitForDecision(t, pxa, seq, npaxos)
     seq++
   }
 
@@ -511,10 +412,7 @@ func TestFileRPCCount(t *testing.T) {
 //
 // many agreements (without failures)
 //
-func TestFileMany(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkMany(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many instances ...\n")
@@ -525,7 +423,7 @@ func TestFileMany(t *testing.T) {
   defer cleanup(pxa)
 
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("many", i)
+    pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
     pxa[i] = Make(pxh, i, nil)
@@ -536,7 +434,7 @@ func TestFileMany(t *testing.T) {
   for seq := 1; seq < ninst; seq++ {
     // only 5 active instances, to limit the
     // number of file descriptors.
-    for seq >= 5 && ndecided(t, pxa, seq - 5) < npaxos {
+    for seq >= 5 && numDecided(t, pxa, seq - 5) < npaxos {
       time.Sleep(20 * time.Millisecond)
     }
     for i := 0; i < npaxos; i++ {
@@ -547,7 +445,7 @@ func TestFileMany(t *testing.T) {
   for {
     done := true
     for seq := 1; seq < ninst; seq++ {
-      if ndecided(t, pxa, seq) < npaxos {
+      if numDecided(t, pxa, seq) < npaxos {
         done = false
       }
     }
@@ -564,10 +462,7 @@ func TestFileMany(t *testing.T) {
 // a peer starts up, with proposal, after others decide.
 // then another peer starts, without a proposal.
 // 
-func TestFileOld(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkOld(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Minority proposal ignored ...\n")
@@ -578,7 +473,7 @@ func TestFileOld(t *testing.T) {
   defer cleanup(pxa)
 
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("old", i)
+    pxh[i] = netport(i)
   }
 
   pxa[1] = Make(pxh, 1, nil)
@@ -586,16 +481,16 @@ func TestFileOld(t *testing.T) {
   pxa[3] = Make(pxh, 3, nil)
   pxa[1].Start(1, 111)
 
-  waitmajority(t, pxa, 1)
+  waitForDecisionMajority(t, pxa, 1)
 
   pxa[0] = Make(pxh, 0, nil)
   pxa[0].Start(1, 222)
 
-  waitn(t, pxa, 1, 4)
+  waitForDecision(t, pxa, 1, 4)
 
   if false {
     pxa[4] = Make(pxh, 4, nil)
-    waitn(t, pxa, 1, npaxos)
+    waitForDecision(t, pxa, 1, npaxos)
   }
 
   fmt.Printf("  ... Passed\n")
@@ -604,10 +499,7 @@ func TestFileOld(t *testing.T) {
 //
 // many agreements, with unreliable RPC
 //
-func TestFileManyUnreliable(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkManyUnreliable(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many instances, unreliable RPC ...\n")
@@ -618,7 +510,7 @@ func TestFileManyUnreliable(t *testing.T) {
   defer cleanup(pxa)
 
   for i := 0; i < npaxos; i++ {
-    pxh[i] = port("manyun", i)
+    pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
     pxa[i] = Make(pxh, i, nil)
@@ -630,7 +522,7 @@ func TestFileManyUnreliable(t *testing.T) {
   for seq := 1; seq < ninst; seq++ {
     // only 3 active instances, to limit the
     // number of file descriptors.
-    for seq >= 3 && ndecided(t, pxa, seq - 3) < npaxos {
+    for seq >= 3 && numDecided(t, pxa, seq - 3) < npaxos {
       time.Sleep(20 * time.Millisecond)
     }
     for i := 0; i < npaxos; i++ {
@@ -641,7 +533,7 @@ func TestFileManyUnreliable(t *testing.T) {
   for {
     done := true
     for seq := 1; seq < ninst; seq++ {
-      if ndecided(t, pxa, seq) < npaxos {
+      if numDecided(t, pxa, seq) < npaxos {
         done = false
       }
     }
@@ -653,7 +545,7 @@ func TestFileManyUnreliable(t *testing.T) {
   
   fmt.Printf("  ... Passed\n")
 }
-
+/*
 func pp(tag string, src int, dst int) string {
   s := "/var/tmp/824-"
   s += strconv.Itoa(os.Getuid()) + "/"
@@ -682,7 +574,8 @@ func part(t *testing.T, tag string, npaxos int, p1 []int, p2 []int, p3 []int) {
     for i := 0; i < len(p); i++ {
       for j := 0; j < len(p); j++ {
         ij := pp(tag, p[i], p[j])
-        pj := port(tag, p[j])
+        //pj := netport(tag, p[j])
+	pj := netport(p[j]) //TODO: fixme
         err := os.Link(pj, ij)
         if err != nil {
           // one reason this link can fail is if the
@@ -695,10 +588,7 @@ func part(t *testing.T, tag string, npaxos int, p1 []int, p2 []int, p3 []int) {
   }
 }
 
-func TestFilePartition(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkPartition(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   tag := "partition"
@@ -711,7 +601,8 @@ func TestFilePartition(t *testing.T) {
     var pxh []string = make([]string, npaxos)
     for j := 0; j < npaxos; j++ {
       if j == i {
-        pxh[j] = port(tag, i)
+        //pxh[j] = netport(tag, i)
+	pxh[j] = netport(i) //TODO: fixme
       } else {
         pxh[j] = pp(tag, i, j)
       }
@@ -734,7 +625,7 @@ func TestFilePartition(t *testing.T) {
 
   part(t, tag, npaxos, []int{0}, []int{1,2,3}, []int{4})
   time.Sleep(2 * time.Second)
-  waitmajority(t, pxa, seq)
+  waitForDecisionMajority(t, pxa, seq)
 
   fmt.Printf("  ... Passed\n")
 
@@ -744,7 +635,7 @@ func TestFilePartition(t *testing.T) {
   pxa[4].Start(seq, 1004)
   part(t, tag, npaxos, []int{0,1,2,3,4}, []int{}, []int{})
 
-  waitn(t, pxa, seq, npaxos)
+  waitForDecision(t, pxa, seq, npaxos)
 
   fmt.Printf("  ... Passed\n")
 
@@ -756,13 +647,13 @@ func TestFilePartition(t *testing.T) {
     part(t, tag, npaxos, []int{0,1,2}, []int{3,4}, []int{})
     pxa[0].Start(seq, seq * 10)
     pxa[3].Start(seq, (seq * 10) + 1)
-    waitmajority(t, pxa, seq)
-    if ndecided(t, pxa, seq) > 3 {
+    waitForDecisionMajority(t, pxa, seq)
+    if numDecided(t, pxa, seq) > 3 {
       t.Fatalf("too many decided")
     }
     
     part(t, tag, npaxos, []int{0,1}, []int{2,3,4}, []int{})
-    waitn(t, pxa, seq, npaxos)
+    waitForDecision(t, pxa, seq, npaxos)
   }
 
   fmt.Printf("  ... Passed\n")
@@ -781,8 +672,8 @@ func TestFilePartition(t *testing.T) {
     for i := 0; i < npaxos; i++ {
       pxa[i].Start(seq, (seq * 10) + i)
     }
-    waitn(t, pxa, seq, 3)
-    if ndecided(t, pxa, seq) > 3 {
+    waitForDecision(t, pxa, seq, 3)
+    if numDecided(t, pxa, seq) > 3 {
       t.Fatalf("too many decided")
     }
     
@@ -792,16 +683,13 @@ func TestFilePartition(t *testing.T) {
       pxa[i].unreliable = false
     }
 
-    waitn(t, pxa, seq, 5)
+    waitForDecision(t, pxa, seq, 5)
   }
 
   fmt.Printf("  ... Passed\n")
 }
 
-func TestFileLots(t *testing.T) {
-	if network {
-		t.Fatalf("need to unset network flag!")
-	}
+func TestNetworkLots(t *testing.T) {
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many requests, changing partitions ...\n")
@@ -816,7 +704,8 @@ func TestFileLots(t *testing.T) {
     var pxh []string = make([]string, npaxos)
     for j := 0; j < npaxos; j++ {
       if j == i {
-        pxh[j] = port(tag, i)
+        //pxh[j] = netport(tag, i)
+	pxh[j] = netport(i) //TODO: fixme
       } else {
         pxh[j] = pp(tag, i, j)
       }
@@ -861,7 +750,7 @@ func TestFileLots(t *testing.T) {
       // how many instances are in progress?
       nd := 0
       for i := 0; i < seq; i++ {
-        if ndecided(t, pxa, i) == npaxos {
+        if numDecided(t, pxa, i) == npaxos {
           nd++
         }
       }
@@ -881,7 +770,7 @@ func TestFileLots(t *testing.T) {
     defer func() { ch3 <- true }()
     for done == false {
       for i := 0; i < seq; i++ {
-        ndecided(t, pxa, i)
+        numDecided(t, pxa, i)
       }
       time.Sleep(time.Duration(rand.Int63() % 300) * time.Millisecond)
     }
@@ -901,8 +790,10 @@ func TestFileLots(t *testing.T) {
   time.Sleep(5 * time.Second)
 
   for i := 0; i < seq; i++ {
-    waitmajority(t, pxa, i)
+    waitForDecisionMajority(t, pxa, i)
   }
 
   fmt.Printf("  ... Passed\n")
 }
+
+*/

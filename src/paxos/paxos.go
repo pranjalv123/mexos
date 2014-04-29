@@ -29,6 +29,10 @@ import "sync"
 import "fmt"
 import "math/rand"
 import "time"
+import "strconv"
+
+const network = true
+const printRPCerrors = false
 
 type Proposal struct {
 	prepare int
@@ -38,16 +42,18 @@ type Proposal struct {
 }
 
 type Paxos struct {
-	mu          sync.Mutex
-	l           net.Listener
-	dead        bool
-	unreliable  bool
-	rpcCount    int
-	peers       []string
-	me          int // index into peers[]
-	instances   map[int]Proposal
-	maxInstance int
-	done        map[int]int
+	mu           sync.Mutex
+	l            net.Listener
+	dead         bool
+	unreliable   bool
+	deaf         bool
+	rpcCount     int
+	peers        []string
+	me           int // index into peers[]
+	instances    map[int]Proposal
+	maxInstance  int
+	done         map[int]int
+	doneChannels map[int]chan bool
 }
 
 type PrepareArgs struct {
@@ -102,23 +108,48 @@ type DecideReply struct {
 // please do not change this function.
 //
 func call(srv string, name string, args interface{}, reply interface{}) bool {
-	c, err := rpc.Dial("unix", srv)
-	if err != nil {
-		err1 := err.(*net.OpError)
-		if err1.Err != syscall.ENOENT && err1.Err != syscall.ECONNREFUSED {
-			fmt.Printf("paxos Dial() failed: %v\n", err1)
+	if network {
+
+		c, err := rpc.Dial("tcp", srv)
+		if err != nil {
+			err1 := err.(*net.OpError)
+			if err1.Err != syscall.ENOENT && err1.Err != syscall.ECONNREFUSED {
+				fmt.Printf("paxos Dial() failed: %v\n", err1)
+			}
+			return false
+		}
+		defer c.Close()
+
+		err = c.Call(name, args, reply)
+		if err == nil {
+			return true
+		}
+
+		if printRPCerrors {
+			fmt.Println(err)
+		}
+		return false
+	} else {
+		c, err := rpc.Dial("unix", srv)
+		if err != nil {
+			err1 := err.(*net.OpError)
+			if err1.Err != syscall.ENOENT && err1.Err != syscall.ECONNREFUSED {
+				fmt.Printf("paxos Dial() failed: %v\n", err1)
+			}
+			return false
+		}
+		defer c.Close()
+
+		err = c.Call(name, args, reply)
+		if err == nil {
+			return true
+		}
+
+		if printRPCerrors {
+			fmt.Println(err)
 		}
 		return false
 	}
-	defer c.Close()
-
-	err = c.Call(name, args, reply)
-	if err == nil {
-		return true
-	}
-
-	fmt.Println(err)
-	return false
 }
 
 func (px *Paxos) callAcceptor(index int, name string, args interface{}, reply interface{}) bool {
@@ -210,6 +241,10 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 	px.mu.Unlock()
 	reply.Err = false
 	reply.Done = px.done[px.me]
+	if channel, exists := px.doneChannels[args.Instance]; exists {
+		channel <- true
+		delete(px.doneChannels, args.Instance)
+	}
 	return nil
 }
 
@@ -356,6 +391,10 @@ func (px *Paxos) Status(seq int) (bool, interface{}) {
 	return prop.decided, prop.value
 }
 
+func (px *Paxos) SetDoneChannel(seq int, channel chan bool) {
+	px.doneChannels[seq] = channel
+}
+
 //
 // tell the peer to shut itself down.
 // for testing.
@@ -377,30 +416,52 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 	px := &Paxos{}
 	px.peers = peers
 	px.me = me
+	px.deaf = false
 	px.instances = make(map[int]Proposal)
 	px.maxInstance = -1
 	px.done = make(map[int]int)
 	for i := 0; i < len(px.peers); i++ {
 		px.done[i] = -1
 	}
+	px.doneChannels = make(map[int]chan bool)
 
 	go px.doneCollector()
 
 	if rpcs != nil {
 		// caller will create socket &c
-		rpcs.Register(px)
+		if !printRPCerrors {
+			disableLog()
+			rpcs.Register(px)
+			enableLog()
+		} else {
+			rpcs.Register(px)
+		}
 	} else {
 		rpcs = rpc.NewServer()
-		rpcs.Register(px)
+		if !printRPCerrors {
+			disableLog()
+			rpcs.Register(px)
+			enableLog()
+		} else {
+			rpcs.Register(px)
+		}
 
 		// prepare to receive connections from clients.
 		// change "unix" to "tcp" to use over a network.
-		os.Remove(peers[me]) // only needed for "unix"
-		l, e := net.Listen("unix", peers[me])
-		if e != nil {
-			log.Fatal("listen error: ", e)
+		if network {
+			l, e := net.Listen("tcp", ":"+strconv.Itoa(2000+me))
+			if e != nil {
+				log.Fatal("listen error: ", e)
+			}
+			px.l = l
+		} else {
+			os.Remove(peers[me]) // only needed for "unix"
+			l, e := net.Listen("unix", peers[me])
+			if e != nil {
+				log.Fatal("listen error: ", e)
+			}
+			px.l = l
 		}
-		px.l = l
 
 		// please do not change any of the following code,
 		// or do anything to subvert it.
@@ -410,16 +471,27 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 			for px.dead == false {
 				conn, err := px.l.Accept()
 				if err == nil && px.dead == false {
-					if px.unreliable && (rand.Int63()%1000) < 100 {
+					if px.deaf || (px.unreliable && (rand.Int63()%1000) < 100) {
 						// discard the request.
 						conn.Close()
 					} else if px.unreliable && (rand.Int63()%1000) < 200 {
 						// process the request but force discard of reply.
-						c1 := conn.(*net.UnixConn)
-						f, _ := c1.File()
-						err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
-						if err != nil {
-							fmt.Printf("shutdown: %v\n", err)
+						if !network {
+							c1 := conn.(*net.UnixConn)
+							f, _ := c1.File()
+							err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
+							if err != nil {
+								fmt.Printf("shutdown: %v\n", err)
+							}
+
+						} else {
+							//respond to imaginary port?
+							c1 := conn.(*net.TCPConn)
+							f, _ := c1.File()
+							err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
+							if err != nil {
+								fmt.Printf("shutdown: %v\n", err)
+							}
 						}
 						px.rpcCount++
 						go rpcs.ServeConn(conn)
@@ -438,4 +510,16 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 	}
 
 	return px
+}
+
+type NullWriter int
+
+func (NullWriter) Write([]byte) (int, error) { return 0, nil }
+
+func enableLog() {
+	log.SetOutput(os.Stderr)
+}
+
+func disableLog() {
+	log.SetOutput(new(NullWriter))
 }
