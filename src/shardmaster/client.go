@@ -11,11 +11,13 @@ import "fmt"
 
 type Clerk struct {
 	servers []string // shardmaster replicas
+	network bool
 }
 
-func MakeClerk(servers []string) *Clerk {
+func MakeClerk(servers []string, network bool) *Clerk {
 	ck := new(Clerk)
 	ck.servers = servers
+	ck.network = network
 	return ck
 }
 
@@ -35,23 +37,41 @@ func MakeClerk(servers []string) *Clerk {
 // please use call() to send all RPCs, in client.go and server.go.
 // please don't change this function.
 //
-func call(srv string, rpcname string,
-	args interface{}, reply interface{}) bool {
-	c, errx := rpc.Dial("unix", srv)
-	if errx != nil {
+func call(srv string, rpcname string, args interface{}, 
+	reply interface{}, network bool) bool {
+	if network {
+		c, errx := rpc.Dial("tcp", srv)
+		if errx != nil {
+			return false
+		}
+		defer c.Close()
+		
+		err := c.Call(rpcname, args, reply)
+		if err == nil {
+			return true
+		}
+		
+		if printRPCerrors {
+			fmt.Println(err)
+		}
+		return false
+	} else {
+		c, errx := rpc.Dial("unix", srv)
+		if errx != nil {
+			return false
+		}
+		defer c.Close()
+		
+		err := c.Call(rpcname, args, reply)
+		if err == nil {
+			return true
+		}
+		
+		if printRPCerrors {
+			fmt.Println(err)
+		}
 		return false
 	}
-	defer c.Close()
-
-	err := c.Call(rpcname, args, reply)
-	if err == nil {
-		return true
-	}
-
-	if printRPCerrors {
-		fmt.Println(err)
-	}
-	return false
 }
 
 func (ck *Clerk) Query(num int) Config {
@@ -61,7 +81,7 @@ func (ck *Clerk) Query(num int) Config {
 			args := &QueryArgs{}
 			args.Num = num
 			var reply QueryReply
-			ok := call(srv, "ShardMaster.Query", args, &reply)
+			ok := call(srv, "ShardMaster.Query", args, &reply, ck.network)
 			if ok {
 				return reply.Config
 			}
@@ -79,7 +99,7 @@ func (ck *Clerk) Join(gid int64, servers []string) {
 			args.GID = gid
 			args.Servers = servers
 			var reply JoinReply
-			ok := call(srv, "ShardMaster.Join", args, &reply)
+			ok := call(srv, "ShardMaster.Join", args, &reply, ck.network)
 			if ok {
 				return
 			}
@@ -95,7 +115,7 @@ func (ck *Clerk) Leave(gid int64) {
 			args := &LeaveArgs{}
 			args.GID = gid
 			var reply LeaveReply
-			ok := call(srv, "ShardMaster.Leave", args, &reply)
+			ok := call(srv, "ShardMaster.Leave", args, &reply, ck.network)
 			if ok {
 				return
 			}
@@ -112,7 +132,7 @@ func (ck *Clerk) Move(shard int, gid int64) {
 			args.Shard = shard
 			args.GID = gid
 			var reply LeaveReply
-			ok := call(srv, "ShardMaster.Move", args, &reply)
+			ok := call(srv, "ShardMaster.Move", args, &reply, ck.network)
 			if ok {
 				return
 			}

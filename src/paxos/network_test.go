@@ -15,10 +15,6 @@ func netport(port int) string {
 }
 
 func TestNetworkBasic(t *testing.T) {
-  if !network {
-    t.Fatalf("need to set network flag!")
-  }
-
   runtime.GOMAXPROCS(4)
 
   const npaxos = 3
@@ -30,7 +26,7 @@ func TestNetworkBasic(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
+    pxa[i] = Make(pxh, i, nil, true)
   }
 
   fmt.Printf("Test: Single proposer ...\n")
@@ -79,9 +75,6 @@ func TestNetworkBasic(t *testing.T) {
 }
 
 func TestNetworkDeaf(t *testing.T) {
-	if !network {
-		t.Fatalf("need to set network flag!")
-	}
   runtime.GOMAXPROCS(4)
 
   const npaxos = 5
@@ -93,7 +86,7 @@ func TestNetworkDeaf(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
+    pxa[i] = Make(pxh, i, nil, true)
   }
 
   fmt.Printf("Test: Deaf proposer ...\n")
@@ -128,9 +121,6 @@ func TestNetworkDeaf(t *testing.T) {
 }
 
 func TestNetworkForget(t *testing.T) {
-  if !network {
-    t.Fatalf("need to set network flag!")
-  }
   runtime.GOMAXPROCS(4)
 
   const npaxos = 6
@@ -142,7 +132,7 @@ func TestNetworkForget(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
+    pxa[i] = Make(pxh, i, nil, true)
   }
 
   fmt.Printf("Test: Forgetting ...\n")
@@ -213,9 +203,6 @@ func TestNetworkForget(t *testing.T) {
 }
 
 func TestNetworkManyForget(t *testing.T) {
-  if !network {
-    t.Fatalf("need to set network flag!")
-  }
   runtime.GOMAXPROCS(4)
 
   const npaxos = 3
@@ -227,7 +214,7 @@ func TestNetworkManyForget(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
+    pxa[i] = Make(pxh, i, nil, true)
     pxa[i].unreliable = true
   }
 
@@ -283,9 +270,6 @@ func TestNetworkManyForget(t *testing.T) {
 // does paxos forgetting actually free the memory?
 //
 func TestNetworkForgetMem(t *testing.T) {
-  if !network {
-    t.Fatalf("need to set network flag!")
-  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Paxos frees forgotten instance memory ...\n")
@@ -299,7 +283,7 @@ func TestNetworkForgetMem(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
+    pxa[i] = Make(pxh, i, nil, true)
   }
 
   pxa[0].Start(0, "x")
@@ -350,9 +334,6 @@ func TestNetworkForgetMem(t *testing.T) {
 }
 
 func TestNetworkRPCCount(t *testing.T) {
-  if !network {
-    t.Fatalf("need to set network flag!")
-  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: RPC counts aren't too high ...\n")
@@ -366,7 +347,7 @@ func TestNetworkRPCCount(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
+    pxa[i] = Make(pxh, i, nil, true)
   }
 
   ninst1 := 5
@@ -428,9 +409,6 @@ func TestNetworkRPCCount(t *testing.T) {
 // many agreements (without failures)
 //
 func TestNetworkMany(t *testing.T) {
-  if !network {
-    t.Fatalf("need to set network flag!")
-  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many instances ...\n")
@@ -444,7 +422,7 @@ func TestNetworkMany(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
+    pxa[i] = Make(pxh, i, nil, true)
     pxa[i].Start(0, 0)
   }
 
@@ -481,9 +459,6 @@ func TestNetworkMany(t *testing.T) {
 // then another peer starts, without a proposal.
 // 
 func TestNetworkOld(t *testing.T) {
-  if !network {
-    t.Fatalf("need to set network flag!")
-  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Minority proposal ignored ...\n")
@@ -497,20 +472,20 @@ func TestNetworkOld(t *testing.T) {
     pxh[i] = netport(i)
   }
 
-  pxa[1] = Make(pxh, 1, nil)
-  pxa[2] = Make(pxh, 2, nil)
-  pxa[3] = Make(pxh, 3, nil)
+  pxa[1] = Make(pxh, 1, nil, true)
+  pxa[2] = Make(pxh, 2, nil, true)
+  pxa[3] = Make(pxh, 3, nil, true)
   pxa[1].Start(1, 111)
 
   waitForDecisionMajority(t, pxa, 1)
 
-  pxa[0] = Make(pxh, 0, nil)
+  pxa[0] = Make(pxh, 0, nil, true)
   pxa[0].Start(1, 222)
 
   waitForDecision(t, pxa, 1, 4)
 
   if false {
-    pxa[4] = Make(pxh, 4, nil)
+    pxa[4] = Make(pxh, 4, nil, true)
     waitForDecision(t, pxa, 1, npaxos)
   }
 
@@ -521,9 +496,6 @@ func TestNetworkOld(t *testing.T) {
 // many agreements, with unreliable RPC
 //
 func TestNetworkManyUnreliable(t *testing.T) {
-  if !network {
-    t.Fatalf("need to set network flag!")
-  }
   runtime.GOMAXPROCS(4)
 
   fmt.Printf("Test: Many instances, unreliable RPC ...\n")
@@ -537,7 +509,7 @@ func TestNetworkManyUnreliable(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil)
+    pxa[i] = Make(pxh, i, nil, true)
     pxa[i].unreliable = true
     pxa[i].Start(0, 0)
   }
@@ -617,9 +589,6 @@ func part(t *testing.T, pxa []*Paxos , p1 []int, p2 []int, p3 []int) {
 }
 
 func TestNetworkPartition(t *testing.T) {
-	if !network {
-		t.Fatalf("need to set network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	//tag := "partition"
@@ -633,7 +602,7 @@ func TestNetworkPartition(t *testing.T) {
 		pxh[i] = netport(i) //TODO: fixme
 	}
 	for i := 0; i < npaxos; i++ {
-		pxa[i] = Make(pxh, i, nil)
+		pxa[i] = Make(pxh, i, nil, true)
 	}
 	
 	//defer part(t, tag, npaxos, []int{}, []int{}, []int{})
@@ -708,9 +677,6 @@ func TestNetworkPartition(t *testing.T) {
 }
 
 func TestNetworkLots(t *testing.T) {
-	if !network {
-	  t.Fatalf("need to set network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 	
 	fmt.Printf("Test: Many requests, changing partitions ...\n")
@@ -726,7 +692,7 @@ func TestNetworkLots(t *testing.T) {
 		pxh[i] = netport(i) 
 	}
 	for i := 0; i < npaxos; i++ {
-		pxa[i] = Make(pxh, i, nil)
+		pxa[i] = Make(pxh, i, nil, true)
 		pxa[i].unreliable = true
 	}
 	//defer part(t, tag, npaxos, []int{}, []int{}, []int{})

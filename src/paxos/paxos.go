@@ -31,7 +31,6 @@ import "math/rand"
 import "time"
 import "strconv"
 
-const network = false
 const printRPCerrors = false
 
 type Proposal struct {
@@ -46,6 +45,7 @@ type Paxos struct {
 	l            net.Listener
 	dead         bool
 	unreliable   bool
+	network      bool
 	deaf         bool
 	rpcCount     int
 	peers        []string
@@ -116,10 +116,11 @@ func (px *Paxos) callWrap(srv string, name string, args interface{},
 			return false
 		}
 	}
-	return call(srv, name, args, reply)
+	return call(srv, name, args, reply, px.network)
 }
 
-func call(srv string, name string, args interface{}, reply interface{}) bool {
+func call(srv string, name string, args interface{}, reply interface{}, 
+	network bool) bool {
 	if network {
 		c, err := rpc.Dial("tcp", srv)
 		if err != nil {
@@ -423,7 +424,7 @@ func (px *Paxos) Kill() {
 // the ports of all the paxos peers (including this one)
 // are in peers[]. this servers port is peers[me].
 //
-func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
+func Make(peers []string, me int, rpcs *rpc.Server, network bool) *Paxos {
 	px := &Paxos{}
 	px.peers = peers
 	px.reachable = make([]bool, len(px.peers))
@@ -432,6 +433,7 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 	}
 	px.me = me
 	px.deaf = false
+	px.network = network
 	px.instances = make(map[int]Proposal)
 	px.maxInstance = -1
 	px.done = make(map[int]int)
@@ -463,7 +465,7 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 
 		// prepare to receive connections from clients.
 		// change "unix" to "tcp" to use over a network.
-		if network {
+		if px.network {
 			l, e := net.Listen("tcp", ":"+strconv.Itoa(2000+me))
 			if e != nil {
 				log.Fatal("listen error: ", e)
@@ -491,7 +493,7 @@ func Make(peers []string, me int, rpcs *rpc.Server) *Paxos {
 						conn.Close()
 					} else if px.unreliable && (rand.Int63()%1000) < 200 {
 						// process the request but force discard of reply.
-						if !network {
+						if !px.network {
 							c1 := conn.(*net.UnixConn)
 							f, _ := c1.File()
 							err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)

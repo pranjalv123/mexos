@@ -11,14 +11,16 @@ type Clerk struct {
   sm *shardmaster.Clerk
   config shardmaster.Config
   me int64
+  network bool
 }
 
 
 
-func MakeClerk(shardmasters []string) *Clerk {
+func MakeClerk(shardmasters []string, network bool) *Clerk {
   ck := new(Clerk)
-  ck.sm = shardmaster.MakeClerk(shardmasters)
+	ck.sm = shardmaster.MakeClerk(shardmasters, network)
   ck.me = nrand()
+  ck.network = network
   return ck
 }
 
@@ -38,21 +40,38 @@ func MakeClerk(shardmasters []string) *Clerk {
 // please use call() to send all RPCs, in client.go and server.go.
 // please don't change this function.
 //
-func call(srv string, rpcname string,
-          args interface{}, reply interface{}) bool {
-  c, errx := rpc.Dial("unix", srv)
-  if errx != nil {
-    return false
-  }
-  defer c.Close()
-    
-  err := c.Call(rpcname, args, reply)
-  if err == nil {
-    return true
-  }
-
-  fmt.Println(err)
-  return false
+func call(srv string, rpcname string, args interface{}, 
+	reply interface{}, network bool) bool {
+	if network {
+		c, errx := rpc.Dial("tcp", srv)
+		if errx != nil {
+			return false
+		}
+		defer c.Close()
+		
+		err := c.Call(rpcname, args, reply)
+		if err == nil {
+			return true
+		}
+		
+		fmt.Println(err)
+		return false
+		
+	} else {
+		c, errx := rpc.Dial("unix", srv)
+		if errx != nil {
+			return false
+		}
+		defer c.Close()
+		
+		err := c.Call(rpcname, args, reply)
+		if err == nil {
+			return true
+		}
+		
+		fmt.Println(err)
+		return false
+	}
 }
 
 //
@@ -90,7 +109,7 @@ func (ck *Clerk) Get(key string) string {
       // try each server in the shard's replication group.
       for _, srv := range servers {
         var reply KVReply
-        ok := call(srv, "ShardKV.Get", args, &reply)
+	      ok := call(srv, "ShardKV.Get", args, &reply, ck.network)
         if ok && (reply.Err == OK || reply.Err == ErrNoKey) {
           return reply.Value
         }
@@ -124,7 +143,7 @@ func (ck *Clerk) PutExt(key string, value string, dohash bool) string {
       // try each server in the shard's replication group.
       for _, srv := range servers {
         var reply KVReply
-        ok := call(srv, "ShardKV.Put", args, &reply)
+	      ok := call(srv, "ShardKV.Put", args, &reply, ck.network)
         if ok && reply.Err == OK {
           return reply.Value
         }

@@ -358,7 +358,7 @@ func (sm *ShardMaster) Kill() {
 // form the fault-tolerant shardmaster service.
 // me is the index of the current server in servers[].
 //
-func StartServer(servers []string, me int) *ShardMaster {
+func StartServer(servers []string, me int, network bool) *ShardMaster {
 	gob.Register(Op{})
 
 	sm := new(ShardMaster)
@@ -379,7 +379,7 @@ func StartServer(servers []string, me int) *ShardMaster {
 		rpcs.Register(sm)
 	}
 
-	sm.px = paxos.Make(servers, me, rpcs)
+	sm.px = paxos.Make(servers, me, rpcs, network)
 
 	os.Remove(servers[me])
 	l, e := net.Listen("unix", servers[me])

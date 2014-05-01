@@ -44,7 +44,7 @@ type ShardKV struct {
   unreliable bool // for testing
   sm *shardmaster.Clerk
   px *paxos.Paxos
-
+  network bool
   gid int64 // my replica group ID
 
   config shardmaster.Config
@@ -319,7 +319,7 @@ func (kv *ShardKV) tick() {
         for sid, srv := range servers {
           DPrintf("%d.%d.%d) Attempting to get Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
           var reply FetchReply
-          ok := call(srv, "ShardKV.Fetch", args, &reply)
+		ok := call(srv, "ShardKV.Fetch", args, &reply, kv.network)
           if ok && (reply.Err == OK) {
             DPrintf("%d.%d.%d) Got Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
             for k,v := range reply.Store {
@@ -360,13 +360,14 @@ func (kv *ShardKV) kill() {
 // Me is the index of this server in servers[].
 //
 func StartServer(gid int64, shardmasters []string,
-                 servers []string, me int) *ShardKV {
+	servers []string, me int, network bool) *ShardKV {
   gob.Register(Op{})
 
   kv := new(ShardKV)
   kv.me = me
+  kv.network = network
   kv.gid = gid
-  kv.sm = shardmaster.MakeClerk(shardmasters)
+  kv.sm = shardmaster.MakeClerk(shardmasters, kv.network)
 
   kv.config = kv.sm.Query(0)
   kv.store = make(map[string]string)
@@ -376,7 +377,7 @@ func StartServer(gid int64, shardmasters []string,
   rpcs := rpc.NewServer()
   rpcs.Register(kv)
 
-  kv.px = paxos.Make(servers, me, rpcs)
+	kv.px = paxos.Make(servers, me, rpcs, kv.network)
 
 
   os.Remove(servers[me])

@@ -1,13 +1,56 @@
 package main
 
 import "fmt"
+import "os"
 import "paxos"
+import "strconv"
 
 func main() {
-	peers := []string{"10.0.0.101","10.0.0.102","10.0.0.103","10.0.0.104","10.0.0.105",
-		"10.0.0.106", "10.0.0.107", "10.0.0.108", "10.0.0.109", "10.0.0.110"}
-	paxos.Make(peers, 0, nil) 
-	fmt.Printf("Starting paxos server.\n")
+	args := os.Args
+	if len(args) < 3 {
+		fmt.Printf("Not enough arguments, must specify program type:\n"+
+ 			"   localFile|localNet|awsNet paxos\n"+
+			"   localFile|localNet|awsNet shardmaster client|server\n"+
+			"   localFile|localNet|awsNet shardkv client|server\n")
+		os.Exit(1)
+	}
+
+	var network bool
+	peers := make([]string, 11)
+
+	switch args[1] {
+	case "localFile":
+		network = false;
+	case "localNet":
+		network = true;
+		for i, _ := range peers {
+			peers[i] = "127.0.0.1:200"+strconv.Itoa(i)
+		}
+	case "awsNet":
+		network = true;
+		for i, _ := range peers {
+			peers[i] = "10.0.0.1"+strconv.Itoa(i)
+		}
+	default:
+		fmt.Printf("Invalid communication system, must specify:\n"+
+ 			"   localFile|localNet|awsNet\n")
+		os.Exit(1)
+	} 
+	
+	switch args[2] {
+	case "paxos":
+		paxos.Make(peers, 0, nil, network) 
+		fmt.Printf("Starting paxos server.\n")
+	case "shardmaster":
+		fmt.Printf("Starting shardmaster.\n")
+	case "shardkv":
+		fmt.Printf("Starting shardkv.\n")
+	default: 
+		fmt.Printf("Invalid program type, choose one:" +
+ 			"   paxos|shardmaster|shardkv")
+		os.Exit(1)
+	}
+
 	done := false
 	for (!done) {}
 }

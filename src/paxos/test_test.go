@@ -59,7 +59,7 @@ func waitForDecision(test interface{}, paxosServers []*Paxos, seq int, wanted in
 			break
 		}
 		time.Sleep(toWait)
-		if toWait < 500*time.Millisecond {
+		if toWait < 5000*time.Millisecond {
 			toWait *= 2
 		}
 	}
@@ -145,7 +145,7 @@ func BenchmarkAgreementSpeed_1Instance_1Value_1Proposer(benchmark *testing.B) {
 		paxosPorts[i] = makePort("time", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	benchmark.ResetTimer()
@@ -173,7 +173,7 @@ func BenchmarkAgreementSpeed_1Instance_5Value_1Proposer(benchmark *testing.B) {
 		paxosPorts[i] = makePort("time", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	numValues := 5
@@ -204,7 +204,7 @@ func BenchmarkAgreementSpeed_1Instance_5Value_3Proposer(benchmark *testing.B) {
 		paxosPorts[i] = makePort("time", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	numValues := 5
@@ -235,7 +235,7 @@ func BenchmarkAgreementSpeed_5Instance_5Value_3Proposer(benchmark *testing.B) {
 		paxosPorts[i] = makePort("time", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	numInstances := 5
@@ -261,9 +261,6 @@ func TestFilePersistenceBasic(test *testing.T) {
 	if onlyBenchmarks || !runNewTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	tag := "persistence"
@@ -285,7 +282,7 @@ func TestFilePersistenceBasic(test *testing.T) {
 				paxosPorts[i][j] = makePrivatePort(tag, i, j)
 			}
 		}
-		paxosServers[i] = Make(paxosPorts[i], i, nil)
+		paxosServers[i] = Make(paxosPorts[i], i, nil, false)
 	}
 	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})
 
@@ -302,7 +299,7 @@ func TestFilePersistenceBasic(test *testing.T) {
 	paxosServers[1].Start(1, 1)
 	waitForDecisionMajority(test, paxosServers, 1)
 	// Bring server back
-	paxosServers[0] = Make(paxosPorts[0], 0, nil)
+	paxosServers[0] = Make(paxosPorts[0], 0, nil, false)
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
 	// Get agreement on first instance again (poke restarted server)
 	paxosServers[0].Start(0, 1)
@@ -326,7 +323,7 @@ func TestFilePersistenceBasic(test *testing.T) {
 	paxosServers[1].Start(2, 2)
 	waitForDecisionMajority(test, paxosServers, 1)
 	// Bring server back
-	paxosServers[0] = Make(paxosPorts[0], 0, nil)
+	paxosServers[0] = Make(paxosPorts[0], 0, nil, false)
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
 	// See if restarted server knows about missed instance
 	decided, value = paxosServers[0].Status(2)
@@ -341,9 +338,6 @@ func TestFilePersistenceBasic(test *testing.T) {
 func TestFilePersistencePartition(test *testing.T) {
 	if onlyBenchmarks || !runNewTests {
 		return
-	}
-	if network {
-		test.Fatalf("need to unset network flag!")
 	}
 	runtime.GOMAXPROCS(4)
 
@@ -366,7 +360,7 @@ func TestFilePersistencePartition(test *testing.T) {
 				paxosPorts[i][j] = makePrivatePort(tag, i, j)
 			}
 		}
-		paxosServers[i] = Make(paxosPorts[i], i, nil)
+		paxosServers[i] = Make(paxosPorts[i], i, nil, false)
 	}
 	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})
 
@@ -386,9 +380,9 @@ func TestFilePersistencePartition(test *testing.T) {
 	paxosServers[3].Start(0, 1)
 	time.Sleep(1 * time.Second)
 	// Bring majority back
-	paxosServers[0] = Make(paxosPorts[0], 0, nil)
-	paxosServers[1] = Make(paxosPorts[1], 1, nil)
-	paxosServers[2] = Make(paxosPorts[2], 2, nil)
+	paxosServers[0] = Make(paxosPorts[0], 0, nil, false)
+	paxosServers[1] = Make(paxosPorts[1], 1, nil, false)
+	paxosServers[2] = Make(paxosPorts[2], 2, nil, false)
 	// Check that old value is forced when partition heals
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
 	waitForDecisionMajority(test, paxosServers, 0)
@@ -403,9 +397,6 @@ func TestFilePersistencePartition(test *testing.T) {
 func TestFilePersistenceAllRestart(test *testing.T) {
 	if onlyBenchmarks || !runNewTests {
 		return
-	}
-	if network {
-		test.Fatalf("need to unset network flag!")
 	}
 	runtime.GOMAXPROCS(4)
 
@@ -428,7 +419,7 @@ func TestFilePersistenceAllRestart(test *testing.T) {
 				paxosPorts[i][j] = makePrivatePort(tag, i, j)
 			}
 		}
-		paxosServers[i] = Make(paxosPorts[i], i, nil)
+		paxosServers[i] = Make(paxosPorts[i], i, nil, false)
 	}
 	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})
 
@@ -456,7 +447,7 @@ func TestFilePersistenceAllRestart(test *testing.T) {
 	// Restart all servers
 	// As each is started, check min and old instance
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts[i], i, nil)
+		paxosServers[i] = Make(paxosPorts[i], i, nil, false)
 		min := paxosServers[i].Min()
 		max := paxosServers[i].Max()
 		_, recoveredValue := paxosServers[i].Status(0)
@@ -490,9 +481,6 @@ func TestFileBasic(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	const numServers = 3
@@ -505,7 +493,7 @@ func TestFileBasic(test *testing.T) {
 		paxosPorts[i] = makePort("basic", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	fmt.Printf("\nTest: Single proposer ...")
@@ -557,9 +545,6 @@ func TestFileDeaf(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	const numServers = 5
@@ -572,7 +557,7 @@ func TestFileDeaf(test *testing.T) {
 		paxosPorts[i] = makePort("deaf", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	fmt.Printf("\nTest: Deaf proposer ...")
@@ -610,9 +595,6 @@ func TestFileForget(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	const numServers = 6
@@ -625,7 +607,7 @@ func TestFileForget(test *testing.T) {
 		paxosPorts[i] = makePort("forget", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	fmt.Printf("\nTest: Forgetting ...")
@@ -704,9 +686,6 @@ func TestFileManyForgetUnreliable(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	const numServers = 3
@@ -719,7 +698,7 @@ func TestFileManyForgetUnreliable(test *testing.T) {
 		paxosPorts[i] = makePort("forgetMany", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false )
 		paxosServers[i].unreliable = true
 	}
 
@@ -781,9 +760,6 @@ func TestFileForgetMem(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	fmt.Printf("\nTest: Paxos frees forgotten instance memory ...")
@@ -798,7 +774,7 @@ func TestFileForgetMem(test *testing.T) {
 		paxosPorts[i] = makePort("forgetMemory", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	// Run initial sequence
@@ -856,9 +832,6 @@ func TestFileRPCCountRegular(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	fmt.Printf("\nTest: RPC counts aren't too high ...")
@@ -873,7 +846,7 @@ func TestFileRPCCountRegular(test *testing.T) {
 		paxosPorts[i] = makePort("count", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false )
 	}
 
 	numInstances := 5
@@ -935,9 +908,6 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	fmt.Printf("\nTest: Pre-prepare messages reduce RPC count ...")
@@ -952,7 +922,7 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 		paxosPorts[i] = makePort("count", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	seq := 0
@@ -1021,9 +991,6 @@ func TestFileMany(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	fmt.Printf("\nTest: Many instances ...")
@@ -1038,7 +1005,7 @@ func TestFileMany(test *testing.T) {
 		paxosPorts[i] = makePort("many", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 		paxosServers[i].Start(0, 0)
 	}
 
@@ -1080,9 +1047,6 @@ func TestFileOld(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	fmt.Printf("\nTest: Minority proposal ignored ...")
@@ -1097,20 +1061,20 @@ func TestFileOld(test *testing.T) {
 		paxosPorts[i] = makePort("old", i)
 	}
 
-	paxosServers[1] = Make(paxosPorts, 1, nil)
-	paxosServers[2] = Make(paxosPorts, 2, nil)
-	paxosServers[3] = Make(paxosPorts, 3, nil)
+	paxosServers[1] = Make(paxosPorts, 1, nil, false)
+	paxosServers[2] = Make(paxosPorts, 2, nil, false)
+	paxosServers[3] = Make(paxosPorts, 3, nil, false)
 	paxosServers[1].Start(1, 111)
 
 	waitForDecisionMajority(test, paxosServers, 1)
 
-	paxosServers[0] = Make(paxosPorts, 0, nil)
+	paxosServers[0] = Make(paxosPorts, 0, nil, false)
 	paxosServers[0].Start(1, 222)
 
 	waitForDecision(test, paxosServers, 1, 4)
 
 	if false {
-		paxosServers[4] = Make(paxosPorts, 4, nil)
+		paxosServers[4] = Make(paxosPorts, 4, nil, false)
 		waitForDecision(test, paxosServers, 1, numServers)
 	}
 
@@ -1123,9 +1087,6 @@ func TestFileOld(test *testing.T) {
 func TestFileManyUnreliable(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
-	}
-	if network {
-		test.Fatalf("need to unset network flag!")
 	}
 	runtime.GOMAXPROCS(4)
 
@@ -1141,7 +1102,7 @@ func TestFileManyUnreliable(test *testing.T) {
 		paxosPorts[i] = makePort("manyUnreliable", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 		paxosServers[i].unreliable = true
 		paxosServers[i].Start(0, 0)
 	}
@@ -1232,9 +1193,6 @@ func TestFilePartition(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	tag := "partition"
@@ -1255,7 +1213,7 @@ func TestFilePartition(test *testing.T) {
 				paxosPorts[j] = makePrivatePort(tag, i, j)
 			}
 		}
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})
 
@@ -1338,9 +1296,6 @@ func TestFileLots(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-	if network {
-		test.Fatalf("need to unset network flag!")
-	}
 	runtime.GOMAXPROCS(4)
 
 	fmt.Printf("\nTest: Many requests, changing partitions ...")
@@ -1363,7 +1318,7 @@ func TestFileLots(test *testing.T) {
 				paxosPorts[j] = makePrivatePort(tag, i, j)
 			}
 		}
-		paxosServers[i] = Make(paxosPorts, i, nil)
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 		paxosServers[i].unreliable = true
 	}
 	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})

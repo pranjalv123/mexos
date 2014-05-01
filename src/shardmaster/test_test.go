@@ -98,14 +98,14 @@ func TestBasic(test *testing.T) {
 		shardMasterPorts[i] = makePort("basic", i)
 	}
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i] = StartServer(shardMasterPorts, i)
+		shardMasterServers[i] = StartServer(shardMasterPorts, i, false)
 	}
 
 	// Make clerks to communicate with shardmaster
-	masterClerk := MakeClerk(shardMasterPorts)
+	masterClerk := MakeClerk(shardMasterPorts, false)
 	var clerks [numServers]*Clerk
 	for i := 0; i < numServers; i++ {
-		clerks[i] = MakeClerk([]string{shardMasterPorts[i]})
+		clerks[i] = MakeClerk([]string{shardMasterPorts[i]}, false)
 	}
 
 	fmt.Printf("\nTest: Basic leave/join ...")
@@ -334,17 +334,17 @@ func TestUnreliable(test *testing.T) {
 		shardMasterPorts[i] = makePort("unrel", i)
 	}
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i] = StartServer(shardMasterPorts, i)
+		shardMasterServers[i] = StartServer(shardMasterPorts, i, false)
 		// don't turn on unreliable because the assignment
 		// doesn't require the shardmaster to detect duplicate
 		// client requests.
 		// shardMasterServers[i].unreliable = true
 	}
 
-	masterClerk := MakeClerk(shardMasterPorts)
+	masterClerk := MakeClerk(shardMasterPorts, false)
 	var clerks [numServers]*Clerk
 	for i := 0; i < numServers; i++ {
-		clerks[i] = MakeClerk([]string{shardMasterPorts[i]})
+		clerks[i] = MakeClerk([]string{shardMasterPorts[i]}, false)
 	}
 
 	fmt.Printf("\nTest: Concurrent leave/join, failure ...")
@@ -389,10 +389,10 @@ func TestFreshQuery(test *testing.T) {
 		shardMasterPorts[i] = makePort("fresh", i)
 	}
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i] = StartServer(shardMasterPorts, i)
+		shardMasterServers[i] = StartServer(shardMasterPorts, i, false)
 	}
 
-	clerk1 := MakeClerk([]string{shardMasterPorts[1]})
+	clerk1 := MakeClerk([]string{shardMasterPorts[1]}, false)
 
 	fmt.Printf("\nTest: Query() returns latest configuration ...")
 
@@ -400,7 +400,7 @@ func TestFreshQuery(test *testing.T) {
 	if os.Rename(shardMasterPorts[0], portx) != nil {
 		test.Fatalf("os.Rename() failed")
 	}
-	clerkx := MakeClerk([]string{portx})
+	clerkx := MakeClerk([]string{portx}, false)
 
 	// Use clerk1 to join, and clerkx to query (see if clerkx hears about join)
 	clerk1.Join(1001, []string{"a", "b", "c"})
@@ -430,15 +430,15 @@ func TestPersistence(test *testing.T) {
 		shardMasterPorts[i] = makePort("fresh", i)
 	}
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i] = StartServer(shardMasterPorts, i)
+		shardMasterServers[i] = StartServer(shardMasterPorts, i, false)
 	}
 
 	// Make clerks to communicate with servers
-	masterClerk := MakeClerk(shardMasterPorts)
+	masterClerk := MakeClerk(shardMasterPorts, false)
 	var clerks [numServers]*Clerk
 	var gids []int64
 	for i := 0; i < numServers; i++ {
-		clerks[i] = MakeClerk([]string{shardMasterPorts[i]})
+		clerks[i] = MakeClerk([]string{shardMasterPorts[i]}, false)
 		gids = append(gids, int64(i)+1)
 	}
 	fmt.Printf("\nTest: Single restarted server knows about past and missed configs ...")
@@ -457,7 +457,7 @@ func TestPersistence(test *testing.T) {
 	checkConfig(test, gids, masterClerk)
 
 	// Bring server back and query configs
-	shardMasterServers[0] = StartServer(shardMasterPorts, 0)
+	shardMasterServers[0] = StartServer(shardMasterPorts, 0, false)
 	if clerks[0].Query(3).Num != 3 {
 		test.Fatalf("Restarted server does not remember past configs it had seen")
 	}
@@ -480,7 +480,7 @@ func TestPersistence(test *testing.T) {
 
 	// Bring servers back
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i] = StartServer(shardMasterPorts, i)
+		shardMasterServers[i] = StartServer(shardMasterPorts, i, false)
 	}
 	// Check configs
 	for i := 0; i < numServers; i++ {
@@ -505,14 +505,14 @@ func BenchmarkJoinSpeed_____(benchmark *testing.B) {
 		shardMasterPorts[i] = makePort("fresh", i)
 	}
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i] = StartServer(shardMasterPorts, i)
+		shardMasterServers[i] = StartServer(shardMasterPorts, i, false)
 	}
 
 	// Make clerks to communicate with servers
 	var clerks [numServers]*Clerk
 	var gids []int64
 	for i := 0; i < numServers; i++ {
-		clerks[i] = MakeClerk([]string{shardMasterPorts[i]})
+		clerks[i] = MakeClerk([]string{shardMasterPorts[i]}, false)
 		gids = append(gids, int64(i)+1)
 	}
 	clerks[1].Join(gids[1], []string{"a", "b", "c"})
@@ -538,14 +538,14 @@ func BenchmarkLeaveSpeed____(benchmark *testing.B) {
 		shardMasterPorts[i] = makePort("fresh", i)
 	}
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i] = StartServer(shardMasterPorts, i)
+		shardMasterServers[i] = StartServer(shardMasterPorts, i, false)
 	}
 
 	// Make clerks to communicate with servers
 	var clerks [numServers]*Clerk
 	var gids []int64
 	for i := 0; i < numServers; i++ {
-		clerks[i] = MakeClerk([]string{shardMasterPorts[i]})
+		clerks[i] = MakeClerk([]string{shardMasterPorts[i]}, false)
 		gids = append(gids, int64(i)+1)
 	}
 	clerks[0].Join(gids[1], []string{"a", "b", "c"})
@@ -572,14 +572,14 @@ func BenchmarkJoinLeaveSpeed(benchmark *testing.B) {
 		shardMasterPorts[i] = makePort("fresh", i)
 	}
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i] = StartServer(shardMasterPorts, i)
+		shardMasterServers[i] = StartServer(shardMasterPorts, i, false)
 	}
 
 	// Make clerks to communicate with servers
 	var clerks [numServers]*Clerk
 	var gids []int64
 	for i := 0; i < numServers; i++ {
-		clerks[i] = MakeClerk([]string{shardMasterPorts[i]})
+		clerks[i] = MakeClerk([]string{shardMasterPorts[i]}, false)
 		gids = append(gids, int64(i)+1)
 	}
 	clerks[0].Join(gids[1], []string{"a", "b", "c"})

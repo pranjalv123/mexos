@@ -53,7 +53,7 @@ func setup(tag string, unreliable bool) ([]string, []int64, [][]string, [][]*Sha
     smh[i] = port(tag+"m", i)
   }
   for i := 0; i < nmasters; i++ {
-    sma[i] = shardmaster.StartServer(smh, i)
+	  sma[i] = shardmaster.StartServer(smh, i, false)
   }
 
   const ngroups = 3   // replica groups
@@ -70,7 +70,7 @@ func setup(tag string, unreliable bool) ([]string, []int64, [][]string, [][]*Sha
       ha[i][j] = port(tag+"s", (i*nreplicas)+j)
     }
     for j := 0; j < nreplicas; j++ {
-      sa[i][j] = StartServer(gids[i], smh, ha[i], j)
+	    sa[i][j] = StartServer(gids[i], smh, ha[i], j, false)
       sa[i][j].unreliable = unreliable
     }
   }
@@ -85,10 +85,10 @@ func TestBasic(t *testing.T) {
 
   fmt.Printf("Test: Basic Join/Leave ...\n")
 
-  mck := shardmaster.MakeClerk(smh)
+	mck := shardmaster.MakeClerk(smh, false)
   mck.Join(gids[0], ha[0])
 
-  ck := MakeClerk(smh)
+	ck := MakeClerk(smh, false)
 
   ck.Put("a", "x")
   v := ck.PutHash("a", "b")
@@ -147,10 +147,10 @@ func TestMove(t *testing.T) {
 
   fmt.Printf("Test: Shards really move ...\n")
 
-  mck := shardmaster.MakeClerk(smh)
+	mck := shardmaster.MakeClerk(smh, false)
   mck.Join(gids[0], ha[0])
 
-  ck := MakeClerk(smh)
+	ck := MakeClerk(smh, false)
 
   // insert one key per shard
   for i := 0; i < shardmaster.NShards; i++ {
@@ -177,7 +177,7 @@ func TestMove(t *testing.T) {
   var mu sync.Mutex
   for i := 0; i < shardmaster.NShards; i++ {
     go func(me int) {
-      myck := MakeClerk(smh)
+	    myck := MakeClerk(smh, false)
       v := myck.Get(string('0'+me))
       if v == string('0'+me) {
         mu.Lock()
@@ -205,10 +205,10 @@ func TestLimp(t *testing.T) {
 
   fmt.Printf("Test: Reconfiguration with some dead replicas ...\n")
 
-  mck := shardmaster.MakeClerk(smh)
+	mck := shardmaster.MakeClerk(smh, false)
   mck.Join(gids[0], ha[0])
 
-  ck := MakeClerk(smh)
+	ck := MakeClerk(smh, false)
 
   ck.Put("a", "b")
   if ck.Get("a") != "b" {
@@ -267,7 +267,7 @@ func doConcurrent(t *testing.T, unreliable bool) {
   smh, gids, ha, _, clean := setup("conc"+strconv.FormatBool(unreliable), unreliable)
   defer clean()
 
-  mck := shardmaster.MakeClerk(smh)
+	mck := shardmaster.MakeClerk(smh, false)
   for i := 0; i < len(gids); i++ {
     mck.Join(gids[i], ha[i])
   }
@@ -279,8 +279,8 @@ func doConcurrent(t *testing.T, unreliable bool) {
     go func(me int) {
       ok := true
       defer func() { ca[me] <- ok }()
-      ck := MakeClerk(smh)
-      mymck := shardmaster.MakeClerk(smh)
+	    ck := MakeClerk(smh, false)
+	    mymck := shardmaster.MakeClerk(smh, false)
       key := strconv.Itoa(me)
       last := ""
       for iters := 0; iters < 3; iters++ {
