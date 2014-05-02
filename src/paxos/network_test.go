@@ -8,9 +8,11 @@ import "strconv"
 import "time"
 import "math/rand"
 
-func netport(port int) string {
+const startport = 22222
+
+func netport(i int) string {
 	s := "127.0.0.1:"
-	s += strconv.Itoa(2000+port)
+	s += strconv.Itoa(startport+i)
 	return s
 }
 

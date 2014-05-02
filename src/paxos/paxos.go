@@ -466,7 +466,7 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool) *Paxos {
 		// prepare to receive connections from clients.
 		// change "unix" to "tcp" to use over a network.
 		if px.network {
-			l, e := net.Listen("tcp", ":"+strconv.Itoa(2000+me))
+			l, e := net.Listen("tcp", ":"+strconv.Itoa(startport+me))
 			if e != nil {
 				log.Fatal("listen error: ", e)
 			}
