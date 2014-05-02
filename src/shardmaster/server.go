@@ -15,7 +15,7 @@ import "strconv"
 
 const Debug = 0
 const printRPCerrors = false
-const startport = 2100
+const startport = 2200
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -29,6 +29,7 @@ type ShardMaster struct {
 	l          net.Listener
 	me         int
 	dead       bool // for testing
+	deaf       bool // for testing
 	unreliable bool // for testing
 	px         *paxos.Paxos
 	network    bool
@@ -404,7 +405,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 		for sm.dead == false {
 			conn, err := sm.l.Accept()
 			if err == nil && sm.dead == false {
-				if sm.unreliable && (rand.Int63()%1000) < 100 {
+				if sm.deaf || (sm.unreliable && (rand.Int63()%1000) < 100) {
 					// discard the request.
 					conn.Close()
 				} else if sm.unreliable && (rand.Int63()%1000) < 200 {

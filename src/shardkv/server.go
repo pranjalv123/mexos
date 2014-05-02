@@ -15,6 +15,7 @@ import "shardmaster"
 import "strconv"
 
 const Debug=0
+const startport = 2300
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
         if Debug > 0 {
@@ -362,7 +363,6 @@ func (kv *ShardKV) kill() {
 func StartServer(gid int64, shardmasters []string,
 	servers []string, me int, network bool) *ShardKV {
   gob.Register(Op{})
-
   kv := new(ShardKV)
   kv.me = me
   kv.network = network
@@ -370,6 +370,7 @@ func StartServer(gid int64, shardmasters []string,
   kv.sm = shardmaster.MakeClerk(shardmasters, kv.network)
 
   kv.config = kv.sm.Query(0)
+		//fmt.Println("Got here!")
   kv.store = make(map[string]string)
   kv.response = make(map[int64]string)
   kv.minSeq = -1
@@ -380,12 +381,20 @@ func StartServer(gid int64, shardmasters []string,
 	kv.px = paxos.Make(servers, me, rpcs, kv.network)
 
 
-  os.Remove(servers[me])
-  l, e := net.Listen("unix", servers[me]);
-  if e != nil {
-    log.Fatal("listen error: ", e);
-  }
-  kv.l = l
+	if kv.network {
+		l, e := net.Listen("tcp", strconv.Itoa(startport+me));
+		if e != nil {
+			log.Fatal("listen error: ", e);
+		}
+		kv.l = l
+	} else {
+		os.Remove(servers[me])
+		l, e := net.Listen("unix", servers[me]);
+		if e != nil {
+			log.Fatal("listen error: ", e);
+		}
+		kv.l = l
+	}
 
   // please do not change any of the following code,
   // or do anything to subvert it.
@@ -399,13 +408,22 @@ func StartServer(gid int64, shardmasters []string,
           conn.Close()
         } else if kv.unreliable && (rand.Int63() % 1000) < 200 {
           // process the request but force discard of reply.
-          c1 := conn.(*net.UnixConn)
-          f, _ := c1.File()
-          err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
-          if err != nil {
-            fmt.Printf("shutdown: %v\n", err)
-          }
-          go rpcs.ServeConn(conn)
+		if kv.network {
+			c1 := conn.(*net.TCPConn)
+			f, _ := c1.File()
+			err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
+			if err != nil {
+				fmt.Printf("shutdown: %v\n", err)
+			}
+		} else {
+			c1 := conn.(*net.UnixConn)
+			f, _ := c1.File()
+			err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
+			if err != nil {
+				fmt.Printf("shutdown: %v\n", err)
+			}
+		}
+		go rpcs.ServeConn(conn)
         } else {
           go rpcs.ServeConn(conn)
         }
