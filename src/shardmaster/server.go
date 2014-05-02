@@ -11,9 +11,11 @@ import "syscall"
 import "encoding/gob"
 import "math/rand"
 import "time"
+import "strconv"
 
 const Debug = 0
 const printRPCerrors = false
+const startport = 2100
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -29,7 +31,7 @@ type ShardMaster struct {
 	dead       bool // for testing
 	unreliable bool // for testing
 	px         *paxos.Paxos
-
+	network    bool
 	configs      []Config // indexed by config num
 	processedSeq int
 	maxConfig    int
@@ -363,7 +365,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 
 	sm := new(ShardMaster)
 	sm.me = me
-
+	sm.network = network
 	sm.configs = make([]Config, 1)
 	sm.configs[0].Groups = map[int64][]string{}
 
@@ -381,13 +383,20 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 
 	sm.px = paxos.Make(servers, me, rpcs, network)
 
-	os.Remove(servers[me])
-	l, e := net.Listen("unix", servers[me])
-	if e != nil {
-		log.Fatal("listen error: ", e)
+	if sm.network {
+		l, e := net.Listen("tcp", ":"+strconv.Itoa(startport+me))
+		if e != nil {
+			log.Fatal("listen error: ", e)
+		}
+		sm.l = l
+	} else {	
+		os.Remove(servers[me])
+		l, e := net.Listen("unix", servers[me])
+		if e != nil {
+			log.Fatal("listen error: ", e)
+		}
+		sm.l = l
 	}
-	sm.l = l
-
 	// please do not change any of the following code,
 	// or do anything to subvert it.
 
@@ -400,11 +409,20 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 					conn.Close()
 				} else if sm.unreliable && (rand.Int63()%1000) < 200 {
 					// process the request but force discard of reply.
-					c1 := conn.(*net.UnixConn)
-					f, _ := c1.File()
-					err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
-					if err != nil {
-						fmt.Printf("shutdown: %v\n", err)
+					if sm.network {
+						c1 := conn.(*net.TCPConn)
+						f, _ := c1.File()
+						err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
+						if err != nil {
+							fmt.Printf("shutdown: %v\n", err)
+						}
+					} else {
+						c1 := conn.(*net.UnixConn)
+						f, _ := c1.File()
+						err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
+						if err != nil {
+							fmt.Printf("shutdown: %v\n", err)
+						}
 					}
 					go rpcs.ServeConn(conn)
 				} else {

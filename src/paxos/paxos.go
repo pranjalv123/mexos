@@ -31,6 +31,7 @@ import "math/rand"
 import "time"
 import "strconv"
 
+const startport = 2100
 const printRPCerrors = false
 
 type Proposal struct {

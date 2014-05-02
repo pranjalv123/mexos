@@ -82,7 +82,7 @@ func checkConfig(test *testing.T, knownGroups []int64, masterClerk *Clerk) {
 	}
 }
 
-func TestBasic(test *testing.T) {
+func TestFileBasic(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
@@ -318,7 +318,7 @@ func TestBasic(test *testing.T) {
 	fmt.Printf("\n\t... Passed")
 }
 
-func TestUnreliable(test *testing.T) {
+func TestFileUnreliable(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
@@ -373,7 +373,7 @@ func TestUnreliable(test *testing.T) {
 	fmt.Printf("\n\t... Passed")
 }
 
-func TestFreshQuery(test *testing.T) {
+func TestFileFreshQuery(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
@@ -414,7 +414,7 @@ func TestFreshQuery(test *testing.T) {
 	os.Remove(portx)
 }
 
-func TestPersistence(test *testing.T) {
+func TestFilePersistence(test *testing.T) {
 	if onlyBenchmarks || !runNewTests {
 		return
 	}

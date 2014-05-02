@@ -59,7 +59,7 @@ func waitForDecision(test interface{}, paxosServers []*Paxos, seq int, wanted in
 			break
 		}
 		time.Sleep(toWait)
-		if toWait < 5000*time.Millisecond {
+		if toWait < 10000*time.Millisecond {
 			toWait *= 2
 		}
 	}

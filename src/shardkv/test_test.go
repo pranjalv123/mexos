@@ -79,7 +79,7 @@ func setup(tag string, unreliable bool) ([]string, []int64, [][]string, [][]*Sha
   return smh, gids, ha, sa, clean
 }
 
-func TestBasic(t *testing.T) {
+func TestFileBasic(t *testing.T) {
   smh, gids, ha, _, clean := setup("basic", false)
   defer clean()
 
@@ -141,7 +141,7 @@ func TestBasic(t *testing.T) {
   fmt.Printf("  ... Passed\n")
 }
 
-func TestMove(t *testing.T) {
+func TestFileMove(t *testing.T) {
   smh, gids, ha, _, clean := setup("move", false)
   defer clean()
 
@@ -199,7 +199,7 @@ func TestMove(t *testing.T) {
   }
 }
 
-func TestLimp(t *testing.T) {
+func TestFileLimp(t *testing.T) {
   smh, gids, ha, sa, clean := setup("limp", false)
   defer clean()
 
@@ -313,13 +313,13 @@ func doConcurrent(t *testing.T, unreliable bool) {
   }
 }
 
-func TestConcurrent(t *testing.T) {
+func TestFileConcurrent(t *testing.T) {
   fmt.Printf("Test: Concurrent Put/Get/Move ...\n")
   doConcurrent(t, false)
   fmt.Printf("  ... Passed\n")
 }
 
-func TestConcurrentUnreliable(t *testing.T) {
+func TestFileConcurrentUnreliable(t *testing.T) {
   fmt.Printf("Test: Concurrent Put/Get/Move (unreliable) ...\n")
   doConcurrent(t, true)
   fmt.Printf("  ... Passed\n")
