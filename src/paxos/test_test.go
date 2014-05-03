@@ -9,7 +9,7 @@ import "fmt"
 import "math/rand"
 
 const onlyBenchmarks = false
-const runOldTests = true
+const runOldTests = false
 const runNewTests = true
 
 // Make a port using the given tag and host number
@@ -286,14 +286,14 @@ func TestFilePersistenceBasic(test *testing.T) {
 	}
 	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})
 
-	fmt.Printf("\nTest Persistence, single failure, poke restarted server ...")
+	fmt.Printf("\nTest Persistence, single failure ...")
 	// Put all servers in the same partition
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
 	// Get agreement on an instance (only wait for majority)
 	paxosServers[0].Start(0, 0)
 	waitForDecisionMajority(test, paxosServers, 0)
 	// Kill one server, make sure it stops
-	paxosServers[0].Kill()
+	paxosServers[0].KillSaveDisk()
 	time.Sleep(1 * time.Second)
 	// Get agreement on another instance
 	paxosServers[1].Start(1, 1)
@@ -301,37 +301,14 @@ func TestFilePersistenceBasic(test *testing.T) {
 	// Bring server back
 	paxosServers[0] = Make(paxosPorts[0], 0, nil, false)
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
-	// Get agreement on first instance again (poke restarted server)
-	paxosServers[0].Start(0, 1)
-	waitForDecision(test, paxosServers, 0, numServers)
-	// See if restarted server knows about second isntance
-	decided, value := paxosServers[0].Status(1)
-	_, trueValue := paxosServers[1].Status(1)
+	// See if restarted server remembers first instance
+	decided, value := paxosServers[0].Status(0)
+	_, trueValue := paxosServers[1].Status(0)
 	if !decided || (value != trueValue) {
-		test.Fatalf("Restarted server did not learn about missed instance even after being poked")
+		test.Fatalf("Restarted server did not remember first instance")
 	}
 
 	fmt.Printf("\n\t... Passed")
-	// Do it again but without poking the restarted server
-	// (see if it automatically catches itself up on startup - this is needed for shardmaster query to be up to date)
-	fmt.Printf("\nTest Persistence, single failure, no poke ...")
-
-	// Kill one server, make sure it stops
-	paxosServers[0].Kill()
-	time.Sleep(1 * time.Second)
-	// Get agreement on another instance
-	paxosServers[1].Start(2, 2)
-	waitForDecisionMajority(test, paxosServers, 1)
-	// Bring server back
-	paxosServers[0] = Make(paxosPorts[0], 0, nil, false)
-	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
-	// See if restarted server knows about missed instance
-	decided, value = paxosServers[0].Status(2)
-	_, trueValue = paxosServers[1].Status(2)
-	if !decided || (value != trueValue) {
-		test.Fatalf("Restarted server did not learn about missed instance without being poked")
-	}
-	fmt.Printf("\n\tPassed")
 }
 
 // Test that instances are not forgotten when majority partition is restarted
@@ -372,20 +349,20 @@ func TestFilePersistencePartition(test *testing.T) {
 	waitForDecisionMajority(test, paxosServers, 0)
 	_, decidedValue := paxosServers[0].Status(0)
 	// Kill the servers in the majority partition
-	paxosServers[0].Kill()
-	paxosServers[1].Kill()
-	paxosServers[2].Kill()
+	paxosServers[0].KillSaveDisk()
+	paxosServers[1].KillSaveDisk()
+	paxosServers[2].KillSaveDisk()
 	time.Sleep(1 * time.Second)
 	// Start instance in minority
 	paxosServers[3].Start(0, 1)
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	// Bring majority back
 	paxosServers[0] = Make(paxosPorts[0], 0, nil, false)
 	paxosServers[1] = Make(paxosPorts[1], 1, nil, false)
 	paxosServers[2] = Make(paxosPorts[2], 2, nil, false)
 	// Check that old value is forced when partition heals
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
-	waitForDecisionMajority(test, paxosServers, 0)
+	waitForDecision(test, paxosServers, 0, numServers)
 	_, newValue := paxosServers[3].Status(0)
 	if decidedValue != newValue {
 		test.Fatalf("Decided value changed when majority partition restarted")
@@ -434,14 +411,17 @@ func TestFilePersistenceAllRestart(test *testing.T) {
 		paxosServers[i].Done(0)
 	}
 	// Get agreement on some more instances
-	paxosServers[1].Start(1, 1)
-	paxosServers[2].Start(2, 2)
-	waitForDecision(test, paxosServers, 1, numServers)
-	waitForDecision(test, paxosServers, 2, numServers)
+	// Let all servers be proposers in case done messages are piggybacked
+	for i := 0; i < numServers; i++ {
+		paxosServers[i].Start(i+1, i+1)
+	}
+	for i := 0; i < numServers; i++ {
+		waitForDecision(test, paxosServers, i+1, numServers)
+	}
 	_, decidedValue := paxosServers[2].Status(0)
 	// Kill all servers
 	for i := 0; i < numServers; i++ {
-		paxosServers[i].Kill()
+		paxosServers[i].KillSaveDisk()
 	}
 	time.Sleep(2 * time.Second)
 	// Restart all servers
@@ -451,8 +431,11 @@ func TestFilePersistenceAllRestart(test *testing.T) {
 		min := paxosServers[i].Min()
 		max := paxosServers[i].Max()
 		_, recoveredValue := paxosServers[i].Status(0)
-		if min != 0 || max != 2 {
-			test.Fatalf("Restarted servers forgot instances")
+		if min != 0 {
+			test.Fatalf("Restarted server %v has min %v, expected %v", i, min, 0)
+		}
+		if max != numServers {
+			test.Fatalf("Restarted server %v has max %v, expected %v", i, max, numServers)
 		}
 		if recoveredValue != decidedValue {
 			test.Fatalf("Restarted server forgot decided value")
@@ -463,16 +446,99 @@ func TestFilePersistenceAllRestart(test *testing.T) {
 	// Call Done on server that was left out before
 	paxosServers[0].Done(0)
 	// Get agreement on new instance
-	paxosServers[0].Start(0, 3)
-	waitForDecision(test, paxosServers, 0, numServers)
+	// Let everyone be a propose in case Done is piggybacked on replies
+	for i := 0; i < numServers; i++ {
+		paxosServers[i].Start(i+numServers+1, i+numServers+1)
+	}
+	for i := 0; i < numServers; i++ {
+		waitForDecision(test, paxosServers, i+numServers+1, numServers)
+	}
 	// Check that Min advanced
 	for i := 0; i < numServers; i++ {
 		min := paxosServers[i].Min()
 		if min != 1 {
-			test.Fatalf("Restarted servers did not remember their Done values so Min did not advance")
+			test.Fatalf("Restarted server %v did not remember their Done values so Min did not advance (got min %v, expected %v)", i, min, 1)
 		}
 	}
 
+	fmt.Printf("\n\tPassed")
+}
+
+// Test that instances ask other peers for missed instances
+func TestFilePersistenceRecovery(test *testing.T) {
+	if onlyBenchmarks || !runNewTests {
+		return
+	}
+	runtime.GOMAXPROCS(4)
+
+	tag := "persistence"
+	const numServers = 5
+	var paxosServers []*Paxos = make([]*Paxos, numServers)
+	defer cleanup(paxosServers)
+	defer cleanPrivatePorts(tag, numServers)
+
+	// Create ports for servers
+	var paxosPorts [][]string = make([][]string, numServers)
+	for i := 0; i < numServers; i++ {
+		paxosPorts[i] = make([]string, numServers)
+		for j := 0; j < numServers; j++ {
+			if j == i {
+				// Create actual server port for myself
+				paxosPorts[i][i] = makePort(tag, i)
+			} else {
+				// Create port that does nothing until a hard link is established by calling partitionServer()
+				paxosPorts[i][j] = makePrivatePort(tag, i, j)
+			}
+		}
+		paxosServers[i] = Make(paxosPorts[i], i, nil, false)
+	}
+	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})
+
+	fmt.Printf("\nTest Persistence Recovery, single failure, poke restarted server ...")
+	// Put all servers in the same partition
+	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
+	// Get agreement on an instance (only wait for majority)
+	paxosServers[0].Start(0, 0)
+	waitForDecisionMajority(test, paxosServers, 0)
+	// Kill one server, make sure it stops
+	paxosServers[0].KillSaveDisk()
+	time.Sleep(1 * time.Second)
+	// Get agreement on another instance
+	paxosServers[1].Start(1, 1)
+	waitForDecisionMajority(test, paxosServers, 1)
+	// Bring server back
+	paxosServers[0] = Make(paxosPorts[0], 0, nil, false)
+	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
+	// Get agreement on first instance again (poke restarted server)
+	paxosServers[0].Start(0, 1)
+	waitForDecision(test, paxosServers, 0, numServers)
+	// See if restarted server knows about second isntance
+	decided, value := paxosServers[0].Status(1)
+	_, trueValue := paxosServers[1].Status(1)
+	if !decided || (value != trueValue) {
+		test.Fatalf("Restarted server did not learn about missed instance even after being poked")
+	}
+
+	fmt.Printf("\n\t... Passed")
+	// Do it again but without poking the restarted server
+	// (see if it automatically catches itself up on startup - this is needed for shardmaster query to be up to date)
+	fmt.Printf("\nTest Persistence Recovery, single failure, no poke ...")
+
+	// Kill one server, make sure it stops
+	paxosServers[0].KillSaveDisk()
+	time.Sleep(1 * time.Second)
+	// Get agreement on another instance
+	paxosServers[1].Start(2, 2)
+	waitForDecisionMajority(test, paxosServers, 1)
+	// Bring server back
+	paxosServers[0] = Make(paxosPorts[0], 0, nil, false)
+	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
+	// See if restarted server knows about missed instance
+	decided, value = paxosServers[0].Status(2)
+	_, trueValue = paxosServers[1].Status(2)
+	if !decided || (value != trueValue) {
+		test.Fatalf("Restarted server did not learn about missed instance without being poked")
+	}
 	fmt.Printf("\n\tPassed")
 }
 
@@ -682,7 +748,7 @@ func TestFileForget(test *testing.T) {
 // Test a lot of forgetting of sequences
 // Unreliable communications
 // TODO make this actually test something?
-func TestFileManyForgetUnreliable(test *testing.T) {
+func TestFileForgetManyUnreliable(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
@@ -698,7 +764,7 @@ func TestFileManyForgetUnreliable(test *testing.T) {
 		paxosPorts[i] = makePort("forgetMany", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil, false )
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 		paxosServers[i].unreliable = true
 	}
 
@@ -846,7 +912,7 @@ func TestFileRPCCountRegular(test *testing.T) {
 		paxosPorts[i] = makePort("count", i)
 	}
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts, i, nil, false )
+		paxosServers[i] = Make(paxosPorts, i, nil, false)
 	}
 
 	numInstances := 5
@@ -905,7 +971,7 @@ func TestFileRPCCountRegular(test *testing.T) {
 
 // Check that RPC counts aren't too high
 func TestFileRPCCountPrePrepare(test *testing.T) {
-	if onlyBenchmarks || !runOldTests {
+	if onlyBenchmarks || !runNewTests {
 		return
 	}
 	runtime.GOMAXPROCS(4)

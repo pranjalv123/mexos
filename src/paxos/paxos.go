@@ -31,31 +31,69 @@ import "math/rand"
 import "time"
 import "strconv"
 
+import "github.com/jmhodges/levigo"
+import "encoding/gob"
+import "bytes"
+
 const startport = 2100
 const printRPCerrors = false
+const persistent = true
 
+const Debug = 0
+const DebugPersist = 0
+
+func (px *Paxos) DPrintf(format string, a ...interface{}) (n int, err error) {
+	if Debug > 0 {
+		fmt.Printf(format, a...)
+	}
+	return
+}
+
+func (px *Paxos) DPrintfPersist(format string, a ...interface{}) (n int, err error) {
+	if DebugPersist > 0 {
+		fmt.Printf(format, a...)
+	}
+	return
+}
+
+// Structure for a proposal status
+// Will be written to disk for each sequence
+// (note Paxos persistence requires writing Np, Na, and Va so using Proposal just has an extra bool)
 type Proposal struct {
-	prepare int
-	accept  int
-	value   interface{}
-	decided bool
+	Prepare int
+	Accept  int
+	Value   interface{}
+	Decided bool
 }
 
 type Paxos struct {
-	mu           sync.Mutex
-	l            net.Listener
-	dead         bool
-	unreliable   bool
-	network      bool
-	deaf         bool
-	rpcCount     int
-	peers        []string
-	reachable    []bool
-	me           int // index into peers[]
+	mu   sync.Mutex
+	l    net.Listener
+	dead bool
+
+	// Paxos state
 	instances    map[int]Proposal
 	maxInstance  int
 	done         map[int]int
 	doneChannels map[int]chan bool
+
+	// Networking stuff
+	unreliable bool
+	network    bool
+	deaf       bool
+	rpcCount   int
+	reachable  []bool
+	peers      []string
+	me         int // index into peers[]
+
+	// Persistence stuff
+	dbReadOptions  *levigo.ReadOptions
+	dbWriteOptions *levigo.WriteOptions
+	dbOpts         *levigo.Options
+	dbName         string
+	db             *levigo.DB
+	dbLock         sync.Mutex
+	dbMaxInstance  int
 }
 
 type PrepareArgs struct {
@@ -109,10 +147,10 @@ type DecideReply struct {
 // please use call() to send all RPCs, in client.go and server.go.
 // please do not change this function.
 //
-func (px *Paxos) callWrap(srv string, name string, args interface{}, 
+func (px *Paxos) callWrap(srv string, name string, args interface{},
 	reply interface{}) bool {
 	//check if unreachable, for partition tests
-	for i,p := range px.peers {
+	for i, p := range px.peers {
 		if p == srv && !px.reachable[i] {
 			return false
 		}
@@ -120,7 +158,7 @@ func (px *Paxos) callWrap(srv string, name string, args interface{},
 	return call(srv, name, args, reply, px.network)
 }
 
-func call(srv string, name string, args interface{}, reply interface{}, 
+func call(srv string, name string, args interface{}, reply interface{},
 	network bool) bool {
 	if network {
 		c, err := rpc.Dial("tcp", srv)
@@ -165,6 +203,8 @@ func call(srv string, name string, args interface{}, reply interface{},
 	}
 }
 
+// Wrapper for calling prepare, accept, or decide
+// Uses local function if calling myself, otherwise uses RPC
 func (px *Paxos) callAcceptor(index int, name string, args interface{}, reply interface{}) bool {
 	if index == px.me {
 		if name == "Paxos.Prepare" {
@@ -178,30 +218,38 @@ func (px *Paxos) callAcceptor(index int, name string, args interface{}, reply in
 	return px.callWrap(px.peers[index], name, args, reply)
 }
 
+// Get the instance of the given sequence number
+// If haven't heard about it, creats a new instance for that sequence
+// Also updates px.maxInstance
 func (px *Paxos) getInstance(seq int) Proposal {
-	px.mu.Lock()
+	// Load instance from memory if available
+	// otherwise look in database
 	if _, ok := px.instances[seq]; !ok {
-		px.instances[seq] = Proposal{-1, -1, nil, false}
+		px.instances[seq] = px.dbGetInstance(seq)
 	} else {
 		if seq > px.maxInstance {
 			px.maxInstance = seq
 		}
 	}
 	prop := px.instances[seq]
-	px.mu.Unlock()
 	return prop
 }
 
+// Continually check if old instances can be deleted
+// Note that Min() actually processes the Done messages
 func (px *Paxos) doneCollector() {
-	oldMin := -1
+	oldMin := -1 // Index of highest instance that has been deleted already
 	for !px.dead {
+		// Find out min instance to preserve
 		min := px.Min()
+		// Delete any instances not already deleted
 		if min > oldMin {
 			px.mu.Lock()
 			for k := range px.instances {
 				if k < min {
 					px.instances[k] = Proposal{-1, -1, nil, false}
 					delete(px.instances, k)
+					px.dbDeleteInstance(k)
 				}
 			}
 			px.mu.Unlock()
@@ -211,36 +259,38 @@ func (px *Paxos) doneCollector() {
 	}
 }
 
+// Respond to a Prepare request
 func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 	px.mu.Lock()
-	if _, ok := px.instances[args.Instance]; !ok {
-		px.instances[args.Instance] = Proposal{-1, -1, nil, false}
-		if args.Instance > px.maxInstance {
-			px.maxInstance = args.Instance
-		}
-	}
-	prop := px.instances[args.Instance]
+	px.DPrintf("\n%v: Received prepare for sequence %v", px.me, args.Instance)
+	prop := px.getInstance(args.Instance)
 	reply.Err = true
 	reply.Done = px.done[px.me]
 
-	if args.PID > prop.prepare {
-		px.instances[args.Instance] = Proposal{args.PID, prop.accept, prop.value, prop.decided}
+	// Check if proposal number is high enough
+	if args.PID > prop.Prepare {
+		px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
+		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
 		reply.Err = false
-		reply.PID = prop.accept
-		reply.Value = prop.value
+		reply.PID = prop.Accept
+		reply.Value = prop.Value
 	}
 	px.mu.Unlock()
 	return nil
 }
 
+// Respond to an Accept request
 func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 	px.mu.Lock()
-	prop := px.instances[args.Instance]
+	px.DPrintf("\n%v: Received accept for sequence %v", px.me, args.Instance)
+	// Create instance if needed (note prepare request may have been lost in network)
+	prop := px.getInstance(args.Instance)
 	reply.Err = true
 	reply.Done = px.done[px.me]
 
-	if args.PID >= prop.prepare {
-		px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, prop.decided}
+	if args.PID >= prop.Prepare {
+		px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, prop.Decided}
+		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
 		reply.Err = false
 		reply.PID = args.PID
 	}
@@ -248,12 +298,20 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 	return nil
 }
 
+// Respond to a Decide request
 func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 	px.mu.Lock()
+	px.DPrintf("\n%v: Received decide for sequence %v", px.me, args.Instance)
 	px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, true}
+	px.dbWriteInstance(args.Instance, px.instances[args.Instance])
+	if args.Instance > px.maxInstance {
+		px.maxInstance = args.Instance
+	}
 	px.mu.Unlock()
 	reply.Err = false
 	reply.Done = px.done[px.me]
+	// If someone is listening for this sequence to finish, let them know
+	// (used for benchmark speed tests to avoid sleeping)
 	if channel, exists := px.doneChannels[args.Instance]; exists {
 		channel <- true
 		delete(px.doneChannels, args.Instance)
@@ -261,30 +319,39 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 	return nil
 }
 
+// Propose a value for a sequence (will do prepare, accept, decide)
 func (px *Paxos) Propose(seq int, v interface{}) {
+	px.DPrintf("\n%v: Starting proposal for sequence %v", px.me, seq)
+	px.mu.Lock()
 	prop := px.getInstance(seq)
+	px.mu.Unlock()
 	nPID := 0
-	for !prop.decided && !px.dead {
+	for !prop.Decided && !px.dead {
 		total := len(px.peers)
 		hPID := -1
 		hValue := v
 		ok := 0
 
+		// Send Prepare requests to everyone (and record piggybacked done response)
+		px.DPrintf("\n%v: Sending prepare for sequence %v", px.me, seq)
 		for i := 0; i < len(px.peers); i++ {
 			args := &PrepareArgs{seq, nPID}
 			var reply PrepareReply
 			if px.callAcceptor(i, "Paxos.Prepare", args, &reply) && !reply.Err {
-				px.done[i] = reply.Done
+				px.recordDone(i, reply.Done)
 				ok += 1
+				// Record highest prepare number / value among resonses
 				if reply.PID > hPID {
 					hPID = reply.PID
 					hValue = reply.Value
 				}
 			}
 		}
-
+		// If prepare was rejected, start over with new proposal value
 		if ok <= total/2 {
+			px.mu.Lock()
 			prop = px.getInstance(seq)
+			px.mu.Unlock()
 			if hPID > nPID {
 				nPID = hPID + 1
 			} else {
@@ -293,18 +360,22 @@ func (px *Paxos) Propose(seq int, v interface{}) {
 			continue
 		}
 
+		// Send Accept requests to everyone (and record piggybacked done response)
+		px.DPrintf("\n%v: Sending accept for sequence %v", px.me, seq)
 		ok = 0
 		for i := 0; i < len(px.peers); i++ {
 			args := &AcceptArgs{seq, nPID, hValue}
 			var reply AcceptReply
 			if px.callAcceptor(i, "Paxos.Accept", args, &reply) && !reply.Err {
-				px.done[i] = reply.Done
+				px.recordDone(i, reply.Done)
 				ok += 1
 			}
 		}
-
+		// If accept was rejected, start over with new proposal value
 		if ok <= total/2 {
+			px.mu.Lock()
 			prop = px.getInstance(seq)
+			px.mu.Unlock()
 			if hPID > nPID {
 				nPID = hPID + 1
 			} else {
@@ -313,11 +384,13 @@ func (px *Paxos) Propose(seq int, v interface{}) {
 			continue
 		}
 
+		// Send Decided messages to everyone (and record piggybacked done response)
+		px.DPrintf("\n%v: Sending decided for sequence %v", px.me, seq)
 		for i := 0; i < len(px.peers); i++ {
 			args := &DecideArgs{seq, nPID, hValue}
 			var reply DecideReply
 			if px.callAcceptor(i, "Paxos.Decide", args, &reply) && !reply.Err {
-				px.done[i] = reply.Done
+				px.recordDone(i, reply.Done)
 			}
 		}
 		break
@@ -342,7 +415,7 @@ func (px *Paxos) Start(seq int, v interface{}) {
 // see the comments for Min() for more explanation.
 //
 func (px *Paxos) Done(seq int) {
-	px.done[px.me] = seq
+	px.recordDone(px.me, seq)
 }
 
 //
@@ -400,23 +473,313 @@ func (px *Paxos) Min() int {
 // it should not contact other Paxos peers.
 //
 func (px *Paxos) Status(seq int) (bool, interface{}) {
+	px.mu.Lock()
 	prop := px.getInstance(seq)
-	return prop.decided, prop.value
+	px.mu.Unlock()
+	return prop.Decided, prop.Value
 }
 
+// Record a "done" value from a peer
+func (px *Paxos) recordDone(peer int, val int) {
+	px.mu.Lock()
+	defer px.mu.Unlock()
+	px.DPrintf("\n%v: recording done %v, %v", px.me, peer, val)
+	oldVal := px.done[peer]
+	if val > oldVal {
+		px.done[peer] = val
+		px.dbWriteDone()
+	}
+}
+
+// Set a channel which can be used to listen for when a sequence is decided
+// Used by benchmark speed tests to avoid sleep times
 func (px *Paxos) SetDoneChannel(seq int, channel chan bool) {
 	px.doneChannels[seq] = channel
 }
 
 //
 // tell the peer to shut itself down.
-// for testing.
-// please do not change this function.
+// deletes disk contents
 //
 func (px *Paxos) Kill() {
+	// Just double check that Kill isn't called multiple times
+	// (trying to close px.db multiple times causes a panic)
+	if px.dead {
+		return
+	}
+
+	// Kill the server
+	px.KillSaveDisk()
+
+	// Destroy the database
+	if persistent {
+		px.DPrintfPersist("\n%v: Destroying database... ", px.me)
+		err := levigo.DestroyDatabase(px.dbName, px.dbOpts)
+		if err != nil {
+			px.DPrintfPersist("\terror")
+		} else {
+			px.DPrintfPersist("\tsuccess")
+		}
+	}
+}
+
+func (px *Paxos) KillSaveDisk() {
+	// Just double check that Kill isn't called multiple times
+	// (trying to close px.db multiple times causes a panic)
+	if px.dead {
+		return
+	}
+	// Kill the server
+	px.DPrintf("\n%v: Killing the server", px.me)
 	px.dead = true
 	if px.l != nil {
 		px.l.Close()
+	}
+	// Close the database
+	if persistent {
+		px.dbLock.Lock()
+		px.db.Close()
+		px.dbLock.Unlock()
+	}
+}
+
+// Writes the given instance to the database
+func (px *Paxos) dbWriteInstance(seq int, toWrite Proposal) {
+	if !persistent {
+		return
+	}
+	px.dbLock.Lock()
+	defer px.dbLock.Unlock()
+	if px.dead {
+		return
+	}
+
+	toPrint := ""
+	toPrint += fmt.Sprintf("\n%v: Writing instance %v to database... ", px.me, seq)
+	// Encode the instance into a byte array
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
+	err := enc.Encode(toWrite)
+	if err != nil {
+		px.DPrintfPersist("\terror encoding: %s", fmt.Sprint(err))
+	} else {
+		// Write the state to the database
+		key := "instance_" + strconv.Itoa(seq)
+		err := px.db.Put(px.dbWriteOptions, []byte(key), buffer.Bytes())
+		if err != nil {
+			toPrint += fmt.Sprintf("\terror writing to database")
+		} else {
+			toPrint += fmt.Sprintf("\tsuccess")
+			// Record max instance
+			if seq > px.dbMaxInstance {
+				px.dbWriteMaxInstance(seq)
+			}
+		}
+	}
+	px.DPrintfPersist(toPrint)
+}
+
+// Tries to get the desired instance from the database
+// If it doesn't exist, returns empty Proposal
+func (px *Paxos) dbGetInstance(toGet int) Proposal {
+	if !persistent {
+		return Proposal{-1, -1, nil, false}
+	}
+	px.dbLock.Lock()
+	defer px.dbLock.Unlock()
+	if px.dead {
+		return Proposal{-1, -1, nil, false}
+	}
+
+	toPrint := ""
+	toPrint += fmt.Sprintf("\n%v: Reading instance %v from database... ", px.me, toGet)
+	// Read entry from database if it exists
+	key := "instance_" + strconv.Itoa(toGet)
+	entryBytes, err := px.db.Get(px.dbReadOptions, []byte(key))
+
+	// Decode the entry if it exists, otherwise return empty
+	if err == nil && len(entryBytes) > 0 {
+		toPrint += "\tDecoding entry... "
+		buffer := *bytes.NewBuffer(entryBytes)
+		decoder := gob.NewDecoder(&buffer)
+		var entryDecoded Proposal
+		err = decoder.Decode(&entryDecoded)
+		if err != nil {
+			toPrint += "\terror"
+		} else {
+			toPrint += "\tsuccess"
+			px.DPrintfPersist(toPrint)
+			return entryDecoded
+		}
+	} else {
+		toPrint += fmt.Sprintf("\tNo entry found in database %s", fmt.Sprint(err))
+		px.DPrintfPersist(toPrint)
+		return Proposal{-1, -1, nil, false}
+	}
+
+	px.DPrintfPersist(toPrint)
+	return Proposal{-1, -1, nil, false}
+}
+
+// Deletes the given instance from the database
+func (px *Paxos) dbDeleteInstance(seq int) {
+	if !persistent {
+		return
+	}
+	px.dbLock.Lock()
+	defer px.dbLock.Unlock()
+	if px.dead {
+		return
+	}
+
+	px.DPrintfPersist("\n%v: Deleting instance %v from the database... ", px.me, seq)
+	// Delete entry if it exists
+	key := "instance_" + strconv.Itoa(seq)
+	err := px.db.Delete(px.dbWriteOptions, []byte(key))
+	if err != nil {
+		px.DPrintfPersist("\terror")
+	} else {
+		px.DPrintfPersist("\tsuccess")
+	}
+}
+
+// Write the "done" state to the database
+func (px *Paxos) dbWriteDone() {
+	if !persistent {
+		return
+	}
+	px.dbLock.Lock()
+	defer px.dbLock.Unlock()
+	if px.dead {
+		return
+	}
+
+	px.DPrintfPersist("\n%v: Writing 'done' state to database... ", px.me)
+	// Encode the "done" map into a byte array
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
+	err := enc.Encode(px.done)
+	if err != nil {
+		px.DPrintfPersist("\terror encoding")
+	} else {
+		// Write the state to the database
+		err := px.db.Put(px.dbWriteOptions, []byte("done"), buffer.Bytes())
+		if err != nil {
+			px.DPrintfPersist("\terror writing to database")
+		} else {
+			px.DPrintfPersist("\tsuccess %v", px.done)
+		}
+	}
+}
+
+// Writes the persisted max instance number to the database
+func (px *Paxos) dbWriteMaxInstance(max int) {
+	if !persistent {
+		return
+	}
+	if px.dead {
+		return
+	}
+
+	toPrint := ""
+	toPrint += fmt.Sprintf("\n%v: Writing max instance %v to database... ", px.me, max)
+	// Encode the number into a byte array
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
+	err := enc.Encode(max)
+	if err != nil {
+		px.DPrintfPersist("\terror encoding: %s", fmt.Sprint(err))
+	} else {
+		// Write the state to the database
+		key := "dbMaxInstance"
+		err := px.db.Put(px.dbWriteOptions, []byte(key), buffer.Bytes())
+		if err != nil {
+			toPrint += fmt.Sprintf("\terror writing to database")
+		} else {
+			toPrint += fmt.Sprintf("\tsuccess")
+			px.dbMaxInstance = max
+		}
+	}
+	px.DPrintfPersist(toPrint)
+}
+
+// Initialize database for persistence
+// and load any previously written "done" state
+func (px *Paxos) dbInit() {
+	if !persistent {
+		return
+	}
+	px.dbLock.Lock()
+	defer px.dbLock.Unlock()
+	px.mu.Lock()
+	defer px.mu.Unlock()
+	if px.dead {
+		return
+	}
+
+	px.DPrintfPersist("\n%v: Initializing database", px.me)
+
+	// Register Proposal struct since we will encode/decode it using gob
+	// Calling this probably isn't necessary, but being explicit for now
+	gob.Register(Proposal{})
+
+	// Open database (create it if it doesn't exist)
+	px.dbOpts = levigo.NewOptions()
+	px.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
+	px.dbOpts.SetCreateIfMissing(true)
+	px.dbName = "/home/ubuntu/mexos/src/paxos/persist/paxosDB_" + strconv.Itoa(px.me)
+	px.DPrintfPersist("\n\t%v: DB Name: %s", px.me, px.dbName)
+	var err error
+	px.db, err = levigo.Open(px.dbName, px.dbOpts)
+	if err != nil {
+		px.DPrintfPersist("\n\t%v: Error opening database! \n\t%s", px.me, fmt.Sprint(err))
+	} else {
+		px.DPrintfPersist("\n\t%v: Database opened successfully", px.me)
+	}
+
+	// Create options for reading/writing entries
+	px.dbReadOptions = levigo.NewReadOptions()
+	px.dbWriteOptions = levigo.NewWriteOptions()
+
+	// Read Paxos "done" state from database if it exists
+	doneBytes, err := px.db.Get(px.dbReadOptions, []byte("done"))
+	if err == nil && len(doneBytes) > 0 {
+		// Decode the "done" state
+		px.DPrintfPersist("\n\t%v: Decoding stored 'done' state... ", px.me)
+		buffer := *bytes.NewBuffer(doneBytes)
+		decoder := gob.NewDecoder(&buffer)
+		var doneDecoded map[int]int
+		err = decoder.Decode(&doneDecoded)
+		if err != nil {
+			px.DPrintfPersist("\terror decoding: %s", fmt.Sprint(err))
+		} else {
+			for peer, doneVal := range doneDecoded {
+				px.done[peer] = doneVal
+			}
+			px.DPrintfPersist("\tsuccess %v --- %v", doneDecoded, px.done)
+		}
+	} else {
+		px.DPrintfPersist("\n\t%v: No stored 'done' state to load", px.me)
+	}
+
+	// Read max instance from database if it exists
+	px.dbMaxInstance = -1
+	maxInstanceBytes, err := px.db.Get(px.dbReadOptions, []byte("dbMaxInstance"))
+	if err == nil && len(maxInstanceBytes) > 0 {
+		// Decode the max instance
+		px.DPrintfPersist("\n\t%v: Decoding max instance... ", px.me)
+		bufferMax := *bytes.NewBuffer(maxInstanceBytes)
+		decoder := gob.NewDecoder(&bufferMax)
+		var maxDecoded int
+		err = decoder.Decode(&maxDecoded)
+		if err != nil {
+			px.DPrintfPersist("\terror decoding: %s", fmt.Sprint(err))
+		} else {
+			px.maxInstance = maxDecoded
+			px.DPrintfPersist("\tsuccess")
+		}
+	} else {
+		px.DPrintfPersist("\n\t%v: No stored max instance to load", px.me)
 	}
 }
 
@@ -427,14 +790,17 @@ func (px *Paxos) Kill() {
 //
 func Make(peers []string, me int, rpcs *rpc.Server, network bool) *Paxos {
 	px := &Paxos{}
+	// Network stuff
 	px.peers = peers
+	px.me = me
+	px.network = network
 	px.reachable = make([]bool, len(px.peers))
 	for i, _ := range px.peers {
 		px.reachable[i] = true
 	}
-	px.me = me
 	px.deaf = false
-	px.network = network
+
+	// Paxos state
 	px.instances = make(map[int]Proposal)
 	px.maxInstance = -1
 	px.done = make(map[int]int)
@@ -442,6 +808,9 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool) *Paxos {
 		px.done[i] = -1
 	}
 	px.doneChannels = make(map[int]chan bool)
+
+	// Persistence stuff
+	px.dbInit()
 
 	go px.doneCollector()
 
@@ -530,10 +899,6 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool) *Paxos {
 	return px
 }
 
-type NullWriter int
-
-func (NullWriter) Write([]byte) (int, error) { return 0, nil }
-
 func enableLog() {
 	log.SetOutput(os.Stderr)
 }
@@ -541,3 +906,7 @@ func enableLog() {
 func disableLog() {
 	log.SetOutput(new(NullWriter))
 }
+
+type NullWriter int
+
+func (NullWriter) Write([]byte) (int, error) { return 0, nil }
