@@ -25,14 +25,18 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 }
 
 type ShardMaster struct {
-	mu         sync.Mutex
-	l          net.Listener
+	mu sync.Mutex
+	l  net.Listener
+
+	// Network stuff
 	me         int
 	dead       bool // for testing
 	deaf       bool // for testing
 	unreliable bool // for testing
-	px         *paxos.Paxos
 	network    bool
+
+	// Shardmaster state
+	px           *paxos.Paxos
 	configs      []Config // indexed by config num
 	processedSeq int
 	maxConfig    int
@@ -45,6 +49,7 @@ type Op struct {
 	Shard   int
 }
 
+// Evenly distribute the given shards over the given groups
 func (sm *ShardMaster) balance(gids []int64, shards [NShards]int64) [NShards]int64 {
 	DPrintf("%d) Balance with %d and %d\n", sm.me, gids, shards)
 	expectedGPS := (NShards / len(gids))
@@ -55,9 +60,12 @@ func (sm *ShardMaster) balance(gids []int64, shards [NShards]int64) [NShards]int
 	num := make(map[int64]int)
 	var over []int
 
+	// Copy old shard distribution
+	// and check which groups have too many shards
 	for k, v := range shards {
 		num[v] = num[v] + 1
 		newShards[k] = v
+		// If group no longer exists or is overloaded, mark shard as over
 		found := false
 		for _, v2 := range gids {
 			if v == v2 {
@@ -69,13 +77,15 @@ func (sm *ShardMaster) balance(gids []int64, shards [NShards]int64) [NShards]int
 		}
 	}
 	DPrintf("%d %d\n", len(over), expectedGPS)
-	for _, k := range gids {
-		if k == 0 {
+
+	// Move shards from overloaded groups to underloaded groups
+	for _, v := range gids {
+		if v == 0 {
 			continue
 		}
-		for num[k] < expectedGPS && len(over) > 0 {
-			newShards[over[0]] = k
-			num[k] += 1
+		for num[v] < expectedGPS && len(over) > 0 {
+			newShards[over[0]] = v
+			num[v] += 1
 			over = over[1:len(over)]
 		}
 	}
@@ -390,7 +400,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 			log.Fatal("listen error: ", e)
 		}
 		sm.l = l
-	} else {	
+	} else {
 		os.Remove(servers[me])
 		l, e := net.Listen("unix", servers[me])
 		if e != nil {

@@ -215,7 +215,18 @@ func (px *Paxos) callAcceptor(index int, name string, args interface{}, reply in
 			return px.Decide(args.(*DecideArgs), reply.(*DecideReply)) == nil
 		}
 	}
-	return px.callWrap(px.peers[index], name, args, reply)
+	if name == "Paxos.Decide" {
+		// Retry call until it succeeds
+		for !px.dead {
+			if px.callWrap(px.peers[index], name, args, reply) {
+				return true
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+		return false
+	} else {
+		return px.callWrap(px.peers[index], name, args, reply)
+	}
 }
 
 // Get the instance of the given sequence number
@@ -321,7 +332,7 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 
 // Propose a value for a sequence (will do prepare, accept, decide)
 func (px *Paxos) Propose(seq int, v interface{}) {
-	DPrintf("\n%v: Starting proposal for sequence %v", px.me, seq)
+	DPrintf("\n%v: Starting proposal for instance %v", px.me, seq)
 	px.mu.Lock()
 	prop := px.getInstance(seq)
 	px.mu.Unlock()
@@ -331,7 +342,6 @@ func (px *Paxos) Propose(seq int, v interface{}) {
 		hPID := -1
 		hValue := v
 		ok := 0
-
 		// Send Prepare requests to everyone (and record piggybacked done response)
 		DPrintf("\n%v: Sending prepare for sequence %v", px.me, seq)
 		for i := 0; i < len(px.peers); i++ {
@@ -340,7 +350,7 @@ func (px *Paxos) Propose(seq int, v interface{}) {
 			if px.callAcceptor(i, "Paxos.Prepare", args, &reply) && !reply.Err {
 				px.recordDone(i, reply.Done)
 				ok += 1
-				// Record highest prepare number / value among resonses
+				// Record highest prepare number / value among responses
 				if reply.PID > hPID {
 					hPID = reply.PID
 					hValue = reply.Value
@@ -388,10 +398,12 @@ func (px *Paxos) Propose(seq int, v interface{}) {
 		DPrintf("\n%v: Sending decided for sequence %v", px.me, seq)
 		for i := 0; i < len(px.peers); i++ {
 			args := &DecideArgs{seq, nPID, hValue}
-			var reply DecideReply
-			if px.callAcceptor(i, "Paxos.Decide", args, &reply) && !reply.Err {
-				px.recordDone(i, reply.Done)
-			}
+			go func(index int, args DecideArgs) {
+				var reply DecideReply
+				if px.callAcceptor(index, "Paxos.Decide", &args, &reply) && !reply.Err {
+					px.recordDone(index, reply.Done)
+				}
+			}(i, *args)
 		}
 		break
 	}

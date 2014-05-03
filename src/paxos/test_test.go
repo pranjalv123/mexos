@@ -7,6 +7,7 @@ import "os"
 import "time"
 import "fmt"
 import "math/rand"
+import "sync"
 
 const onlyBenchmarks = false
 const runOldTests = false
@@ -286,7 +287,7 @@ func TestFilePersistenceBasic(test *testing.T) {
 	}
 	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})
 
-	fmt.Printf("\nTest Persistence, single failure ...")
+	fmt.Printf("\nTest Persistence, single failure, save disk ...")
 	// Put all servers in the same partition
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
 	// Get agreement on an instance (only wait for majority)
@@ -308,7 +309,7 @@ func TestFilePersistenceBasic(test *testing.T) {
 		test.Fatalf("Restarted server did not remember first instance")
 	}
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 }
 
 // Test that instances are not forgotten when majority partition is restarted
@@ -1450,6 +1451,164 @@ func TestFileLots(test *testing.T) {
 	done = true
 	<-proposerDoneChannel
 	<-partitionDoneChannel
+	<-checkerDoneChannel
+
+	// Repair partitions, then check that all instances decided.
+	for i := 0; i < numServers; i++ {
+		paxosServers[i].unreliable = false
+	}
+	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
+
+	for i := 0; i < seq; i++ {
+		waitForDecisionMajority(test, paxosServers, i)
+	}
+
+	fmt.Printf("\n\tPassed\n\n")
+}
+
+func TestFilePersistenceLotsPartitionsRebootsUnreliable(test *testing.T) {
+	if onlyBenchmarks || !runNewTests {
+		return
+	}
+	runtime.GOMAXPROCS(4)
+
+	fmt.Printf("\nTest: Many requests, changing partitions, random reboots, unreliable ...")
+
+	tag := "lots"
+	const numServers = 5
+	var paxosServers []*Paxos = make([]*Paxos, numServers)
+	defer cleanup(paxosServers)
+	defer cleanPrivatePorts(tag, numServers)
+
+	// Make ports for servers
+	var paxosPorts [][]string = make([][]string, numServers)
+	for i := 0; i < numServers; i++ {
+		paxosPorts[i] = make([]string, numServers)
+		for j := 0; j < numServers; j++ {
+			if j == i {
+				// Make actual server port for myself
+				paxosPorts[i][i] = makePort(tag, i)
+			} else {
+				// Create port that does nothing until a hard link is established by calling partitionServer()
+				paxosPorts[i][j] = makePrivatePort(tag, i, j)
+			}
+		}
+		paxosServers[i] = Make(paxosPorts[i], i, nil, false)
+		paxosServers[i].unreliable = true
+	}
+	defer partitionServers(test, tag, numServers, []int{}, []int{}, []int{})
+	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
+
+	done := false
+	partitions := make([][]int, 3)
+	partitions[0] = []int{0, 1, 2, 3, 4}
+	var partitionLock sync.Mutex
+
+	// periodically reboot random servers
+	rebootDoneChannel := make(chan bool)
+	go func() {
+		defer func() { rebootDoneChannel <- true }()
+		for done == false {
+			// Randomly reboot a server with its disk contents
+			partitionLock.Lock()
+			toKill := rand.Int() % (numServers - 1)
+			paxosServers[toKill].KillSaveDisk()
+			time.Sleep(time.Duration(rand.Int63()%50) * time.Millisecond)
+
+			paxosServers[toKill] = Make(paxosPorts[toKill], toKill, nil, false)
+			paxosServers[toKill].unreliable = true
+			partitionServers(test, tag, numServers, partitions[0], partitions[1], partitions[2])
+			time.Sleep(time.Duration(rand.Int63()%50) * time.Millisecond)
+			partitionLock.Unlock()
+			time.Sleep(time.Duration(rand.Int63()%150) * time.Millisecond)
+		}
+	}()
+
+	// re-partition periodically
+	partitionDoneChannel := make(chan bool)
+	go func() {
+		defer func() { partitionDoneChannel <- true }()
+		for done == false {
+			// Randomly assign each server to a partition
+			partitionLock.Lock()
+			for i := 0; i < 3; i++ {
+				partitions[i] = []int{}
+			}
+			for i := 0; i < numServers; i++ {
+				partition := (rand.Int() % 3)
+				partitions[partition] = append(partitions[partition], i)
+			}
+			partitionServers(test, tag, numServers, partitions[0], partitions[1], partitions[2])
+			partitionLock.Unlock()
+			time.Sleep(time.Duration(rand.Int63()%250) * time.Millisecond)
+		}
+	}()
+
+	seq := 0
+
+	// periodically start a new instance
+	proposerDoneChannel := make(chan bool)
+	go func() {
+		defer func() { proposerDoneChannel <- true }()
+		for done == false {
+			// How many instances are in progress?
+			decidedCount := 0
+			for i := 0; i < seq; i++ {
+				if numDecided(test, paxosServers, i) == numServers {
+					decidedCount++
+				}
+			}
+			// If less than 10 active sequences, start a new one (on every server)
+			if seq-decidedCount < 10 {
+				for i := 0; i < numServers; i++ {
+					paxosServers[i].Start(seq, rand.Int()%10)
+				}
+				seq++
+			}
+			time.Sleep(time.Duration(rand.Int63()%300) * time.Millisecond)
+		}
+	}()
+
+	// periodically check that decisions are consistent
+	checkerDoneChannel := make(chan bool)
+	go func() {
+		defer func() { checkerDoneChannel <- true }()
+		for done == false {
+			// Check that all sequences are consistent
+			for i := 0; i < seq; i++ {
+				numDecided(test, paxosServers, i)
+			}
+			time.Sleep(time.Duration(rand.Int63()%300) * time.Millisecond)
+		}
+	}()
+
+	// Run for a while and then kill the threads
+	duration := 20
+	fmt.Printf("   ")
+	if duration >= 10 {
+		fmt.Printf(" ")
+	}
+	for duration >= 0 {
+		toPrint := ""
+		for i := 0; i < 2; i++ {
+			toPrint += "\b"
+		}
+		if duration < 10 {
+			toPrint += " "
+		}
+		if duration > 0 {
+			toPrint += fmt.Sprintf("%v", duration)
+		} else {
+			toPrint += " "
+		}
+		fmt.Printf(toPrint)
+		duration--
+		time.Sleep(1 * time.Second)
+	}
+	done = true
+	<-proposerDoneChannel
+	<-partitionDoneChannel
+	<-rebootDoneChannel
 	<-checkerDoneChannel
 
 	// Repair partitions, then check that all instances decided.
