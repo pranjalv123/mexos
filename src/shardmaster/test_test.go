@@ -159,7 +159,7 @@ func TestFileBasic(test *testing.T) {
 	checkConfig(test, []int64{gid2}, masterClerk)
 	configs[5] = masterClerk.Query(-1)
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 
 	fmt.Printf("\nTest: Historical queries ...")
 
@@ -189,7 +189,7 @@ func TestFileBasic(test *testing.T) {
 		}
 	}
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 
 	fmt.Printf("\nTest: Move ...")
 	{
@@ -237,7 +237,7 @@ func TestFileBasic(test *testing.T) {
 		masterClerk.Leave(gid3)
 		masterClerk.Leave(gid4)
 	}
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 
 	fmt.Printf("\nTest: Concurrent leave/join ...")
 
@@ -260,7 +260,7 @@ func TestFileBasic(test *testing.T) {
 	}
 	checkConfig(test, gids, masterClerk)
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 
 	fmt.Printf("\nTest: Min advances after joins ...")
 
@@ -270,7 +270,7 @@ func TestFileBasic(test *testing.T) {
 		}
 	}
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 
 	fmt.Printf("\nTest: Minimal transfers after joins ...")
 
@@ -293,7 +293,7 @@ func TestFileBasic(test *testing.T) {
 		}
 	}
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 
 	fmt.Printf("\nTest: Minimal transfers after leaves ...")
 
@@ -315,7 +315,7 @@ func TestFileBasic(test *testing.T) {
 		}
 	}
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 }
 
 func TestFileUnreliable(test *testing.T) {
@@ -370,7 +370,7 @@ func TestFileUnreliable(test *testing.T) {
 	}
 	checkConfig(test, gids, masterClerk)
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 }
 
 func TestFileFreshQuery(test *testing.T) {
@@ -410,7 +410,7 @@ func TestFileFreshQuery(test *testing.T) {
 		test.Fatalf("Query(-1) produced a stale configuration")
 	}
 
-	fmt.Printf("\n\t... Passed\n\n")
+	fmt.Printf("\n\tPassed\n\n")
 	os.Remove(portx)
 }
 
@@ -449,7 +449,7 @@ func TestFilePersistence(test *testing.T) {
 	}
 	checkConfig(test, gids, masterClerk)
 	// Kill a server
-	shardMasterServers[0].Kill()
+	shardMasterServers[0].KillSaveDisk()
 
 	// Make some more configs
 	clerks[1].Leave(gids[1])
@@ -468,13 +468,13 @@ func TestFilePersistence(test *testing.T) {
 	}
 	checkConfig(test, gids, masterClerk)
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 
 	fmt.Printf("\nTest: All servers restart, know about past configs ...")
 
 	// Kill all servers
 	for i := 0; i < numServers; i++ {
-		shardMasterServers[i].Kill()
+		shardMasterServers[i].KillSaveDisk()
 	}
 	time.Sleep(1 * time.Second)
 
@@ -486,12 +486,12 @@ func TestFilePersistence(test *testing.T) {
 	for i := 0; i < numServers; i++ {
 		restartNum = clerks[i].Query(-1).Num
 		if restartNum != correctNum {
-			test.Fatalf("Restarted server %v did not learn about missed configs (knows up to %v, should know %v)", i, restartNum, correctNum)
+			test.Fatalf("Restarted server %v doesn't have old configs (knows up to %v, should know %v)", i, restartNum, correctNum)
 		}
 	}
 	checkConfig(test, gids, masterClerk)
 
-	fmt.Printf("\n\t... Passed\n\n")
+	fmt.Printf("\n\tPassed\n\n")
 }
 
 func BenchmarkJoinSpeed_____(benchmark *testing.B) {
