@@ -42,14 +42,14 @@ const persistent = true
 const Debug = 0
 const DebugPersist = 0
 
-func (px *Paxos) DPrintf(format string, a ...interface{}) (n int, err error) {
+func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
 		fmt.Printf(format, a...)
 	}
 	return
 }
 
-func (px *Paxos) DPrintfPersist(format string, a ...interface{}) (n int, err error) {
+func DPrintfPersist(format string, a ...interface{}) (n int, err error) {
 	if DebugPersist > 0 {
 		fmt.Printf(format, a...)
 	}
@@ -262,7 +262,7 @@ func (px *Paxos) doneCollector() {
 // Respond to a Prepare request
 func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 	px.mu.Lock()
-	px.DPrintf("\n%v: Received prepare for sequence %v", px.me, args.Instance)
+	DPrintf("\n%v: Received prepare for sequence %v", px.me, args.Instance)
 	prop := px.getInstance(args.Instance)
 	reply.Err = true
 	reply.Done = px.done[px.me]
@@ -282,7 +282,7 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 // Respond to an Accept request
 func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 	px.mu.Lock()
-	px.DPrintf("\n%v: Received accept for sequence %v", px.me, args.Instance)
+	DPrintf("\n%v: Received accept for sequence %v", px.me, args.Instance)
 	// Create instance if needed (note prepare request may have been lost in network)
 	prop := px.getInstance(args.Instance)
 	reply.Err = true
@@ -301,7 +301,7 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 // Respond to a Decide request
 func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 	px.mu.Lock()
-	px.DPrintf("\n%v: Received decide for sequence %v", px.me, args.Instance)
+	DPrintf("\n%v: Received decide for sequence %v", px.me, args.Instance)
 	px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, true}
 	px.dbWriteInstance(args.Instance, px.instances[args.Instance])
 	if args.Instance > px.maxInstance {
@@ -321,7 +321,7 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 
 // Propose a value for a sequence (will do prepare, accept, decide)
 func (px *Paxos) Propose(seq int, v interface{}) {
-	px.DPrintf("\n%v: Starting proposal for sequence %v", px.me, seq)
+	DPrintf("\n%v: Starting proposal for sequence %v", px.me, seq)
 	px.mu.Lock()
 	prop := px.getInstance(seq)
 	px.mu.Unlock()
@@ -333,7 +333,7 @@ func (px *Paxos) Propose(seq int, v interface{}) {
 		ok := 0
 
 		// Send Prepare requests to everyone (and record piggybacked done response)
-		px.DPrintf("\n%v: Sending prepare for sequence %v", px.me, seq)
+		DPrintf("\n%v: Sending prepare for sequence %v", px.me, seq)
 		for i := 0; i < len(px.peers); i++ {
 			args := &PrepareArgs{seq, nPID}
 			var reply PrepareReply
@@ -361,7 +361,7 @@ func (px *Paxos) Propose(seq int, v interface{}) {
 		}
 
 		// Send Accept requests to everyone (and record piggybacked done response)
-		px.DPrintf("\n%v: Sending accept for sequence %v", px.me, seq)
+		DPrintf("\n%v: Sending accept for sequence %v", px.me, seq)
 		ok = 0
 		for i := 0; i < len(px.peers); i++ {
 			args := &AcceptArgs{seq, nPID, hValue}
@@ -385,7 +385,7 @@ func (px *Paxos) Propose(seq int, v interface{}) {
 		}
 
 		// Send Decided messages to everyone (and record piggybacked done response)
-		px.DPrintf("\n%v: Sending decided for sequence %v", px.me, seq)
+		DPrintf("\n%v: Sending decided for sequence %v", px.me, seq)
 		for i := 0; i < len(px.peers); i++ {
 			args := &DecideArgs{seq, nPID, hValue}
 			var reply DecideReply
@@ -483,7 +483,7 @@ func (px *Paxos) Status(seq int) (bool, interface{}) {
 func (px *Paxos) recordDone(peer int, val int) {
 	px.mu.Lock()
 	defer px.mu.Unlock()
-	px.DPrintf("\n%v: recording done %v, %v", px.me, peer, val)
+	DPrintf("\n%v: recording done %v, %v", px.me, peer, val)
 	oldVal := px.done[peer]
 	if val > oldVal {
 		px.done[peer] = val
@@ -513,12 +513,12 @@ func (px *Paxos) Kill() {
 
 	// Destroy the database
 	if persistent {
-		px.DPrintfPersist("\n%v: Destroying database... ", px.me)
+		DPrintfPersist("\n%v: Destroying database... ", px.me)
 		err := levigo.DestroyDatabase(px.dbName, px.dbOpts)
 		if err != nil {
-			px.DPrintfPersist("\terror")
+			DPrintfPersist("\terror")
 		} else {
-			px.DPrintfPersist("\tsuccess")
+			DPrintfPersist("\tsuccess")
 		}
 	}
 }
@@ -530,7 +530,7 @@ func (px *Paxos) KillSaveDisk() {
 		return
 	}
 	// Kill the server
-	px.DPrintf("\n%v: Killing the server", px.me)
+	DPrintf("\n%v: Killing the server", px.me)
 	px.dead = true
 	if px.l != nil {
 		px.l.Close()
@@ -561,7 +561,7 @@ func (px *Paxos) dbWriteInstance(seq int, toWrite Proposal) {
 	enc := gob.NewEncoder(&buffer)
 	err := enc.Encode(toWrite)
 	if err != nil {
-		px.DPrintfPersist("\terror encoding: %s", fmt.Sprint(err))
+		DPrintfPersist("\terror encoding: %s", fmt.Sprint(err))
 	} else {
 		// Write the state to the database
 		key := "instance_" + strconv.Itoa(seq)
@@ -576,7 +576,7 @@ func (px *Paxos) dbWriteInstance(seq int, toWrite Proposal) {
 			}
 		}
 	}
-	px.DPrintfPersist(toPrint)
+	DPrintfPersist(toPrint)
 }
 
 // Tries to get the desired instance from the database
@@ -608,16 +608,16 @@ func (px *Paxos) dbGetInstance(toGet int) Proposal {
 			toPrint += "\terror"
 		} else {
 			toPrint += "\tsuccess"
-			px.DPrintfPersist(toPrint)
+			DPrintfPersist(toPrint)
 			return entryDecoded
 		}
 	} else {
 		toPrint += fmt.Sprintf("\tNo entry found in database %s", fmt.Sprint(err))
-		px.DPrintfPersist(toPrint)
+		DPrintfPersist(toPrint)
 		return Proposal{-1, -1, nil, false}
 	}
 
-	px.DPrintfPersist(toPrint)
+	DPrintfPersist(toPrint)
 	return Proposal{-1, -1, nil, false}
 }
 
@@ -632,14 +632,14 @@ func (px *Paxos) dbDeleteInstance(seq int) {
 		return
 	}
 
-	px.DPrintfPersist("\n%v: Deleting instance %v from the database... ", px.me, seq)
+	DPrintfPersist("\n%v: Deleting instance %v from the database... ", px.me, seq)
 	// Delete entry if it exists
 	key := "instance_" + strconv.Itoa(seq)
 	err := px.db.Delete(px.dbWriteOptions, []byte(key))
 	if err != nil {
-		px.DPrintfPersist("\terror")
+		DPrintfPersist("\terror")
 	} else {
-		px.DPrintfPersist("\tsuccess")
+		DPrintfPersist("\tsuccess")
 	}
 }
 
@@ -654,20 +654,20 @@ func (px *Paxos) dbWriteDone() {
 		return
 	}
 
-	px.DPrintfPersist("\n%v: Writing 'done' state to database... ", px.me)
+	DPrintfPersist("\n%v: Writing 'done' state to database... ", px.me)
 	// Encode the "done" map into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
 	err := enc.Encode(px.done)
 	if err != nil {
-		px.DPrintfPersist("\terror encoding")
+		DPrintfPersist("\terror encoding")
 	} else {
 		// Write the state to the database
 		err := px.db.Put(px.dbWriteOptions, []byte("done"), buffer.Bytes())
 		if err != nil {
-			px.DPrintfPersist("\terror writing to database")
+			DPrintfPersist("\terror writing to database")
 		} else {
-			px.DPrintfPersist("\tsuccess %v", px.done)
+			DPrintfPersist("\tsuccess %v", px.done)
 		}
 	}
 }
@@ -688,7 +688,7 @@ func (px *Paxos) dbWriteMaxInstance(max int) {
 	enc := gob.NewEncoder(&buffer)
 	err := enc.Encode(max)
 	if err != nil {
-		px.DPrintfPersist("\terror encoding: %s", fmt.Sprint(err))
+		DPrintfPersist("\terror encoding: %s", fmt.Sprint(err))
 	} else {
 		// Write the state to the database
 		key := "dbMaxInstance"
@@ -700,7 +700,7 @@ func (px *Paxos) dbWriteMaxInstance(max int) {
 			px.dbMaxInstance = max
 		}
 	}
-	px.DPrintfPersist(toPrint)
+	DPrintfPersist(toPrint)
 }
 
 // Initialize database for persistence
@@ -717,7 +717,7 @@ func (px *Paxos) dbInit() {
 		return
 	}
 
-	px.DPrintfPersist("\n%v: Initializing database", px.me)
+	DPrintfPersist("\n%v: Initializing database", px.me)
 
 	// Register Proposal struct since we will encode/decode it using gob
 	// Calling this probably isn't necessary, but being explicit for now
@@ -727,14 +727,16 @@ func (px *Paxos) dbInit() {
 	px.dbOpts = levigo.NewOptions()
 	px.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
 	px.dbOpts.SetCreateIfMissing(true)
-	px.dbName = "/home/ubuntu/mexos/src/paxos/persist/paxosDB_" + strconv.Itoa(px.me)
-	px.DPrintfPersist("\n\t%v: DB Name: %s", px.me, px.dbName)
+	dbDir := "/home/ubuntu/mexos/src/paxos/persist/"
+	px.dbName = dbDir + "paxosDB_" + strconv.Itoa(px.me)
+	os.MkdirAll(dbDir, 0777)
+	DPrintfPersist("\n\t%v: DB Name: %s", px.me, px.dbName)
 	var err error
 	px.db, err = levigo.Open(px.dbName, px.dbOpts)
 	if err != nil {
-		px.DPrintfPersist("\n\t%v: Error opening database! \n\t%s", px.me, fmt.Sprint(err))
+		DPrintfPersist("\n\t%v: Error opening database! \n\t%s", px.me, fmt.Sprint(err))
 	} else {
-		px.DPrintfPersist("\n\t%v: Database opened successfully", px.me)
+		DPrintfPersist("\n\t%v: Database opened successfully", px.me)
 	}
 
 	// Create options for reading/writing entries
@@ -745,21 +747,21 @@ func (px *Paxos) dbInit() {
 	doneBytes, err := px.db.Get(px.dbReadOptions, []byte("done"))
 	if err == nil && len(doneBytes) > 0 {
 		// Decode the "done" state
-		px.DPrintfPersist("\n\t%v: Decoding stored 'done' state... ", px.me)
+		DPrintfPersist("\n\t%v: Decoding stored 'done' state... ", px.me)
 		buffer := *bytes.NewBuffer(doneBytes)
 		decoder := gob.NewDecoder(&buffer)
 		var doneDecoded map[int]int
 		err = decoder.Decode(&doneDecoded)
 		if err != nil {
-			px.DPrintfPersist("\terror decoding: %s", fmt.Sprint(err))
+			DPrintfPersist("\terror decoding: %s", fmt.Sprint(err))
 		} else {
 			for peer, doneVal := range doneDecoded {
 				px.done[peer] = doneVal
 			}
-			px.DPrintfPersist("\tsuccess %v --- %v", doneDecoded, px.done)
+			DPrintfPersist("\tsuccess %v --- %v", doneDecoded, px.done)
 		}
 	} else {
-		px.DPrintfPersist("\n\t%v: No stored 'done' state to load", px.me)
+		DPrintfPersist("\n\t%v: No stored 'done' state to load", px.me)
 	}
 
 	// Read max instance from database if it exists
@@ -767,19 +769,19 @@ func (px *Paxos) dbInit() {
 	maxInstanceBytes, err := px.db.Get(px.dbReadOptions, []byte("dbMaxInstance"))
 	if err == nil && len(maxInstanceBytes) > 0 {
 		// Decode the max instance
-		px.DPrintfPersist("\n\t%v: Decoding max instance... ", px.me)
+		DPrintfPersist("\n\t%v: Decoding max instance... ", px.me)
 		bufferMax := *bytes.NewBuffer(maxInstanceBytes)
 		decoder := gob.NewDecoder(&bufferMax)
 		var maxDecoded int
 		err = decoder.Decode(&maxDecoded)
 		if err != nil {
-			px.DPrintfPersist("\terror decoding: %s", fmt.Sprint(err))
+			DPrintfPersist("\terror decoding: %s", fmt.Sprint(err))
 		} else {
 			px.maxInstance = maxDecoded
-			px.DPrintfPersist("\tsuccess")
+			DPrintfPersist("\tsuccess")
 		}
 	} else {
-		px.DPrintfPersist("\n\t%v: No stored max instance to load", px.me)
+		DPrintfPersist("\n\t%v: No stored max instance to load", px.me)
 	}
 }
 
