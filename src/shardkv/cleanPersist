@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rm -r -f /home/ubuntu/mexos/src/paxos/persist/
+rm -r -f /home/ubuntu/mexos/src/shardmaster/persist/
+rm -r -f /home/ubuntu/mexos/src/shardkv/persist/

@@ -717,7 +717,7 @@ func (px *Paxos) dbWriteMaxInstance(max int) {
 
 // Initialize database for persistence
 // and load any previously written "done" state
-func (px *Paxos) dbInit() {
+func (px *Paxos) dbInit(tag string) {
 	if !persistent {
 		return
 	}
@@ -740,7 +740,7 @@ func (px *Paxos) dbInit() {
 	px.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
 	px.dbOpts.SetCreateIfMissing(true)
 	dbDir := "/home/ubuntu/mexos/src/paxos/persist/"
-	px.dbName = dbDir + "paxosDB_" + strconv.Itoa(px.me)
+	px.dbName = dbDir + "paxosDB_" + tag + "_" + strconv.Itoa(px.me)
 	os.MkdirAll(dbDir, 0777)
 	DPrintfPersist("\n\t%v: DB Name: %s", px.me, px.dbName)
 	var err error
@@ -802,7 +802,7 @@ func (px *Paxos) dbInit() {
 // the ports of all the paxos peers (including this one)
 // are in peers[]. this servers port is peers[me].
 //
-func Make(peers []string, me int, rpcs *rpc.Server, network bool) *Paxos {
+func Make(peers []string, me int, rpcs *rpc.Server, network bool, tag string) *Paxos {
 	px := &Paxos{}
 	// Network stuff
 	px.peers = peers
@@ -824,7 +824,7 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool) *Paxos {
 	px.doneChannels = make(map[int]chan bool)
 
 	// Persistence stuff
-	px.dbInit()
+	px.dbInit(tag)
 
 	go px.doneCollector()
 

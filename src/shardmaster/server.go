@@ -25,14 +25,14 @@ const persistent = true
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
-		log.Printf(format, a...)
+		fmt.Printf(format, a...)
 	}
 	return
 }
 
 func DPrintfPersist(format string, a ...interface{}) (n int, err error) {
 	if DebugPersist > 0 {
-		log.Printf(format, a...)
+		fmt.Printf(format, a...)
 	}
 	return
 }
@@ -679,7 +679,6 @@ func (sm *ShardMaster) dbInit() {
 	}
 
 	// Read processed sequence from database if it exists
-	sm.processedSeq = -1
 	processedSeqBytes, err := sm.db.Get(sm.dbReadOptions, []byte("processedSequence"))
 	if err == nil && len(processedSeqBytes) > 0 {
 		// Decode the max instance
@@ -732,7 +731,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 		rpcs.Register(sm)
 	}
 
-	sm.px = paxos.Make(servers, me, rpcs, network)
+	sm.px = paxos.Make(servers, me, rpcs, network, "shardmaster")
 
 	if sm.network {
 		l, e := net.Listen("tcp", ":"+strconv.Itoa(startport+me))

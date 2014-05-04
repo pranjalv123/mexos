@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# If a test fails before Kill() is called,
+# you probably want to delete the databases before retrying the test
+
+rm -r -f /home/ubuntu/mexos/src/paxos/persist/
+rm -r -f /home/ubuntu/mexos/src/shardmaster/persist/
+
