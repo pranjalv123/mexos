@@ -121,7 +121,7 @@ func (ck *Clerk) Get(key string) string {
 			}
 		}
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 
 		// ask master for a new configuration.
 		ck.config = ck.sm.Query(-1)
@@ -155,7 +155,7 @@ func (ck *Clerk) PutExt(key string, value string, dohash bool) string {
 			}
 		}
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 
 		// ask master for a new configuration.
 		ck.config = ck.sm.Query(-1)
