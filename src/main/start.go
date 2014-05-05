@@ -133,7 +133,7 @@ func getPaxos(npaxos int) []string {
 		os.Exit(1)
 	}
 	var pxhosts []string = make([]string, npaxos)
-	for i := 0; i < npaxos; i++ {
+	for i := 1; i <= npaxos; i++ {
 		pxhosts[i] = "10.0.0."+strconv.Itoa(100+i)+":"+strconv.Itoa(kvport)
 	}
 
