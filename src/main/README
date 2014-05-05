@@ -1,0 +1,22 @@
+This start program is to start a networked instance of a server on AWS.
+
+To compile:
+go build start.go
+
+To run:
+./start <serverType> <flags>
+
+server types:
+  paxos
+	-npaxos: number of paxos peers
+  shardmaster 
+  	-ngroups: number of groups
+	-nmasters: number of masters per group
+	nmasters*ngroups must be <12
+  kvpaxos:  
+  	-ngroups: number of groups
+	-nmasters: number of masters per group
+	-nreplicas: number of kvshard replicas per group
+	(nmasters + nreplicas)*ngroups must be <12
+
+
