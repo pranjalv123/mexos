@@ -5,35 +5,95 @@ import "os"
 import "os/exec"
 import "strings"
 import "strconv"
-//import "paxos"
-//import "flag"
+import "paxos"
+import "shardmaster"
+import "shardkv"
+import "flag"
 
 const smport = 3333
 const kvport = 2222
 const network = true
 
 func main() {
-	args := os.Args
+	var npaxos = flag.Int("npaxos", 3, "number of paxos instances")
+	var ngroups = flag.Int("ngroups", 3, "number of shard groups")
+	var nmasters = flag.Int("nmasters", 1, "number of shardmasters per shard group")
+	var nreplicas = flag.Int("nreplicas", 3, "number of kvshard replicas per group")
+	
+	flag.Parse()
+	args := flag.Args()
 	if len(args) < 1 {
 		fmt.Printf("Not enough arguments, must specify program type:\n"+
  			"   paxos|shardmaster|shardkv\n")
 		os.Exit(1)
 	}
 
-	switch args[1] {
+	switch args[0] {
 	case "paxos":
-		npaxos := 5
-		peers := getPaxos(npaxos) 
-		fmt.Println(peers)
+		fmt.Println("Attempting to start paxos server...")
+		peers := getPaxos(*npaxos) 
 		me := whoami(peers)
-		fmt.Println("me = ", me)
-		//paxos.Make(peers, , nil, true) 
-		fmt.Printf("Starting paxos server.\n")
+		if me == -1 {
+			fmt.Println("Host didn't find own IP in peer list! Exiting!")
+			os.Exit(1)
+		}
+		paxos.Make(peers, me, nil, network, "somedbtag") 
+		fmt.Println("peers: ",peers)
+		fmt.Println("me: ", me)
+		fmt.Printf("Started paxos server.\n")
+
 	case "shardmaster":
-		//peers = getShardmaster(, 3)
-		fmt.Printf("Starting shardmaster.\n")
+		fmt.Println("Attempting to start shardmaster server...")
+		peers, _ := getShardmasters(*nmasters, *ngroups)
+		me := whoami(peers)
+		if me == -1 {
+			fmt.Println("Host didn't find own IP in peer list! Exiting!")
+			os.Exit(1)
+		}
+		shardmaster.StartServer(peers, me, network)
+		fmt.Println("peers: ",peers)
+		fmt.Println("me: ", me)
+		fmt.Printf("Started shardmaster.\n")
+
 	case "shardkv":
-		fmt.Printf("Starting shardkv.\n")
+		fmt.Println("Attempting to start shardkv server...")
+		//---------Default Shardmaster Servers------------
+		//group 100: 10.0.0.101
+		//group 101: 10.0.0.102
+		//group 102: 10.0.0.103
+		//-----------Default ShardKV Servers--------------
+		//group 100: 10.0.0.104, 10.0.0.105, 10.0.0.106
+		//group 101: 10.0.0.107, 10.0.0.108, 10.0.0.109
+		//group 102: 10.0.0.110, 10.0.0.111, 10.0.0.112
+		metapeers, masters, groups := getShardkvs(*nreplicas, *nmasters, *ngroups)
+		me := whoami(masters)
+		if me != -1 {
+			fmt.Println("Starting shardmaster instead.")
+			shardmaster.StartServer(masters, me, network)
+			fmt.Printf("peers: %v\n", masters)
+			fmt.Printf("me: %d\n", me)
+			fmt.Println("Success!")
+		}
+		var gid int64
+		peers := make([]string, *ngroups) 
+		for i, v := range metapeers {
+			peers = v
+			me = whoami(v)
+			gid = groups[i]
+			if me != -1 {
+				break
+			}
+		}
+		if me == -1 {
+			fmt.Println("Host didn't find own IP in peer list! Exiting!")
+			os.Exit(1)
+		}
+		fmt.Println("masters:",masters)
+		fmt.Printf("peers: %v\n", peers)
+		fmt.Printf("me: %d, gid :%d\n", me, gid)
+		shardkv.StartServer(gid, masters, peers, me, network)
+		fmt.Printf("Successfully started shardkv.\n")
+
 	default: 
 		fmt.Printf("Invalid program type, choose one:" +
  			"   paxos|shardmaster|shardkv")
@@ -76,52 +136,47 @@ func getPaxos(npaxos int) []string {
 	return pxhosts
 }
 
-func getShardmasters(smPerGroup int, ngroups int) ([]string, []int64) {
-	//---------Default Shardmaster Servers------------
-	//group 100: 10.0.0.101
-	//group 101: 10.0.0.105
-	//group 102: 10.0.0.109
-	if smPerGroup*ngroups > 12 {
-		fmt.Printf("Invalid configuration parameters!")
+func getShardmasters(nmasters int, ngroups int) ([]string, []int64) {
+	if nmasters*ngroups > 12 {
+		fmt.Printf("Invalid configuration parameters!\n" +
+			"nmasters*ngroups >12 (= %d)\n", nmasters*ngroups)
 		os.Exit(1)
 	}
 	
 	gids := make([]int64, ngroups)    // each group ID                                 
-	var smhosts []string = make([]string, smPerGroup*ngroups)
-
-	for grp := 0; grp < ngroups; grp++ {
-		//make GIDS
-		gids[grp] = int64(grp + 100)
-		
-		//make shardmasters
-		for i := 1; i <= smPerGroup; i++ {
-			smhosts[i] = "10.0.0." + strconv.Itoa(100+(ngroups*i)+i) + ":" +
-				strconv.Itoa(smport)
-		}
+	var smhosts []string = make([]string, nmasters*ngroups)
+	
+	//make GIDS
+	for gid := 0; gid < ngroups; gid++ {
+		gids[gid] = int64(gid + 100)
 	}
-
+	//make shardmasters
+	for i := 1; i <= ngroups*nmasters; i++ {
+		smhosts[i-1] = "10.0.0." + strconv.Itoa(100+i) + ":" + strconv.Itoa(smport)
+	}
 	return smhosts, gids
 }
 
-func getShardkvs(replicasPerGroup int, smPerGroup int, ngroups int) ([][]string, []string,
+func getShardkvs(nreplicas int, nmasters int, ngroups int) ([][]string, []string,
 	[]int64){
 	
-	if replicasPerGroup*ngroups > 12 || ngroups > replicasPerGroup {
-		fmt.Printf("Invalid configuration parameters!")
+	if (nreplicas+nmasters)*ngroups > 12  {
+		fmt.Printf("Invalid configuration parameters!\n"+
+			"(nmasters+nreplicas)*ngroups >12 (= %d)\n", 
+			(nmasters+nreplicas)*ngroups)
 		os.Exit(1)
 	}
-	//-----------Default ShardKV Servers--------------
-	//group 100: 10.0.0.102, 10.0.0.103, 10.0.0.104
-	//group 101: 10.0.0.106, 10.0.0.107, 10.0.0.108
-	//group 102: 10.0.0.110, 10.0.0.111, 10.0.0.112
 	kvhosts := make([][]string, ngroups)   // ShardKV ports, [group][replica]
 
-	smhosts, gids := getShardmasters(smPerGroup, ngroups)
-	
+	smhosts, gids := getShardmasters(nmasters, ngroups)
+
+	offset := nmasters*ngroups+1
 	for grp := 0; grp < ngroups; grp++ {
-		kvhosts[grp] = make([]string, replicasPerGroup)
-		for j := smPerGroup+1; j <= smPerGroup+replicasPerGroup; j++ {
-			kvhosts[grp][j] = "10.0.0." + strconv.Itoa(100+(grp*ngroups)+j) +
+		kvhosts[grp] = make([]string, nreplicas)
+		for j := 0; j < nreplicas; j++ {
+			//fmt.Println(100+(grp*ngroups)+j+offset)
+			kvhosts[grp][j] = "10.0.0." + 
+				strconv.Itoa(100+(grp*ngroups)+j+offset) +
 				":" + strconv.Itoa(kvport)
 		}
 	}
@@ -129,13 +184,3 @@ func getShardkvs(replicasPerGroup int, smPerGroup int, ngroups int) ([][]string,
 	return kvhosts, smhosts, gids
 }
 
-/*func printList(l []interface) {
-	fmt.Println("[")
-	comma := ""
-	for _, i := range l {
-		fmt.Printf("%s%v", comma, i)
-		comma = ","
-	}
-	fmt.Println("]")
-	
-}*/
