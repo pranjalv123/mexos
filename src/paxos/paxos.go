@@ -540,17 +540,13 @@ func (px *Paxos) callLeader(seq int, v interface{}) {
 // is reached.
 //
 func (px *Paxos) Start(seq int, v interface{}) {
-<<<<<<< HEAD
 	go func() {
 		for px.recovering && !px.dead {
 			time.Sleep(10 * time.Millisecond)
 		}
 		DPrintf("\n%v Starting %v, recovering %v dead %v", px.me, seq, px.recovering, px.dead)
-		px.Propose(seq, v)
+    px.callLeader(seq, v)
 	}()
-=======
-  go px.callLeader(seq, v)
->>>>>>> Adding initial leader code
 }
 
 //
