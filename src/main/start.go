@@ -106,8 +106,8 @@ func main() {
 
 func whoami(peers []string) int {
 	//ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
-	//out, err := exec.Command("/home/ubuntu/mexos/src/main/getip").Output()
-	out, err := exec.Command("./getip").Output()
+	out, err := exec.Command("/home/ubuntu/mexos/src/main/getip").Output()
+	//out, err := exec.Command("./getip").Output()
 	if err != nil {
 		fmt.Printf("Could not execute ifconfig! %s\n", err)
 		os.Exit(1)
