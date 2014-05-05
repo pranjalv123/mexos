@@ -439,7 +439,9 @@ func (kv *ShardKV) tick() {
 func (kv *ShardKV) Kill() {
 	// Just double check that Kill isn't called multiple times
 	// (trying to close kv.db multiple times causes a panic)
+	//fmt.Printf("\n%v-%v Got Kill()", kv.gid, kv.me)
 	if kv.dead {
+		//fmt.Printf("\n\t%v-%v Already dead", kv.gid, kv.me)
 		return
 	}
 
@@ -460,6 +462,7 @@ func (kv *ShardKV) Kill() {
 
 	// Destroy the database
 	if persistent {
+		//fmt.Printf("\n%v-%v Destroying the database", kv.gid, kv.me)
 		DPrintfPersist("\n%v: Destroying database... ", kv.me)
 		err := levigo.DestroyDatabase(kv.dbName, kv.dbOpts)
 		if err != nil {
@@ -473,7 +476,9 @@ func (kv *ShardKV) Kill() {
 func (kv *ShardKV) KillSaveDisk() {
 	// Just double check that Kill isn't called multiple times
 	// (trying to close kv.db multiple times causes a panic)
+	//fmt.Printf("\n%v-%v Got Kill()", kv.gid, kv.me)
 	if kv.dead {
+		//fmt.Printf("\n%v-%v Already dead", kv.gid, kv.me)
 		return
 	}
 	// Kill the server

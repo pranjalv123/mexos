@@ -18,7 +18,7 @@ func makePort(tag string, host int) string {
 	s := "/var/tmp/824-"
 	s += strconv.Itoa(os.Getuid()) + "/"
 	os.Mkdir(s, 0777)
-	s += "px-"
+	s += "sm-"
 	s += strconv.Itoa(os.Getpid()) + "-"
 	s += tag + "-"
 	s += strconv.Itoa(host)
