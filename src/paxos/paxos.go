@@ -44,6 +44,8 @@ const recovery = false
 const Debug = 0
 const DebugPersist = 0
 
+const enableLeader = 1
+
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
 		fmt.Printf(format, a...)
@@ -517,7 +519,7 @@ func (px *Paxos) callLeader(seq int, v interface{}) {
   args := &ProposeArgs{seq, v, newDone}
   var reply ProposeReply
 
-	if px.leader == px.me {
+	if px.leader == px.me || enableLeader == 0 {
     px.Propose(args, &reply)
 	} else {
     if px.callWrap(px.peers[px.leader], "Paxos.Propose", args, reply) && !reply.Err {
