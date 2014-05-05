@@ -106,9 +106,10 @@ func main() {
 
 func whoami(peers []string) int {
 	//ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
-	out, err := exec.Command("/home/ubuntu/mexos/src/main/getip").Output()
+	//out, err := exec.Command("/home/ubuntu/mexos/src/main/getip").Output()
+	out, err := exec.Command("./getip").Output()
 	if err != nil {
-		fmt.Printf("Could not execute ifconfig!! %s\n", err)
+		fmt.Printf("Could not execute ifconfig! %s\n", err)
 		os.Exit(1)
 	}; err = nil
 
@@ -116,8 +117,11 @@ func whoami(peers []string) int {
 	//fmt.Printf("myip: %s\n", ip)
 
 	for i, addr := range peers {
-		if addr[0:len(addr)-6] == ip {
+		
+		if addr[0:len(addr)-5] == ip {
 			return i
+		} else {
+		//	fmt.Println("I am not ",addr[0:len(addr)-5])
 		}
 	}
 	return -1
@@ -130,7 +134,7 @@ func getPaxos(npaxos int) []string {
 	}
 	var pxhosts []string = make([]string, npaxos)
 	for i := 0; i < npaxos; i++ {
-		pxhosts[i] = "10.0.0.10"+strconv.Itoa(i)+":"+strconv.Itoa(kvport)
+		pxhosts[i] = "10.0.0."+strconv.Itoa(100+i)+":"+strconv.Itoa(kvport)
 	}
 
 	return pxhosts
