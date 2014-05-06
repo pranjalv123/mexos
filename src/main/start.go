@@ -1,17 +1,16 @@
 package main
 
+import "test"
 import "fmt"
 import "os"
 import "os/exec"
 import "strings"
-import "strconv"
+//import "strconv"
 import "paxos"
 import "shardmaster"
 import "shardkv"
 import "flag"
 
-const smport = 3333
-const kvport = 2222
 const network = true
 
 func main() {
@@ -31,7 +30,7 @@ func main() {
 	switch args[0] {
 	case "paxos":
 		fmt.Println("Attempting to start paxos server...")
-		peers := getPaxos(*npaxos) 
+		peers := test.GetPaxos(*npaxos) 
 		me := whoami(peers)
 		if me == -1 {
 			fmt.Println("Host didn't find own IP in peer list! Exiting!")
@@ -44,7 +43,7 @@ func main() {
 
 	case "shardmaster":
 		fmt.Println("Attempting to start shardmaster server...")
-		peers, _ := getShardmasters(*nmasters, *ngroups)
+		peers, _ := test.GetShardmasters(*nmasters, *ngroups)
 		me := whoami(peers)
 		if me == -1 {
 			fmt.Println("Host didn't find own IP in peer list! Exiting!")
@@ -65,7 +64,7 @@ func main() {
 		//group 100: 10.0.0.104, 10.0.0.105, 10.0.0.106
 		//group 101: 10.0.0.107, 10.0.0.108, 10.0.0.109
 		//group 102: 10.0.0.110, 10.0.0.111, 10.0.0.112
-		metapeers, masters, groups := getShardkvs(*nreplicas, *nmasters, *ngroups)
+		metapeers, masters, groups := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
 		me := whoami(masters)
 		if me != -1 {
 			fmt.Println("Starting shardmaster instead.")
@@ -85,7 +84,8 @@ func main() {
 			}
 		}
 		if me == -1 {
-			fmt.Println("Host didn't find own IP in peer list! Exiting!")
+			fmt.Printf("Exiting! Host didn't find own IP %s in peer list: %v!\n",
+				getIP(), metapeers)
 			os.Exit(1)
 		}
 		fmt.Println("masters:",masters)
@@ -105,17 +105,8 @@ func main() {
 }
 
 func whoami(peers []string) int {
-	//ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
-	out, err := exec.Command("/home/ubuntu/mexos/src/main/getip").Output()
-	//out, err := exec.Command("./getip").Output()
-	if err != nil {
-		fmt.Printf("Could not execute ifconfig! %s\n", err)
-		os.Exit(1)
-	}; err = nil
-
-	ip := strings.TrimSpace(string(out))
 	//fmt.Printf("myip: %s\n", ip)
-
+	ip := getIP()
 	for i, addr := range peers {
 		
 		if addr[0:len(addr)-5] == ip {
@@ -127,64 +118,15 @@ func whoami(peers []string) int {
 	return -1
 }
 
-func getPaxos(npaxos int) []string {
-	if npaxos > 12 {
-		fmt.Printf("Only 10 servers available, you asked for %i.", npaxos)
+func getIP() string {
+	//ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
+	out, err := exec.Command("/home/ubuntu/mexos/src/main/getip").Output()
+	//out, err := exec.Command("./getip").Output()
+	if err != nil {
+		fmt.Printf("Could not execute ifconfig! %s\n", err)
 		os.Exit(1)
-	}
-	var pxhosts []string = make([]string, npaxos)
-	for i := 1; i <= npaxos; i++ {
-		pxhosts[i-1] = "10.0.0."+strconv.Itoa(100+i)+":"+strconv.Itoa(kvport)
-	}
+	}; err = nil
 
-	return pxhosts
+	ip := strings.TrimSpace(string(out))
+	return ip
 }
-
-func getShardmasters(nmasters int, ngroups int) ([]string, []int64) {
-	if nmasters*ngroups > 12 {
-		fmt.Printf("Invalid configuration parameters!\n" +
-			"nmasters*ngroups >12 (= %d)\n", nmasters*ngroups)
-		os.Exit(1)
-	}
-	
-	gids := make([]int64, ngroups)    // each group ID                                 
-	var smhosts []string = make([]string, nmasters*ngroups)
-	
-	//make GIDS
-	for gid := 0; gid < ngroups; gid++ {
-		gids[gid] = int64(gid + 100)
-	}
-	//make shardmasters
-	for i := 1; i <= ngroups*nmasters; i++ {
-		smhosts[i-1] = "10.0.0." + strconv.Itoa(100+i) + ":" + strconv.Itoa(smport)
-	}
-	return smhosts, gids
-}
-
-func getShardkvs(nreplicas int, nmasters int, ngroups int) ([][]string, []string,
-	[]int64){
-	
-	if (nreplicas+nmasters)*ngroups > 12  {
-		fmt.Printf("Invalid configuration parameters!\n"+
-			"(nmasters+nreplicas)*ngroups >12 (= %d)\n", 
-			(nmasters+nreplicas)*ngroups)
-		os.Exit(1)
-	}
-	kvhosts := make([][]string, ngroups)   // ShardKV ports, [group][replica]
-
-	smhosts, gids := getShardmasters(nmasters, ngroups)
-
-	offset := nmasters*ngroups+1
-	for grp := 0; grp < ngroups; grp++ {
-		kvhosts[grp] = make([]string, nreplicas)
-		for j := 0; j < nreplicas; j++ {
-			//fmt.Println(100+(grp*ngroups)+j+offset)
-			kvhosts[grp][j] = "10.0.0." + 
-				strconv.Itoa(100+(grp*ngroups)+j+offset) +
-				":" + strconv.Itoa(kvport)
-		}
-	}
-	
-	return kvhosts, smhosts, gids
-}
-
