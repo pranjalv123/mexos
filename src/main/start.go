@@ -56,7 +56,7 @@ func main() {
 
 	case "shardkv":
 		fmt.Println("------------------------------------------")
-		fmt.Println("Attempting to start shardkv server...")
+		fmt.Println(getIP(), "attempting to start shardkv server...")
 		//---------Default Shardmaster Servers------------
 		//group 100: 10.0.0.101
 		//group 101: 10.0.0.102
@@ -68,7 +68,7 @@ func main() {
 		metapeers, masters, groups := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
 		me := whoami(masters)
 		if me != -1 {
-			fmt.Println(getIP()," starting shardmaster instead.")
+			fmt.Println("Starting shardmaster instead.")
 			shardmaster.StartServer(masters, me, network)
 			fmt.Printf("peers: %v\n", masters)
 			fmt.Printf("me: %d\n", me)
@@ -94,7 +94,6 @@ func main() {
 		fmt.Printf("peers: %v\n", peers)
 		fmt.Printf("me: %d, gid :%d\n", me, gid)
 		shardkv.StartServer(gid, masters, peers, me, network)
-		fmt.Printf("Successfully started shardkv.\n")
 		
 	default: 
 		fmt.Printf("Invalid program type, choose one:" +
