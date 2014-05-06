@@ -10,8 +10,8 @@ import "math/rand"
 import "sync"
 
 const onlyBenchmarks = false
-const runOldTests = false
-const runNewTests = true
+const runOldTests = true
+const runNewTests = false
 
 // Make a port using the given tag and host number
 func makePort(tag string, host int) string {
@@ -427,20 +427,25 @@ func TestFilePersistenceAllRestart(test *testing.T) {
 	time.Sleep(2 * time.Second)
 	// Restart all servers
 	// As each is started, check min and old instance
+	waitChan := make(chan int)
 	for i := 0; i < numServers; i++ {
-		paxosServers[i] = Make(paxosPorts[i], i, nil, false, "")
-		min := paxosServers[i].Min()
-		max := paxosServers[i].Max()
-		_, recoveredValue := paxosServers[i].Status(0)
-		if min != 0 {
-			test.Fatalf("Restarted server %v has min %v, expected %v", i, min, 0)
-		}
-		if max != numServers {
-			test.Fatalf("Restarted server %v has max %v, expected %v", i, max, numServers)
-		}
-		if recoveredValue != decidedValue {
-			test.Fatalf("Restarted server forgot decided value")
-		}
+		go func(index int) {
+			paxosServers[index] = Make(paxosPorts[index], index, nil, false, "")
+			waitChan <- 1
+			min := paxosServers[index].Min()
+			max := paxosServers[index].Max()
+			_, recoveredValue := paxosServers[index].Status(0)
+			if min != 0 {
+				test.Fatalf("Restarted server %v has min %v, expected %v", index, min, 0)
+			}
+			if max != numServers {
+				test.Fatalf("Restarted server %v has max %v, expected %v", index, max, numServers)
+			}
+			if recoveredValue != decidedValue {
+				test.Fatalf("Restarted server forgot decided value")
+			}
+		}(i)
+		<-waitChan
 	}
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
 	time.Sleep(1 * time.Second)
@@ -500,13 +505,13 @@ func TestFilePersistenceRecovery(test *testing.T) {
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
 	// Get agreement on an instance (only wait for majority)
 	paxosServers[0].Start(0, 0)
-	waitForDecisionMajority(test, paxosServers, 0)
+	waitForDecision(test, paxosServers, 0, numServers-1)
 	// Kill one server, make sure it stops
 	paxosServers[0].KillSaveDisk()
 	time.Sleep(1 * time.Second)
 	// Get agreement on another instance
 	paxosServers[1].Start(1, 1)
-	waitForDecisionMajority(test, paxosServers, 1)
+	waitForDecision(test, paxosServers, 1, numServers-1)
 	// Bring server back
 	paxosServers[0] = Make(paxosPorts[0], 0, nil, false, "")
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
@@ -520,17 +525,17 @@ func TestFilePersistenceRecovery(test *testing.T) {
 		test.Fatalf("Restarted server did not learn about missed instance even after being poked")
 	}
 
-	fmt.Printf("\n\t... Passed")
+	fmt.Printf("\n\tPassed")
 	// Do it again but without poking the restarted server
 	// (see if it automatically catches itself up on startup - this is needed for shardmaster query to be up to date)
 	fmt.Printf("\nTest Persistence Recovery, single failure, no poke ...")
 
 	// Kill one server, make sure it stops
 	paxosServers[0].KillSaveDisk()
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	// Get agreement on another instance
 	paxosServers[1].Start(2, 2)
-	waitForDecisionMajority(test, paxosServers, 1)
+	waitForDecision(test, paxosServers, 2, numServers-1)
 	// Bring server back
 	paxosServers[0] = Make(paxosPorts[0], 0, nil, false, "")
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
@@ -538,7 +543,7 @@ func TestFilePersistenceRecovery(test *testing.T) {
 	decided, value = paxosServers[0].Status(2)
 	_, trueValue = paxosServers[1].Status(2)
 	if !decided || (value != trueValue) {
-		test.Fatalf("Restarted server did not learn about missed instance without being poked")
+		test.Fatalf("Restarted server did not learn about missed instance without being poked (got %v, expected %v, decided is %v)", value, trueValue, decided)
 	}
 	fmt.Printf("\n\tPassed")
 }
@@ -915,6 +920,15 @@ func TestFileRPCCountRegular(test *testing.T) {
 	for i := 0; i < numServers; i++ {
 		paxosServers[i] = Make(paxosPorts, i, nil, false, "")
 	}
+	// Wait for servers to finish sending recovery RPCs
+	for i := 0; i < numServers; i++ {
+		_ = paxosServers[i].Min()
+	}
+
+	rpcCount := 0
+	for j := 0; j < numServers; j++ {
+		rpcCount += paxosServers[j].rpcCount
+	}
 
 	numInstances := 5
 	seq := 0
@@ -924,7 +938,7 @@ func TestFileRPCCountRegular(test *testing.T) {
 		seq++
 	}
 
-	rpcCount := 0
+	rpcCount *= -1
 	for j := 0; j < numServers; j++ {
 		rpcCount += paxosServers[j].rpcCount
 	}
@@ -991,6 +1005,15 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 	for i := 0; i < numServers; i++ {
 		paxosServers[i] = Make(paxosPorts, i, nil, false, "")
 	}
+	// Wait for servers to finish sending recovery RPCs
+	for i := 0; i < numServers; i++ {
+		_ = paxosServers[i].Min()
+	}
+
+	rpcCount := 0
+	for j := 0; j < numServers; j++ {
+		rpcCount += paxosServers[j].rpcCount
+	}
 
 	seq := 0
 
@@ -998,7 +1021,7 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 	paxosServers[0].Start(seq, "x")
 	waitForDecision(test, paxosServers, seq, numServers)
 	seq++
-	rpcCount := 0
+	rpcCount *= -1
 	for j := 0; j < numServers; j++ {
 		rpcCount += paxosServers[j].rpcCount
 	}
@@ -1073,6 +1096,8 @@ func TestFileMany(test *testing.T) {
 	}
 	for i := 0; i < numServers; i++ {
 		paxosServers[i] = Make(paxosPorts, i, nil, false, "")
+	}
+	for i := 0; i < numServers; i++ {
 		paxosServers[i].Start(0, 0)
 	}
 
@@ -1171,6 +1196,8 @@ func TestFileManyUnreliable(test *testing.T) {
 	for i := 0; i < numServers; i++ {
 		paxosServers[i] = Make(paxosPorts, i, nil, false, "")
 		paxosServers[i].unreliable = true
+	}
+	for i := 0; i < numServers; i++ {
 		paxosServers[i].Start(0, 0)
 	}
 
@@ -1504,7 +1531,7 @@ func TestFilePersistenceLotsPartitionsRebootsUnreliable(test *testing.T) {
 	partitions[0] = []int{0, 1, 2, 3, 4}
 	var partitionLock sync.Mutex
 
-	// periodically reboot random servers
+	// periodically reboot random servers (with or without disk)
 	rebootDoneChannel := make(chan bool)
 	go func() {
 		defer func() { rebootDoneChannel <- true }()
@@ -1512,15 +1539,19 @@ func TestFilePersistenceLotsPartitionsRebootsUnreliable(test *testing.T) {
 			// Randomly reboot a server with its disk contents
 			partitionLock.Lock()
 			toKill := rand.Int() % (numServers - 1)
-			paxosServers[toKill].KillSaveDisk()
-			time.Sleep(time.Duration(rand.Int63()%50) * time.Millisecond)
+			if (rand.Int() % 100) < 50 {
+				paxosServers[toKill].KillSaveDisk()
+			} else {
+				paxosServers[toKill].Kill()
+			}
+			time.Sleep(time.Duration(50+rand.Int63()%50) * time.Millisecond)
 
 			paxosServers[toKill] = Make(paxosPorts[toKill], toKill, nil, false, "")
 			paxosServers[toKill].unreliable = true
 			partitionServers(test, tag, numServers, partitions[0], partitions[1], partitions[2])
-			time.Sleep(time.Duration(rand.Int63()%50) * time.Millisecond)
+			time.Sleep(time.Duration(100+rand.Int63()%50) * time.Millisecond)
 			partitionLock.Unlock()
-			time.Sleep(time.Duration(rand.Int63()%150) * time.Millisecond)
+			time.Sleep(time.Duration(500+rand.Int63()%1000) * time.Millisecond)
 		}
 	}()
 
@@ -1583,7 +1614,7 @@ func TestFilePersistenceLotsPartitionsRebootsUnreliable(test *testing.T) {
 	}()
 
 	// Run for a while and then kill the threads
-	duration := 20
+	duration := 15
 	fmt.Printf("   ")
 	if duration >= 10 {
 		fmt.Printf(" ")
@@ -1619,6 +1650,105 @@ func TestFilePersistenceLotsPartitionsRebootsUnreliable(test *testing.T) {
 
 	for i := 0; i < seq; i++ {
 		waitForDecisionMajority(test, paxosServers, i)
+	}
+
+	fmt.Printf("\n\tPassed\n\n")
+}
+
+func TestFileRecovery(test *testing.T) {
+	if onlyBenchmarks || !runNewTests {
+		return
+	}
+	runtime.GOMAXPROCS(4)
+
+	fmt.Printf("\nTest: Recovery after reboot with disk ...")
+
+	const numServers = 3
+	var paxosServers []*Paxos = make([]*Paxos, numServers)
+	var paxosPorts []string = make([]string, numServers)
+	defer cleanup(paxosServers)
+
+	// Make ports for the servers
+	for i := 0; i < numServers; i++ {
+		paxosPorts[i] = makePort("recovery", i)
+	}
+	for i := 0; i < numServers; i++ {
+		paxosServers[i] = Make(paxosPorts, i, nil, false, "")
+	}
+
+	// Get agreement on some instances
+	seq := 0
+	for seq = 0; seq < 10; seq++ {
+		paxosServers[rand.Int()%numServers].Start(seq, seq)
+	}
+	for i := 0; i < seq; i++ {
+		waitForDecision(test, paxosServers, i, numServers)
+	}
+
+	// Kill a server (save disk)
+	paxosServers[0].KillSaveDisk()
+	time.Sleep(500 * time.Millisecond)
+
+	// Get agreement on some more instances
+	for ; seq < 20; seq++ {
+		paxosServers[rand.Int()%(numServers-1)+1].Start(seq, seq)
+	}
+	for i := 0; i < seq; i++ {
+		waitForDecision(test, paxosServers, i, numServers-1)
+	}
+
+	// Restart server
+	paxosServers[0] = Make(paxosPorts, 0, nil, false, "")
+
+	// See if it caught itself up with the others
+	max := paxosServers[0].Max()
+	correctMax := paxosServers[1].Max()
+	if max < correctMax {
+		test.Fatalf("Restarted server %v has max %v, expected %v", 0, max, correctMax)
+	}
+
+	fmt.Printf("\n\tPassed")
+
+	fmt.Printf("\nTest: Recovery after reboot without disk")
+
+	// Call done on some instances
+	for s := 0; s < numServers; s++ {
+		paxosServers[s].Done(10)
+	}
+
+	// Make sure instances are deleted
+	for s := 0; s < numServers; s++ {
+		paxosServers[s].Start(seq, seq)
+		waitForDecision(test, paxosServers, seq, numServers)
+		seq += 1
+	}
+
+	// Kill a server (delete disk)
+	paxosServers[0].Kill()
+	time.Sleep(500 * time.Millisecond)
+
+	// Restart server
+	paxosServers[0] = Make(paxosPorts, 0, nil, false, "")
+
+	// See if it caught itself up with the others
+	max = paxosServers[0].Max()
+	min := paxosServers[0].Min()
+	decided, val := paxosServers[0].Status(seq - 1)
+	correctMax = paxosServers[1].Max()
+	correctMin := paxosServers[1].Min()
+	correctDecided, correctVal := paxosServers[1].Status(seq - 1)
+
+	if max != correctMax {
+		test.Fatalf("Restarted server %v has max %v, expected %v", 0, max, correctMax)
+	}
+	if min != correctMin {
+		test.Fatalf("Restarted server %v has min %v, expected %v", 0, min, correctMin)
+	}
+	if decided != correctDecided {
+		test.Fatalf("Restarted server %v has decided %v, expected %v for instance %v", 0, decided, correctDecided, seq-1)
+	}
+	if val != correctVal {
+		test.Fatalf("Restarted server %v has value %v, expected %v for instance %v", 0, val, correctVal, seq-1)
 	}
 
 	fmt.Printf("\n\tPassed\n\n")

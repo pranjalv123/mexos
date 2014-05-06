@@ -26,7 +26,7 @@ func TestNetworkBasic(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil, true)
+    pxa[i] = Make(pxh, i, nil, true, "networkBasic" + string(i))
   }
 
   fmt.Printf("Test: Single proposer ...\n")
@@ -86,7 +86,7 @@ func TestNetworkDeaf(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil, true)
+    pxa[i] = Make(pxh, i, nil, true, "networkDeaf" + string(i))
   }
 
   fmt.Printf("Test: Deaf proposer ...\n")
@@ -132,7 +132,7 @@ func TestNetworkForget(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil, true)
+    pxa[i] = Make(pxh, i, nil, true, "networkForget" + string(i))
   }
 
   fmt.Printf("Test: Forgetting ...\n")
@@ -214,7 +214,7 @@ func TestNetworkManyForget(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil, true)
+    pxa[i] = Make(pxh, i, nil, true, "networkManyForget" + string(i))
     pxa[i].unreliable = true
   }
 
@@ -283,7 +283,7 @@ func TestNetworkForgetMem(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil, true)
+    pxa[i] = Make(pxh, i, nil, true, "networkNetworkForgetMem" + string(i))
   }
 
   pxa[0].Start(0, "x")
@@ -347,7 +347,7 @@ func TestNetworkRPCCount(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil, true)
+    pxa[i] = Make(pxh, i, nil, true, "networkRPCCount" + string(i))
   }
 
   ninst1 := 5
@@ -422,7 +422,7 @@ func TestNetworkMany(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil, true)
+    pxa[i] = Make(pxh, i, nil, true, "networkMany" + string(i))
     pxa[i].Start(0, 0)
   }
 
@@ -472,20 +472,20 @@ func TestNetworkOld(t *testing.T) {
     pxh[i] = netport(i)
   }
 
-  pxa[1] = Make(pxh, 1, nil, true)
-  pxa[2] = Make(pxh, 2, nil, true)
-  pxa[3] = Make(pxh, 3, nil, true)
+  pxa[1] = Make(pxh, 1, nil, true, "networkOld1")
+  pxa[2] = Make(pxh, 2, nil, true, "networkOld2")
+  pxa[3] = Make(pxh, 3, nil, true, "networkOld3")
   pxa[1].Start(1, 111)
 
   waitForDecisionMajority(t, pxa, 1)
 
-  pxa[0] = Make(pxh, 0, nil, true)
+  pxa[0] = Make(pxh, 0, nil, true, "networkOld0")
   pxa[0].Start(1, 222)
 
   waitForDecision(t, pxa, 1, 4)
 
   if false {
-    pxa[4] = Make(pxh, 4, nil, true)
+    pxa[4] = Make(pxh, 4, nil, true, "networkOld4")
     waitForDecision(t, pxa, 1, npaxos)
   }
 
@@ -509,7 +509,7 @@ func TestNetworkManyUnreliable(t *testing.T) {
     pxh[i] = netport(i)
   }
   for i := 0; i < npaxos; i++ {
-    pxa[i] = Make(pxh, i, nil, true)
+    pxa[i] = Make(pxh, i, nil, true, "networkManyUnreliable" + string(i))
     pxa[i].unreliable = true
     pxa[i].Start(0, 0)
   }
@@ -602,7 +602,7 @@ func TestNetworkPartition(t *testing.T) {
 		pxh[i] = netport(i) //TODO: fixme
 	}
 	for i := 0; i < npaxos; i++ {
-		pxa[i] = Make(pxh, i, nil, true)
+		pxa[i] = Make(pxh, i, nil, true, "networkPartition" + string(i))
 	}
 	
 	//defer part(t, tag, npaxos, []int{}, []int{}, []int{})
@@ -692,7 +692,7 @@ func TestNetworkLots(t *testing.T) {
 		pxh[i] = netport(i) 
 	}
 	for i := 0; i < npaxos; i++ {
-		pxa[i] = Make(pxh, i, nil, true)
+		pxa[i] = Make(pxh, i, nil, true, "networkLots" + string(i))
 		pxa[i].unreliable = true
 	}
 	//defer part(t, tag, npaxos, []int{}, []int{}, []int{})
