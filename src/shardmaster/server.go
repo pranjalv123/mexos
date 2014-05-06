@@ -16,7 +16,7 @@ import "strconv"
 import "github.com/jmhodges/levigo"
 import "bytes"
 
-const Debug = 0
+const Debug = 1
 const DebugPersist = 0
 const printRPCerrors = false
 
@@ -706,10 +706,14 @@ func (sm *ShardMaster) dbInit() {
 func StartServer(servers []string, me int, network bool) *ShardMaster {
 	gob.Register(Op{})
 
+	fmt.Println("running shardmaster.StartServer(), network = ",network)
+
 	sm := new(ShardMaster)
 	// Network stuff
 	sm.me = me
 	sm.network = network
+
+	DPrintf("got here\n")
 
 	// Shardmaster state
 	sm.processedSeq = -1
@@ -717,10 +721,12 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	sm.configs = make(map[int]*Config)
 	sm.configs[0] = &Config{}
 	sm.configs[0].Groups = map[int64][]string{}
-
+	
+	DPrintf("got here\n")	
 	// Persistence stuff
 	sm.dbInit()
-
+	DPrintf("got here\n")
+	
 	rpcs := rpc.NewServer()
 	if !printRPCerrors {
 		disableLog()
@@ -733,8 +739,10 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	sm.px = paxos.Make(servers, me, rpcs, network, "shardmaster")
 
 	if sm.network {
-		port := peers[me][len(peers[me])-6:len(peers[me])-1]
-		l, e := net.Listen("tcp", + port)
+		port := servers[me][len(servers[me])-6:len(servers[me])-1]
+		log.Printf("I am peers[%d] = $s, about to listen on port %s\n", me,
+		port, servers[me])
+		l, e := net.Listen("tcp", port)
 		if e != nil {
 			log.Fatal("listen error: ", e)
 		}
