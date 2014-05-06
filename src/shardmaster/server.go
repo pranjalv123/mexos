@@ -19,7 +19,6 @@ import "bytes"
 const Debug = 0
 const DebugPersist = 0
 const printRPCerrors = false
-const startport = 2200
 
 const persistent = true
 
@@ -734,7 +733,8 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	sm.px = paxos.Make(servers, me, rpcs, network, "shardmaster")
 
 	if sm.network {
-		l, e := net.Listen("tcp", ":"+strconv.Itoa(startport+me))
+		port := peers[me][len(peers[me])-6:len(peers[me])-1]
+		l, e := net.Listen("tcp", + port)
 		if e != nil {
 			log.Fatal("listen error: ", e)
 		}
