@@ -14,7 +14,8 @@ import "math/rand"
 // If you want, you can find-replace Fatalf with Errorf
 //   to allow the tests to finish and then print errors at completion
 //   (but tests will erroneously print out "passed")
-const runNewTests = false
+const runOldTests = true
+const runNewTests = true
 
 var rebootChannel chan int
 
@@ -97,6 +98,9 @@ func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]strin
 }
 
 func TestFileBasic(t *testing.T) {
+	if !runOldTests {
+		return
+	}
 	numGroups := 3
 	numReplicas := 3
 	smPorts, gids, kvPorts, kvServers, clean := setup("basic", false, numGroups, numReplicas)
@@ -167,6 +171,9 @@ func TestFileBasic(t *testing.T) {
 }
 
 func TestFileMove(t *testing.T) {
+	if !runOldTests {
+		return
+	}
 	numGroups := 3
 	numReplicas := 3
 	smPorts, gids, kvPorts, kvServers, clean := setup("move", false, numGroups, numReplicas)
@@ -233,6 +240,9 @@ func TestFileMove(t *testing.T) {
 }
 
 func TestFileLimp(t *testing.T) {
+	if !runOldTests {
+		return
+	}
 	numGroups := 3
 	numReplicas := 3
 	smPorts, gids, kvPorts, kvServers, clean := setup("limp", false, numGroups, numReplicas)
@@ -364,12 +374,18 @@ func doConcurrent(t *testing.T, unreliable bool) {
 }
 
 func TestFileConcurrent(t *testing.T) {
+	if !runOldTests {
+		return
+	}
 	fmt.Printf("\nTest: Concurrent Put/Get/Move...")
 	doConcurrent(t, false)
 	fmt.Printf("\n\tPassed\n")
 }
 
 func TestFileConcurrentUnreliable(t *testing.T) {
+	if !runOldTests {
+		return
+	}
 	fmt.Printf("\nTest: Concurrent Put/Get/Move (unreliable)...")
 	doConcurrent(t, true)
 	fmt.Printf("\n\tPassed\n")
@@ -508,7 +524,7 @@ func TestFilePersistenceOriginals(t *testing.T) {
 	if !runNewTests {
 		return
 	}
-
+	return
 	fmt.Printf("\nTest the original tests but with random reboots of servers or entire groups... ")
 	rebootChannel = make(chan int)
 	// Start randomly signaling for servers to reboot

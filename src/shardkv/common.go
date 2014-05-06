@@ -3,6 +3,7 @@ package shardkv
 import "math/big"
 import "crypto/rand"
 import "hash/fnv"
+import "shardmaster"
 
 //
 // Sharded key/value server.
@@ -47,7 +48,19 @@ type FetchReply struct {
 	Err      Err
 	Store    map[string]string
 	Response map[int64]string
-	Seen     map[int64]bool
+}
+
+type RecoverArgs struct {
+	Config int
+	Shard  int
+}
+
+type RecoverReply struct {
+	MinSeq        int
+	CurrentConfig shardmaster.Config
+	Store         map[string]string
+	Response      map[int64]string
+	Err           bool
 }
 
 func hash(s string) uint32 {

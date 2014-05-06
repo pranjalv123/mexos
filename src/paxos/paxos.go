@@ -74,6 +74,7 @@ type Paxos struct {
 	l         net.Listener
 	dead      bool
 	dbDeleted bool
+	dbClosed  bool
 
 	// Paxos state
 	instances    map[int]Proposal
@@ -681,12 +682,13 @@ func (px *Paxos) KillSaveDisk() {
 		px.l.Close()
 	}
 	// Close the database
-	if persistent && !px.dbDeleted {
+	if persistent && !px.dbClosed {
 		px.dbLock.Lock()
 		px.db.Close()
 		px.dbReadOptions.Close()
 		px.dbWriteOptions.Close()
 		px.dbLock.Unlock()
+		px.dbClosed = true
 	}
 }
 

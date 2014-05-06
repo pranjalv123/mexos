@@ -24,6 +24,7 @@ const DebugPersist = 0
 const printRPCerrors = false
 
 const persistent = true
+const recovery = true
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -51,12 +52,14 @@ type Op struct {
 }
 
 type ShardKV struct {
-	mu sync.Mutex
-	l  net.Listener
+	mu        sync.Mutex
+	l         net.Listener
+	dead      bool // for testing
+	dbClosed  bool
+	dbDeleted bool
 
 	// Network stuff
 	me         int
-	dead       bool // for testing
 	unreliable bool // for testing
 	network    bool
 
@@ -76,6 +79,7 @@ type ShardKV struct {
 	dbName         string
 	db             *levigo.DB
 	dbLock         sync.Mutex
+	recovering     bool
 }
 
 // Get the desired response, either from memory or disk
@@ -277,6 +281,9 @@ func (kv *ShardKV) addReconfigure(num int, store map[string]string, response map
 
 // Accept a Get request
 func (kv *ShardKV) Get(args *GetArgs, reply *KVReply) error {
+	for kv.recovering && !kv.dead {
+		time.Sleep(10 * time.Millisecond)
+	}
 	kv.mu.Lock()
 	defer func() {
 		DPrintf("%d.%d.%d) Get Returns: %s (%s)\n", kv.gid, kv.me, kv.config.Num, reply.Value, reply.Err)
@@ -297,6 +304,9 @@ func (kv *ShardKV) Get(args *GetArgs, reply *KVReply) error {
 
 // Accept a Put request
 func (kv *ShardKV) Put(args *PutArgs, reply *KVReply) error {
+	for kv.recovering && !kv.dead {
+		time.Sleep(10 * time.Millisecond)
+	}
 	kv.mu.Lock()
 	defer func() {
 		DPrintf("%d.%d.%d) Put Returns: %s (%s)\n", kv.gid, kv.me, kv.config.Num, reply.Value, reply.Err)
@@ -326,6 +336,16 @@ func (kv *ShardKV) Put(args *PutArgs, reply *KVReply) error {
 
 // Respond to a Fetch request
 func (kv *ShardKV) Fetch(args *FetchArgs, reply *FetchReply) error {
+	for kv.recovering && !kv.dead {
+		time.Sleep(10 * time.Millisecond)
+	}
+	return kv.fetchHandler(args, reply)
+}
+
+// This helper "fetch" method now exists because both Fetch
+// and FetchRecovery use it, and Fetch must wait for recovery
+// to complete but FetchRecovery must complete even during recovery
+func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 	//kv.mu.Lock()
 	defer func() {
 		DPrintf("%d.%d.%d) Fetch Returns: %s\n", kv.gid, kv.me, kv.config.Num, reply.Store)
@@ -351,7 +371,7 @@ func (kv *ShardKV) Fetch(args *FetchArgs, reply *FetchReply) error {
 	}
 	// Copy key/value pairs for desired shard from disk if not in memory
 	for k, v := range kv.dbGetShard(args.Shard, keysInMemory) {
-		DPrintfPersist("\n\t%v: got shard %v data (%v, %v)", args.Shard, kv.me, k, v)
+		DPrintfPersist("\n\t%v-%v: got shard %v data (%v, %v)", kv.gid, kv.me, args.Shard, k, v)
 		shardStore[k] = v
 	}
 
@@ -366,6 +386,9 @@ func (kv *ShardKV) Fetch(args *FetchArgs, reply *FetchReply) error {
 // if so, re-configure.
 //
 func (kv *ShardKV) tick() {
+	for kv.recovering && !kv.dead {
+		time.Sleep(10 * time.Millisecond)
+	}
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
 
@@ -437,16 +460,8 @@ func (kv *ShardKV) tick() {
 
 // please don't change this function.
 func (kv *ShardKV) Kill() {
-	// Just double check that Kill isn't called multiple times
-	// (trying to close kv.db multiple times causes a panic)
-	//fmt.Printf("\n%v-%v Got Kill()", kv.gid, kv.me)
-	if kv.dead {
-		//fmt.Printf("\n\t%v-%v Already dead", kv.gid, kv.me)
-		return
-	}
-
 	// Kill the server
-	DPrintf("\n%v: Killing the server", kv.me)
+	DPrintfPersist("\n%v-%v: Killing the server", kv.gid, kv.me)
 	kv.dead = true
 	if kv.l != nil {
 		kv.l.Close()
@@ -454,35 +469,31 @@ func (kv *ShardKV) Kill() {
 	kv.px.Kill()
 
 	// Close the database
-	if persistent {
+	if persistent && !kv.dbClosed {
 		kv.dbLock.Lock()
 		kv.db.Close()
+		kv.dbReadOptions.Close()
+		kv.dbWriteOptions.Close()
 		kv.dbLock.Unlock()
+		kv.dbClosed = true
 	}
 
 	// Destroy the database
-	if persistent {
-		//fmt.Printf("\n%v-%v Destroying the database", kv.gid, kv.me)
-		DPrintfPersist("\n%v: Destroying database... ", kv.me)
+	if persistent && !kv.dbDeleted {
+		DPrintfPersist("\n%v-%v: Destroying database... ", kv.gid, kv.me)
 		err := levigo.DestroyDatabase(kv.dbName, kv.dbOpts)
 		if err != nil {
 			DPrintfPersist("\terror")
 		} else {
 			DPrintfPersist("\tsuccess")
+			kv.dbDeleted = true
 		}
 	}
 }
 
 func (kv *ShardKV) KillSaveDisk() {
-	// Just double check that Kill isn't called multiple times
-	// (trying to close kv.db multiple times causes a panic)
-	//fmt.Printf("\n%v-%v Got Kill()", kv.gid, kv.me)
-	if kv.dead {
-		//fmt.Printf("\n%v-%v Already dead", kv.gid, kv.me)
-		return
-	}
 	// Kill the server
-	DPrintf("\n%v: Killing the server", kv.me)
+	DPrintfPersist("\n%v-%v: Killing the server", kv.gid, kv.me)
 	kv.dead = true
 	if kv.l != nil {
 		kv.l.Close()
@@ -490,10 +501,13 @@ func (kv *ShardKV) KillSaveDisk() {
 	kv.px.KillSaveDisk()
 
 	// Close the database
-	if persistent {
+	if persistent && !kv.dbClosed {
 		kv.dbLock.Lock()
 		kv.db.Close()
+		kv.dbReadOptions.Close()
+		kv.dbWriteOptions.Close()
 		kv.dbLock.Unlock()
+		kv.dbClosed = true
 	}
 }
 
@@ -504,24 +518,24 @@ func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool) map[string]str
 	if !persistent {
 		return shardStore
 	}
-	DPrintfPersist("\n%v: dbGetShard Waiting for dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbGetShard Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
-	DPrintfPersist("\n%v: dbGetShard Got dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbGetShard Got dbLock", kv.gid, kv.me)
 	defer func() {
 		kv.dbLock.Unlock()
-		DPrintfPersist("\n%v: dbGetShard Released dbLock", kv.me)
+		DPrintfPersist("\n%v-%v: dbGetShard Released dbLock", kv.gid, kv.me)
 	}()
 	if kv.dead {
 		return shardStore
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Reading shard %v from database... ", kv.me, shard)
+	toPrint += fmt.Sprintf("\n%v-%v: Reading shard %v from database... ", kv.gid, kv.me, shard)
 	// Get database iterator
 	iterator := kv.db.NewIterator(kv.dbReadOptions)
 	defer iterator.Close()
 	iterator.SeekToFirst()
-	DPrintfPersist("\n%v: dbGetShard starting iteration", kv.me)
+	DPrintfPersist("\n%v-%v: dbGetShard starting iteration", kv.gid, kv.me)
 	for iterator.Valid() {
 		keyBytes := iterator.Key()
 		key := string(keyBytes)
@@ -562,19 +576,19 @@ func (kv *ShardKV) dbGet(key string) (string, bool) {
 	if !persistent {
 		return "", false
 	}
-	DPrintfPersist("\n%v: dbGet Waiting for dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbGet Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
-	DPrintfPersist("\n%v: dbGet Got dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbGet Got dbLock", kv.gid, kv.me)
 	defer func() {
 		kv.dbLock.Unlock()
-		DPrintfPersist("\n%v: dbGet Released dbLock", kv.me)
+		DPrintfPersist("\n%v-%v: dbGet Released dbLock", kv.gid, kv.me)
 	}()
 	if kv.dead {
 		return "", false
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Reading value for %v from database... ", kv.me, key)
+	toPrint += fmt.Sprintf("\n%v-%v: Reading value for %v from database... ", kv.gid, kv.me, key)
 	// Read entry from database if it exists
 	key = fmt.Sprintf("KVkey_%v", key)
 	entryBytes, err := kv.db.Get(kv.dbReadOptions, []byte(key))
@@ -608,19 +622,19 @@ func (kv *ShardKV) dbPut(key string, value string) {
 	if !persistent {
 		return
 	}
-	DPrintfPersist("\n%v: dbPut Waiting for dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbPut Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
-	DPrintfPersist("\n%v: dbPut Got dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbPut Got dbLock", kv.gid, kv.me)
 	defer func() {
 		kv.dbLock.Unlock()
-		DPrintfPersist("\n%v: dbPut Released dbLock", kv.me)
+		DPrintfPersist("\n%v-%v: dbPut Released dbLock", kv.gid, kv.me)
 	}()
 	if kv.dead {
 		return
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Writing (%v, %v) to database... ", kv.me, key, value)
+	toPrint += fmt.Sprintf("\n%v-%v: Writing (%v, %v) to database... ", kv.gid, kv.me, key, value)
 	// Encode the value into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
@@ -646,19 +660,19 @@ func (kv *ShardKV) dbGetResponse(toGet int64) (string, bool) {
 	if !persistent {
 		return "", false
 	}
-	DPrintfPersist("\n%v: dbGetResponse Waiting for dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbGetResponse Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
-	DPrintfPersist("\n%v: dbGetResponse Got dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbGetResponse Got dbLock", kv.gid, kv.me)
 	defer func() {
 		kv.dbLock.Unlock()
-		DPrintfPersist("\n%v: dbGetResponse Released dbLock", kv.me)
+		DPrintfPersist("\n%v-%v: dbGetResponse Released dbLock", kv.gid, kv.me)
 	}()
 	if kv.dead {
 		return "", false
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Reading response %v from database... ", kv.me, toGet)
+	toPrint += fmt.Sprintf("\n%v-%v: Reading response %v from database... ", kv.gid, kv.me, toGet)
 	// Read entry from database if it exists
 	key := fmt.Sprintf("response_%v", toGet)
 	entryBytes, err := kv.db.Get(kv.dbReadOptions, []byte(key))
@@ -692,19 +706,19 @@ func (kv *ShardKV) dbWriteResponse(id int64, response string) {
 	if !persistent {
 		return
 	}
-	DPrintfPersist("\n%v: dbWriteResponse Waiting for dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbWriteResponse Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
-	DPrintfPersist("\n%v: dbWriteResponse Got dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbWriteResponse Got dbLock", kv.gid, kv.me)
 	defer func() {
 		kv.dbLock.Unlock()
-		DPrintfPersist("\n%v: dbWriteResponse Released dbLock", kv.me)
+		DPrintfPersist("\n%v-%v: dbWriteResponse Released dbLock", kv.gid, kv.me)
 	}()
 	if kv.dead {
 		return
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Writing response %v -> %v to database... ", kv.me, id, response)
+	toPrint += fmt.Sprintf("\n%v-%v: Writing response %v -> %v to database... ", kv.gid, kv.me, id, response)
 	// Encode the response into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
@@ -729,19 +743,19 @@ func (kv *ShardKV) dbWriteMinSeq(seq int) {
 	if !persistent {
 		return
 	}
-	DPrintfPersist("\n%v: dbWriteMinSeq Waiting for dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbWriteMinSeq Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
-	DPrintfPersist("\n%v: dbWriteMinSeq Got dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbWriteMinSeq Got dbLock", kv.gid, kv.me)
 	defer func() {
 		kv.dbLock.Unlock()
-		DPrintfPersist("\n%v: dbWriteMinSeq Released dbLock", kv.me)
+		DPrintfPersist("\n%v-%v: dbWriteMinSeq Released dbLock", kv.gid, kv.me)
 	}()
 	if kv.dead {
 		return
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Writing min sequence num %v to database... ", kv.me, seq)
+	toPrint += fmt.Sprintf("\n%v-%v: Writing min sequence num %v to database... ", kv.gid, kv.me, seq)
 	// Encode the number into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
@@ -766,19 +780,19 @@ func (kv *ShardKV) dbWriteConfigNum(configNum int) {
 	if !persistent {
 		return
 	}
-	DPrintfPersist("\n%v: dbWriteConfigNum Waiting for dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbWriteConfigNum Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
-	DPrintfPersist("\n%v: dbWriteConfigNum Got dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbWriteConfigNum Got dbLock", kv.gid, kv.me)
 	defer func() {
 		kv.dbLock.Unlock()
-		DPrintfPersist("\n%v: dbWriteConfigNum Released dbLock", kv.me)
+		DPrintfPersist("\n%v-%v: dbWriteConfigNum Released dbLock", kv.gid, kv.me)
 	}()
 	if kv.dead {
 		return
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Writing config num %v to database... ", kv.me, configNum)
+	toPrint += fmt.Sprintf("\n%v-%v: Writing config num %v to database... ", kv.gid, kv.me, configNum)
 	// Encode the number into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
@@ -804,12 +818,12 @@ func (kv *ShardKV) dbInit() {
 	if !persistent {
 		return
 	}
-	DPrintfPersist("\n%v: dbInit Waiting for dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbInit Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
-	DPrintfPersist("\n%v: dbInit Got dbLock", kv.me)
+	DPrintfPersist("\n%v-%v: dbInit Got dbLock", kv.gid, kv.me)
 	defer func() {
 		kv.dbLock.Unlock()
-		DPrintfPersist("\n%v: dbInit Released dbLock", kv.me)
+		DPrintfPersist("\n%v-%v: dbInit Released dbLock", kv.gid, kv.me)
 	}()
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
@@ -817,7 +831,7 @@ func (kv *ShardKV) dbInit() {
 		return
 	}
 
-	DPrintfPersist("\n%v: Initializing database", kv.me)
+	DPrintfPersist("\n%v-%v: Initializing database", kv.gid, kv.me)
 
 	// Open database (create it if it doesn't exist)
 	kv.dbOpts = levigo.NewOptions()
@@ -826,13 +840,13 @@ func (kv *ShardKV) dbInit() {
 	dbDir := "/home/ubuntu/mexos/src/shardkv/persist/"
 	kv.dbName = dbDir + "shardkvDB_" + fmt.Sprint(kv.gid) + "_" + strconv.Itoa(kv.me)
 	os.MkdirAll(dbDir, 0777)
-	DPrintfPersist("\n\t%v: DB Name: %s", kv.me, kv.dbName)
+	DPrintfPersist("\n\t%v-%v: DB Name: %s", kv.gid, kv.me, kv.dbName)
 	var err error
 	kv.db, err = levigo.Open(kv.dbName, kv.dbOpts)
 	if err != nil {
-		DPrintfPersist("\n\t%v: Error opening database! \n\t%s", kv.me, fmt.Sprint(err))
+		DPrintfPersist("\n\t%v-%v: Error opening database! \n\t%s", kv.gid, kv.me, fmt.Sprint(err))
 	} else {
-		DPrintfPersist("\n\t%v: Database opened successfully", kv.me)
+		DPrintfPersist("\n\t%v-%v: Database opened successfully", kv.gid, kv.me)
 	}
 
 	// Create options for reading/writing entries
@@ -843,7 +857,7 @@ func (kv *ShardKV) dbInit() {
 	minSeqBytes, err := kv.db.Get(kv.dbReadOptions, []byte("minSeq"))
 	if err == nil && len(minSeqBytes) > 0 {
 		// Decode the max instance
-		DPrintfPersist("\n\t%v: Decoding min seqeunce... ", kv.me)
+		DPrintfPersist("\n\t%v-%v: Decoding min seqeunce... ", kv.gid, kv.me)
 		bufferMinSeq := *bytes.NewBuffer(minSeqBytes)
 		decoder := gob.NewDecoder(&bufferMinSeq)
 		var minSeqDecoded int
@@ -855,14 +869,14 @@ func (kv *ShardKV) dbInit() {
 			DPrintfPersist("\tsuccess")
 		}
 	} else {
-		DPrintfPersist("\n\t%v: No stored min sequence to load", kv.me)
+		DPrintfPersist("\n\t%v-%v: No stored min sequence to load", kv.gid, kv.me)
 	}
 
 	// Read config number from database if it exists
 	configNumBytes, err := kv.db.Get(kv.dbReadOptions, []byte("configNum"))
 	if err == nil && len(configNumBytes) > 0 {
 		// Decode the max instance
-		DPrintfPersist("\n\t%v: Decoding config num... ", kv.me)
+		DPrintfPersist("\n\t%v-%v: Decoding config num... ", kv.gid, kv.me)
 		bufferConfigNum := *bytes.NewBuffer(configNumBytes)
 		decoder := gob.NewDecoder(&bufferConfigNum)
 		var configNumDecoded int
@@ -879,8 +893,119 @@ func (kv *ShardKV) dbInit() {
 			DPrintfPersist("\tsuccess")
 		}
 	} else {
-		DPrintfPersist("\n\t%v: No stored config num to load", kv.me)
+		DPrintfPersist("\n\t%v-%v: No stored config num to load", kv.gid, kv.me)
 	}
+}
+
+func (kv *ShardKV) startup(servers []string) {
+	defer func() {
+		kv.recovering = false
+		DPrintfPersist("\n%v-%v Marked recovery false", kv.gid, kv.me)
+	}()
+	// Initialize database, check if state is stored
+	kv.recovering = true
+	DPrintfPersist("\n%v-%v Marked recovery true", kv.gid, kv.me)
+	kv.dbInit()
+	if !recovery {
+		return
+	}
+	// Get minSeq and configNum from a peer
+	if len(servers) == 1 {
+		return
+	}
+	haveState := false
+	args := RecoverArgs{-1, -1}
+	for !kv.dead && !haveState {
+		for index, server := range servers {
+			if index == kv.me {
+				continue
+			}
+			DPrintfPersist("\n\t%v-%v: Asking %v for kv recovery state", kv.gid, kv.me, index)
+			var reply RecoverReply
+			ok := call(server, "ShardKV.FetchRecovery", args, &reply, kv.network)
+			if ok && !reply.Err {
+				DPrintfPersist("\n\t%v%v: Got %v", kv.gid, kv.me, reply)
+				if reply.MinSeq > kv.minSeq {
+					kv.config = reply.CurrentConfig
+					kv.minSeq = reply.MinSeq
+					kv.dbWriteMinSeq(kv.minSeq)
+					kv.dbWriteConfigNum(kv.config.Num)
+				}
+				haveState = true
+				break
+			}
+		}
+	}
+	DPrintfPersist("\n\t%v-%v: Starting to recover shards and responses", kv.gid, kv.me)
+	// Now either state was stored or state was gone but is recovered
+	// Now want to get up to date
+	var myShards []int
+	for shard, gid := range kv.config.Shards {
+		if gid == kv.gid {
+			myShards = append(myShards, shard)
+		}
+	}
+	for _, shard := range myShards {
+		haveShard := false
+		args := RecoverArgs{kv.config.Num, shard}
+		for !kv.dead && !haveShard {
+			for index, server := range servers {
+				if index == kv.me {
+					continue
+				}
+				DPrintfPersist("\n\t%v-%v: Asking %v for shard %v", kv.gid, kv.me, index, shard)
+				var reply RecoverReply
+				ok := call(server, "ShardKV.FetchRecovery", args, &reply, kv.network)
+				if ok && !reply.Err {
+					DPrintf("\n\t: %v-%v Got shard %v from %v\n", kv.gid, kv.me, shard, index)
+					for k, v := range reply.Store {
+						kv.store[k] = v
+						kv.dbPut(k, v)
+					}
+					for k, v := range reply.Response {
+						kv.response[k] = v
+						kv.dbWriteResponse(k, v)
+					}
+					haveShard = true
+					break
+				}
+			}
+		}
+	}
+}
+
+func (kv *ShardKV) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
+	kv.mu.Lock()
+	defer kv.mu.Unlock()
+	DPrintfPersist("\n%v-%v: Got Fetch Recovery request", kv.gid, kv.me)
+
+	if args.Config == -1 {
+		reply.CurrentConfig = shardmaster.Config{}
+		config := kv.config
+		reply.CurrentConfig.Num = config.Num
+		reply.CurrentConfig.Groups = make(map[int64][]string)
+		for gid, servers := range config.Groups {
+			reply.CurrentConfig.Groups[gid] = servers
+		}
+		for shard, gid := range config.Shards {
+			reply.CurrentConfig.Shards[shard] = gid
+		}
+
+		reply.MinSeq = kv.minSeq
+		reply.Err = false
+	} else {
+		reply.Err = false
+		fetchArgs := FetchArgs{args.Config, args.Shard}
+		var fetchReply FetchReply
+		err := kv.fetchHandler(&fetchArgs, &fetchReply)
+		reply.Err = (err != nil || fetchReply.Err != OK)
+		DPrintfPersist("\n%v-%verr: %v, fetchReply err: %v", kv.gid, kv.me, err, fetchReply.Err)
+		reply.Response = fetchReply.Response
+		reply.Store = fetchReply.Store
+	}
+
+	DPrintfPersist("\n%v-%v: sending %v", kv.gid, kv.me, reply)
+	return nil
 }
 
 //
@@ -913,10 +1038,13 @@ func StartServer(gid int64, shardmasters []string,
 	kv.response = make(map[int64]string)
 	kv.minSeq = -1
 
-	DPrintf("got here\n")
 	// Peristence stuff
-	kv.dbInit()
-	DPrintf("got here\n")
+	waitChan := make(chan int)
+	go func() {
+		waitChan <- 1
+		kv.startup(servers)
+	}()
+	<-waitChan
 
 	rpcs := rpc.NewServer()
 	if !printRPCerrors {
@@ -927,6 +1055,7 @@ func StartServer(gid int64, shardmasters []string,
 		rpcs.Register(kv)
 	}
 
+	// Give paxos a tag which is different for each group
 	kv.px = paxos.Make(servers, me, rpcs, kv.network, "shardkv_"+fmt.Sprint(kv.gid))
 
 	if kv.network {

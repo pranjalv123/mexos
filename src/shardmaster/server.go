@@ -44,6 +44,7 @@ type ShardMaster struct {
 	l         net.Listener
 	dead      bool // for testing
 	dbDeleted bool
+	dbClosed  bool
 
 	// Network stuff
 	me         int
@@ -449,12 +450,13 @@ func (sm *ShardMaster) Kill() {
 	sm.px.Kill()
 
 	// Close the database
-	if persistent {
+	if persistent && !sm.dbClosed {
 		sm.dbLock.Lock()
 		sm.db.Close()
 		sm.dbReadOptions.Close()
 		sm.dbWriteOptions.Close()
 		sm.dbLock.Unlock()
+		sm.dbClosed = true
 	}
 
 	// Destroy the database
@@ -480,12 +482,13 @@ func (sm *ShardMaster) KillSaveDisk() {
 	sm.px.KillSaveDisk()
 
 	// Close the database
-	if persistent {
+	if persistent && !sm.dbClosed {
 		sm.dbLock.Lock()
 		sm.db.Close()
 		sm.dbReadOptions.Close()
 		sm.dbWriteOptions.Close()
 		sm.dbLock.Unlock()
+		sm.dbClosed = true
 	}
 }
 
