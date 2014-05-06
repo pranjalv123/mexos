@@ -11,7 +11,7 @@ import "sync"
 
 const onlyBenchmarks = false
 const runOldTests = true
-const runNewTests = false
+const runNewTests = true
 
 // Make a port using the given tag and host number
 func makePort(tag string, host int) string {
@@ -920,16 +920,20 @@ func TestFileRPCCountRegular(test *testing.T) {
 	for i := 0; i < numServers; i++ {
 		paxosServers[i] = Make(paxosPorts, i, nil, false, "")
 	}
+
 	// Wait for servers to finish sending recovery RPCs
 	for i := 0; i < numServers; i++ {
 		_ = paxosServers[i].Min()
 	}
-
 	rpcCount := 0
+	rpcTotalCount := 0
 	for j := 0; j < numServers; j++ {
-		rpcCount += paxosServers[j].rpcCount
+		count := paxosServers[j].rpcCount
+		rpcCount += count
+		rpcTotalCount += count
 	}
 
+	// Get agrerment on an instance and count RPCs
 	numInstances := 5
 	seq := 0
 	for i := 0; i < numInstances; i++ {
@@ -937,10 +941,11 @@ func TestFileRPCCountRegular(test *testing.T) {
 		waitForDecision(test, paxosServers, seq, numServers)
 		seq++
 	}
-
-	rpcCount *= -1
+	rpcCount = -rpcTotalCount // Subtract recovery RPCs
 	for j := 0; j < numServers; j++ {
-		rpcCount += paxosServers[j].rpcCount
+		count := paxosServers[j].rpcCount
+		rpcCount += count
+		rpcTotalCount += count
 	}
 
 	// per agreement:
@@ -954,6 +959,7 @@ func TestFileRPCCountRegular(test *testing.T) {
 			numInstances, rpcCount, rpcCountExpected)
 	}
 
+	// Get agreement on more instances (multiple proposers)
 	numInstances = 5
 	for i := 0; i < numInstances; i++ {
 		for j := 0; j < numServers; j++ {
@@ -965,9 +971,11 @@ func TestFileRPCCountRegular(test *testing.T) {
 		seq++
 	}
 
-	rpcCount *= -1 // Want to subtract previous count to only count this round of RPCs
+	rpcCount = -rpcTotalCount // Subtract previous count to only count this round of RPCs
 	for j := 0; j < numServers; j++ {
-		rpcCount += paxosServers[j].rpcCount
+		count := paxosServers[j].rpcCount
+		rpcCount += count
+		rpcTotalCount += count
 	}
 
 	// worst case per agreement:
@@ -1009,10 +1017,12 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 	for i := 0; i < numServers; i++ {
 		_ = paxosServers[i].Min()
 	}
-
 	rpcCount := 0
+	rpcTotalCount := 0
 	for j := 0; j < numServers; j++ {
-		rpcCount += paxosServers[j].rpcCount
+		count := paxosServers[j].rpcCount
+		rpcCount += count
+		rpcTotalCount += count
 	}
 
 	seq := 0
@@ -1021,11 +1031,12 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 	paxosServers[0].Start(seq, "x")
 	waitForDecision(test, paxosServers, seq, numServers)
 	seq++
-	rpcCount *= -1
+	rpcCount = -rpcTotalCount // Subtract recovery RPCs
 	for j := 0; j < numServers; j++ {
-		rpcCount += paxosServers[j].rpcCount
+		count := paxosServers[j].rpcCount
+		rpcCount += count
+		rpcTotalCount += count
 	}
-	rpcCount *= -1 // Don't count these initial messages
 
 	// Perform agreement on multiple instances, one at a time
 	// with a single proposer for all of them
@@ -1035,8 +1046,11 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 		waitForDecision(test, paxosServers, seq, numServers)
 		seq++
 	}
+	rpcCount = -rpcTotalCount // Subtract initial agreement round
 	for j := 0; j < numServers; j++ {
-		rpcCount += paxosServers[j].rpcCount
+		count := paxosServers[j].rpcCount
+		rpcCount += count
+		rpcTotalCount += count
 	}
 
 	// Check rpcCount
@@ -1062,9 +1076,11 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 		waitForDecision(test, paxosServers, seq, numServers)
 		seq++
 	}
-	rpcCount *= -1 // Want to subtract previous count to only count this round of RPCs
+	rpcCount = -rpcTotalCount // Subtract previous count to only count this round of RPCs
 	for j := 0; j < numServers; j++ {
-		rpcCount += paxosServers[j].rpcCount
+		count := paxosServers[j].rpcCount
+		rpcCount += count
+		rpcTotalCount += count
 	}
 
 	// TODO figure out what expected count should be
@@ -1709,7 +1725,7 @@ func TestFileRecovery(test *testing.T) {
 
 	fmt.Printf("\n\tPassed")
 
-	fmt.Printf("\nTest: Recovery after reboot without disk")
+	fmt.Printf("\nTest: Recovery after reboot without disk ...")
 
 	// Call done on some instances
 	for s := 0; s < numServers; s++ {

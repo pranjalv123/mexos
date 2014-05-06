@@ -16,11 +16,14 @@ import "strconv"
 import "github.com/jmhodges/levigo"
 import "bytes"
 
-const Debug = 1
+const Debug = 0
 const DebugPersist = 0
 const printRPCerrors = false
 
+// Note: if persistent and recovery are not enabled,
+// some of the persistence tests fail by panic (divide-by-zero in balance)
 const persistent = true
+const recovery = true
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -37,12 +40,13 @@ func DPrintfPersist(format string, a ...interface{}) (n int, err error) {
 }
 
 type ShardMaster struct {
-	mu sync.Mutex
-	l  net.Listener
+	mu        sync.Mutex
+	l         net.Listener
+	dead      bool // for testing
+	dbDeleted bool
 
 	// Network stuff
 	me         int
-	dead       bool // for testing
 	deaf       bool // for testing
 	unreliable bool // for testing
 	network    bool
@@ -61,6 +65,7 @@ type ShardMaster struct {
 	db             *levigo.DB
 	dbLock         sync.Mutex
 	dbMaxConfig    int
+	recovering     bool
 }
 
 type Op struct {
@@ -251,6 +256,9 @@ func (sm *ShardMaster) processLog(maxSeq int) {
 
 // Accept a Join request
 func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
+	for sm.recovering && !sm.dead {
+		time.Sleep(10 * time.Millisecond)
+	}
 	sm.mu.Lock()
 	DPrintf("%d) Join: %d -> %s\n", sm.me, args.GID, args.Servers)
 
@@ -292,6 +300,9 @@ func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
 
 // Accept a request to remove a group
 func (sm *ShardMaster) Leave(args *LeaveArgs, reply *LeaveReply) error {
+	for sm.recovering && !sm.dead {
+		time.Sleep(10 * time.Millisecond)
+	}
 	sm.mu.Lock()
 	DPrintf("%d) Leave: %d\n", sm.me, args.GID)
 
@@ -333,6 +344,9 @@ func (sm *ShardMaster) Leave(args *LeaveArgs, reply *LeaveReply) error {
 
 // Accept a request to move a shard to a particular group
 func (sm *ShardMaster) Move(args *MoveArgs, reply *MoveReply) error {
+	for sm.recovering && !sm.dead {
+		time.Sleep(10 * time.Millisecond)
+	}
 	sm.mu.Lock()
 	DPrintf("%d) Move: %d -> %d\n", sm.me, args.Shard, args.GID)
 
@@ -374,6 +388,9 @@ func (sm *ShardMaster) Move(args *MoveArgs, reply *MoveReply) error {
 
 // Respond to a query about a particular configuration
 func (sm *ShardMaster) Query(args *QueryArgs, reply *QueryReply) error {
+	for sm.recovering && !sm.dead {
+		time.Sleep(10 * time.Millisecond)
+	}
 	sm.mu.Lock()
 	DPrintf("%d) Query: %d\n", sm.me, args.Num)
 
@@ -423,14 +440,8 @@ func (sm *ShardMaster) Query(args *QueryArgs, reply *QueryReply) error {
 
 // please don't change this function.
 func (sm *ShardMaster) Kill() {
-	// Just double check that Kill isn't called multiple times
-	// (trying to close sm.db multiple times causes a panic)
-	if sm.dead {
-		return
-	}
-
 	// Kill the server
-	DPrintf("\n%v: Killing the server", sm.me)
+	DPrintfPersist("\n%v: Killing the server", sm.me)
 	sm.dead = true
 	if sm.l != nil {
 		sm.l.Close()
@@ -441,29 +452,27 @@ func (sm *ShardMaster) Kill() {
 	if persistent {
 		sm.dbLock.Lock()
 		sm.db.Close()
+		sm.dbReadOptions.Close()
+		sm.dbWriteOptions.Close()
 		sm.dbLock.Unlock()
 	}
 
 	// Destroy the database
-	if persistent {
+	if persistent && !sm.dbDeleted {
 		DPrintfPersist("\n%v: Destroying database... ", sm.me)
 		err := levigo.DestroyDatabase(sm.dbName, sm.dbOpts)
 		if err != nil {
 			DPrintfPersist("\terror")
 		} else {
 			DPrintfPersist("\tsuccess")
+			sm.dbDeleted = true
 		}
 	}
 }
 
 func (sm *ShardMaster) KillSaveDisk() {
-	// Just double check that Kill isn't called multiple times
-	// (trying to close sm.db multiple times causes a panic)
-	if sm.dead {
-		return
-	}
 	// Kill the server
-	DPrintf("\n%v: Killing the server", sm.me)
+	DPrintfPersist("\n%v: Killing the server", sm.me)
 	sm.dead = true
 	if sm.l != nil {
 		sm.l.Close()
@@ -474,6 +483,8 @@ func (sm *ShardMaster) KillSaveDisk() {
 	if persistent {
 		sm.dbLock.Lock()
 		sm.db.Close()
+		sm.dbReadOptions.Close()
+		sm.dbWriteOptions.Close()
 		sm.dbLock.Unlock()
 	}
 }
@@ -697,6 +708,100 @@ func (sm *ShardMaster) dbInit() {
 	}
 }
 
+func (sm *ShardMaster) startup(servers []string) {
+	defer func() {
+		sm.recovering = false
+		DPrintfPersist("\n%v Marked recovery false", sm.me)
+	}()
+	// Initialize database, check if state is stored
+	sm.recovering = true
+	DPrintfPersist("\n%v Marked recovery true", sm.me)
+	sm.dbInit()
+	if !recovery {
+		return
+	}
+	// Get processSeq and maxConfig from a peer
+	if len(servers) == 1 {
+		return
+	}
+	haveState := false
+	args := RecoverArgs{-1}
+	newMaxConfig := sm.maxConfig
+	for !sm.dead && !haveState {
+		for index, server := range servers {
+			if index == sm.me {
+				continue
+			}
+			DPrintfPersist("\n\t%v: Asking %v for sm recovery state", sm.me, index)
+			var reply RecoverReply
+			ok := call(server, "ShardMaster.FetchRecovery", args, &reply, sm.network)
+			if ok && !reply.Err {
+				DPrintfPersist("\n\t%v: Got %v", sm.me, reply)
+				if reply.ProcessedSeq > sm.processedSeq {
+					newMaxConfig = reply.MaxConfig
+					sm.processedSeq = reply.ProcessedSeq
+					sm.dbWriteProcessedSeq(sm.processedSeq)
+				}
+				haveState = true
+				break
+			}
+		}
+	}
+	DPrintfPersist("\n\t%v: Starting to recover configs", sm.me)
+	// Now either state was stored or state was gone but is recovered
+	// Now want to get up to date
+	for config := sm.maxConfig + 1; config <= newMaxConfig; config++ {
+		// Ask peer for configs
+		haveConfig := false
+		args := RecoverArgs{config}
+		for !sm.dead && !haveConfig {
+			for index, server := range servers {
+				if index == sm.me {
+					continue
+				}
+				DPrintfPersist("\n\t%v: Asking %v for config %v", sm.me, index, config)
+				var reply RecoverReply
+				ok := call(server, "ShardMaster.FetchRecovery", args, &reply, sm.network)
+				if ok && !reply.Err {
+					replyConfig := reply.RequestedConfig
+					sm.configs[config] = &replyConfig
+					sm.dbWriteConfig(config, replyConfig)
+					DPrintfPersist("\n\t\t%v: Got %v for config %v", sm.me, *sm.configs[config], config)
+					haveConfig = true
+					sm.maxConfig = config
+					break
+				}
+			}
+		}
+	}
+}
+
+func (sm *ShardMaster) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	DPrintfPersist("\n%v: Got Fetch request", sm.me)
+	reply.RequestedConfig = Config{}
+	if args.ConfigNum == -1 {
+		reply.MaxConfig = sm.maxConfig
+		reply.ProcessedSeq = sm.processedSeq
+		DPrintfPersist("\n%v: sending %v", sm.me, reply)
+	} else {
+		config := sm.getConfig(args.ConfigNum)
+		reply.RequestedConfig.Num = config.Num
+		reply.RequestedConfig.Groups = make(map[int64][]string)
+		for gid, servers := range config.Groups {
+			reply.RequestedConfig.Groups[gid] = servers
+		}
+		for shard, gid := range config.Shards {
+			reply.RequestedConfig.Shards[shard] = gid
+		}
+
+		DPrintfPersist("\n%v: sending %v", sm.me, reply)
+	}
+	reply.Err = false
+	return nil
+}
+
 //
 // servers[] contains the ports of the set of
 // servers that will cooperate via Paxos to
@@ -706,14 +811,12 @@ func (sm *ShardMaster) dbInit() {
 func StartServer(servers []string, me int, network bool) *ShardMaster {
 	gob.Register(Op{})
 
-	fmt.Println("running shardmaster.StartServer(), network = ",network)
+	//fmt.Println("running shardmaster.StartServer(), network = ",network)
 
 	sm := new(ShardMaster)
 	// Network stuff
 	sm.me = me
 	sm.network = network
-
-	DPrintf("got here\n")
 
 	// Shardmaster state
 	sm.processedSeq = -1
@@ -721,12 +824,15 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	sm.configs = make(map[int]*Config)
 	sm.configs[0] = &Config{}
 	sm.configs[0].Groups = map[int64][]string{}
-	
-	DPrintf("got here\n")	
+
 	// Persistence stuff
-	sm.dbInit()
-	DPrintf("got here\n")
-	
+	waitChan := make(chan int)
+	go func() {
+		waitChan <- 1
+		sm.startup(servers)
+	}()
+	<-waitChan
+
 	rpcs := rpc.NewServer()
 	if !printRPCerrors {
 		disableLog()
@@ -739,9 +845,9 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	sm.px = paxos.Make(servers, me, rpcs, network, "shardmaster")
 
 	if sm.network {
-		port := servers[me][len(servers[me])-6:len(servers[me])-1]
+		port := servers[me][len(servers[me])-6 : len(servers[me])-1]
 		log.Printf("I am peers[%d] = $s, about to listen on port %s\n", me,
-		port, servers[me])
+			port, servers[me])
 		l, e := net.Listen("tcp", port)
 		if e != nil {
 			log.Fatal("listen error: ", e)

@@ -441,7 +441,7 @@ func TestFilePersistence(test *testing.T) {
 		clerks[i] = MakeClerk([]string{shardMasterPorts[i]}, false)
 		gids = append(gids, int64(i)+1)
 	}
-	fmt.Printf("\nTest: Single restarted server knows about past and missed configs ...")
+	fmt.Printf("\nTest: Single restarted server (with disk) knows about past and missed configs ...")
 
 	// Make some configs
 	for i := 0; i < numServers; i++ {
@@ -459,18 +459,42 @@ func TestFilePersistence(test *testing.T) {
 	// Bring server back and query configs
 	shardMasterServers[0] = StartServer(shardMasterPorts, 0, false)
 	if clerks[0].Query(3).Num != 3 {
-		test.Fatalf("Restarted server does not remember past configs it had seen")
+		test.Fatalf("Restarted server (with disk) does not remember past configs it had seen")
 	}
 	restartNum := clerks[0].Query(-1).Num
 	correctNum := clerks[1].Query(-1).Num
 	if restartNum != correctNum {
-		test.Fatalf("Restarted server did not learn about missed configs (knows up to %v, should know %v)", restartNum, correctNum)
+		test.Fatalf("Restarted server (with disk) did not learn about missed configs (knows up to %v, should know %v)", restartNum, correctNum)
 	}
 	checkConfig(test, gids, masterClerk)
 
 	fmt.Printf("\n\tPassed")
 
-	fmt.Printf("\nTest: All servers restart, know about past configs ...")
+	fmt.Printf("\nTest: Single restarted server (no disk) knows about past and missed configs ...")
+
+	// Kill a server (erase disk)
+	shardMasterServers[0].Kill()
+
+	// Make some more configs
+	clerks[1].Leave(gids[1])
+	clerks[2].Join(gids[1], []string{"a", "b", "c"})
+	checkConfig(test, gids, masterClerk)
+
+	// Bring server back and query configs
+	shardMasterServers[0] = StartServer(shardMasterPorts, 0, false)
+	if clerks[0].Query(4).Num != 4 {
+		test.Fatalf("Restarted server (no disk) does not remember past configs it had seen")
+	}
+	restartNum = clerks[0].Query(-1).Num
+	correctNum = clerks[1].Query(-1).Num
+	if restartNum != correctNum {
+		test.Fatalf("Restarted server (no disk) did not learn about missed configs (knows up to %v, should know %v)", restartNum, correctNum)
+	}
+	checkConfig(test, gids, masterClerk)
+
+	fmt.Printf("\n\tPassed")
+
+	fmt.Printf("\nTest: All servers restart (with disk), know about past configs ...")
 
 	// Kill all servers
 	for i := 0; i < numServers; i++ {

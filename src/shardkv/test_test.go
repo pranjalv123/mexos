@@ -10,7 +10,11 @@ import "fmt"
 import "sync"
 import "math/rand"
 
-const runNewTests = true
+// Note: If a persistence test fails, the next one may fail by panic since kill wasn't called
+// If you want, you can find-replace Fatalf with Errorf
+//   to allow the tests to finish and then print errors at completion
+//   (but tests will erroneously print out "passed")
+const runNewTests = false
 
 var rebootChannel chan int
 
