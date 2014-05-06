@@ -68,7 +68,7 @@ func main() {
 		metapeers, masters, groups := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
 		me := whoami(masters)
 		if me != -1 {
-			fmt.Println(getIP," starting shardmaster instead.")
+			fmt.Println(getIP()," starting shardmaster instead.")
 			shardmaster.StartServer(masters, me, network)
 			fmt.Printf("peers: %v\n", masters)
 			fmt.Printf("me: %d\n", me)
