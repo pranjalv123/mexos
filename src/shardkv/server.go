@@ -18,7 +18,7 @@ import "github.com/jmhodges/levigo"
 import "bytes"
 import "strings"
 
-const Debug = 0
+const Debug = 1
 const startport = 2300
 const DebugPersist = 0
 const printRPCerrors = false
@@ -896,21 +896,27 @@ func StartServer(gid int64, shardmasters []string,
 	servers []string, me int, network bool) *ShardKV {
 	gob.Register(Op{})
 
+	fmt.Println("running shardkv.StartServer(), network = ",network)
+
 	kv := new(ShardKV)
 	// Network stuff
 	kv.me = me
 	kv.network = network
 
+	DPrintf("got here\n")
+
 	// ShardKV state
 	kv.gid = gid
 	kv.sm = shardmaster.MakeClerk(shardmasters, kv.network)
-	kv.config = kv.sm.Query(0)
+	kv.config = kv.sm.Query(0) //hangs here, since shardmaster doesn't work
 	kv.store = make(map[string]string)
 	kv.response = make(map[int64]string)
 	kv.minSeq = -1
 
+	DPrintf("got here\n")
 	// Peristence stuff
 	kv.dbInit()
+	DPrintf("got here\n")	
 
 	rpcs := rpc.NewServer()
 	if !printRPCerrors {
@@ -924,7 +930,10 @@ func StartServer(gid int64, shardmasters []string,
 	kv.px = paxos.Make(servers, me, rpcs, kv.network, "shardkv_"+fmt.Sprint(kv.gid))
 
 	if kv.network {
-		l, e := net.Listen("tcp", strconv.Itoa(startport+me))
+	   	port := servers[me][len(servers[me])-6:len(servers[me])-1]
+		log.Printf("I am peers[%d] = $s, about to listen on port %s\n", me,
+			      port, servers[me])
+		l, e := net.Listen("tcp", port)
 		if e != nil {
 			log.Fatal("listen error: ", e)
 		}
