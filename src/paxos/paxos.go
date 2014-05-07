@@ -38,12 +38,13 @@ import "bytes"
 const startport = 2100
 const printRPCerrors = false
 
-const enableLeader = 1
-const persistent = true
-const recovery = true
+const persistent = false
+const recovery = false
 
 const Debug = 0
 const DebugPersist = 0
+
+const enableLeader = 0
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -82,6 +83,7 @@ type Paxos struct {
 	done         map[int]int
 	doneChannels map[int]chan bool
 	leader       int
+  proposed     map[int]bool
 
 	// Networking stuff
 	unreliable bool
@@ -115,9 +117,11 @@ type RecoverReply struct {
 }
 
 type PrepareArgs struct {
+  Server int
 	Instance int
 	PID      int
 	Done     map[int]int
+  Leader   int
 }
 
 type PrepareReply struct {
@@ -125,19 +129,23 @@ type PrepareReply struct {
 	PID   int
 	Value interface{}
 	Done  map[int]int
+  Leader   int
 }
 
 type AcceptArgs struct {
+  Server int
 	Instance int
 	PID      int
 	Value    interface{}
 	Done     map[int]int
+  Leader   int
 }
 
 type AcceptReply struct {
 	Err  bool
 	PID  int
 	Done map[int]int
+  Leader   int
 }
 
 type DecideArgs struct {
@@ -146,11 +154,13 @@ type DecideArgs struct {
 	PID      int
 	Value    interface{}
 	Done     map[int]int
+  Leader   int
 }
 
 type DecideReply struct {
 	Err  bool
 	Done map[int]int
+  Leader   int
 }
 
 type ProposeArgs struct {
@@ -162,6 +172,7 @@ type ProposeArgs struct {
 type ProposeReply struct {
 	Err  bool
 	Done map[int]int
+  Leader   int
 }
 
 //
@@ -309,7 +320,7 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 		px.recordDone(dk, dv)
 	}
 	px.mu.Lock()
-	DPrintf("\n%v: Received prepare for sequence %v", px.me, args.Instance)
+	DPrintf("\n%v (L%v): Received prepare for sequence %v", px.me, px.leader, args.Instance)
 	prop := px.getInstance(args.Instance)
 	reply.Err = true
 
@@ -320,11 +331,13 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 
 	// Check if proposal number is high enough
 	if args.PID > prop.Prepare {
-		px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
-		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
-		reply.Err = false
+    px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
+    px.dbWriteInstance(args.Instance, px.instances[args.Instance])
+    reply.Err = false
 		reply.PID = prop.Accept
 		reply.Value = prop.Value
+    reply.Leader = args.Server
+    px.leader = -1
 	}
 	px.mu.Unlock()
 
@@ -342,7 +355,7 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 		px.recordDone(dk, dv)
 	}
 	px.mu.Lock()
-	DPrintf("\n%v: Received accept for sequence %v", px.me, args.Instance)
+	DPrintf("\n%v (L%v): Received accept for sequence %v (%v)", px.me, px.leader, args.Instance, args.Value)
 	// Create instance if needed (note prepare request may have been lost in network)
 	prop := px.getInstance(args.Instance)
 	reply.Err = true
@@ -352,18 +365,20 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 		newDone[dk] = dv
 	}
 
-	if args.PID >= prop.Prepare {
+	if args.PID >= prop.Prepare || (args.Server == px.leader && enableLeader > 0) {
 		px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, prop.Decided}
 		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
 		reply.Err = false
 		reply.PID = args.PID
-	}
+    px.leader = args.Server
+  }
 	px.mu.Unlock()
 
 	for dk, dv := range px.done {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
+  reply.Leader = px.leader
 
 	return nil
 }
@@ -371,10 +386,12 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 // Respond to a Decide request
 func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 	px.mu.Lock()
-	DPrintfPersist("\n%v: Received decide for sequence %v", px.me, args.Instance)
+	DPrintf("\n%v (L%v): Received decide for sequence %v (%v)", px.me, px.leader, args.Instance, args.Value)
 	px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, true}
 	px.dbWriteInstance(args.Instance, px.instances[args.Instance])
+
 	px.leader = args.Server
+
 	if args.Instance > px.maxInstance {
 		px.maxInstance = args.Instance
 	}
@@ -400,6 +417,7 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
+  reply.Leader = px.leader
 
 	return nil
 }
@@ -417,33 +435,57 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		newDone[dk] = dv
 	}
 
-	DPrintf("\n%v: Starting proposal for instance %v", px.me, seq)
+
+  if px.proposed[seq] {
+    DPrintf("\n%v (L%v): Ignoring proposal for instance %v (%v)", px.me, px.leader, seq, v)
+    reply.Err = false
+    reply.Done = newDone
+    reply.Leader = px.leader
+    return nil
+  } else {
+    DPrintf("\n%v (L%v): Starting proposal for instance %v (%v)", px.me, px.leader, seq, v)
+    px.proposed[seq] = true
+  }
+
 	px.mu.Lock()
 	prop := px.getInstance(seq)
 	px.mu.Unlock()
 	nPID := 0
+
 	for !prop.Decided && !px.dead {
 		total := len(px.peers)
 		hPID := -1
 		hValue := v
 		ok := 0
-		// Send Prepare requests to everyone (and record piggybacked done response)
-		DPrintf("\n%v: Sending prepare for sequence %v", px.me, seq)
-		for i := 0; i < len(px.peers); i++ {
-			args := &PrepareArgs{seq, nPID, newDone}
-			var reply PrepareReply
-			if px.callAcceptor(i, "Paxos.Prepare", args, &reply) && !reply.Err {
-				for dk, dv := range reply.Done {
-					px.recordDone(dk, dv)
-				}
-				ok += 1
-				// Record highest prepare number / value among responses
-				if reply.PID > hPID {
-					hPID = reply.PID
-					hValue = reply.Value
-				}
-			}
-		}
+    
+    if enableLeader == 2 {
+      px.leader = -1
+    }
+
+
+
+    if px.leader == px.me && enableLeader > 0 {
+      ok = total
+    } else {
+      // Send Prepare requests to everyone (and record piggybacked done response)
+      DPrintf("\n%v (L%v): Sending prepare for sequence %v", px.me, px.leader, seq)
+      for i := 0; i < len(px.peers); i++ {
+        args := &PrepareArgs{px.me, seq, nPID, newDone, px.leader}
+        var reply PrepareReply
+        if px.callAcceptor(i, "Paxos.Prepare", args, &reply) && !reply.Err {
+          for dk,dv := range reply.Done {
+            px.recordDone(dk, dv)
+          }
+          ok += 1
+          // Record highest prepare number / value among responses
+          if reply.PID > hPID {
+            hPID = reply.PID
+            hValue = reply.Value
+          }
+        }
+      }
+    }
+
 		// If prepare was rejected, start over with new proposal value
 		if ok <= total/2 {
 			px.mu.Lock()
@@ -458,18 +500,25 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		}
 
 		// Send Accept requests to everyone (and record piggybacked done response)
-		DPrintf("\n%v: Sending accept for sequence %v", px.me, seq)
+		DPrintf("\n%v (L%v): Sending accept for sequence %v", px.me, px.leader, seq)
 		ok = 0
 		for i := 0; i < len(px.peers); i++ {
-			args := &AcceptArgs{seq, nPID, hValue, newDone}
+			args := &AcceptArgs{px.me, seq, nPID, hValue, newDone, px.leader}
 			var reply AcceptReply
-			if px.callAcceptor(i, "Paxos.Accept", args, &reply) && !reply.Err {
-				for dk, dv := range reply.Done {
-					px.recordDone(dk, dv)
-				}
-				ok += 1
-			}
+			if px.callAcceptor(i, "Paxos.Accept", args, &reply) {
+        if !reply.Err {
+          for dk,dv := range reply.Done {
+            px.recordDone(dk, dv)
+          }
+          ok += 1          
+        } else {
+          if reply.Leader != px.me {
+            px.leader = -1
+          }
+        }
+      }
 		}
+
 		// If accept was rejected, start over with new proposal value
 		if ok <= total/2 {
 			px.mu.Lock()
@@ -484,10 +533,10 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		}
 
 		// Send Decided messages to everyone (and record piggybacked done response)
-		DPrintf("\n%v: Sending decided for sequence %v", px.me, seq)
+		DPrintf("\n%v (L%v): Sending decided for sequence %v", px.me, px.leader, seq)
 		waitChan := make(chan int)
 		for i := 0; i < len(px.peers); i++ {
-			args := &DecideArgs{px.me, seq, nPID, hValue, newDone}
+			args := &DecideArgs{px.me, seq, nPID, hValue, newDone, px.leader}
 			go func(index int, args DecideArgs) {
 				var reply DecideReply
 				waitChan <- 1
@@ -506,6 +555,7 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
+  reply.Leader = px.leader
 
 	return nil
 }
@@ -519,19 +569,22 @@ func (px *Paxos) callLeader(seq int, v interface{}) {
 	args := &ProposeArgs{seq, v, newDone}
 	var reply ProposeReply
 
-	if px.leader == px.me || enableLeader == 0 {
-		px.Propose(args, &reply)
+  if enableLeader == 2 {
+    px.leader = -1
+  }
+
+	if px.leader == px.me || px.leader == -1 || enableLeader == 0 {
+    px.Propose(args, &reply)
 	} else {
-		if px.callWrap(px.peers[px.leader], "Paxos.Propose", args, reply) && !reply.Err {
-			for pr, vl := range reply.Done {
-				px.recordDone(pr, vl)
-			}
-			return
-		} else {
-			DPrintf("FALLBACK\n")
-			px.Propose(args, &reply)
-		}
-	}
+    if px.callWrap(px.peers[px.leader], "Paxos.Propose", args, &reply) && !reply.Err {
+      for pr,vl := range reply.Done {
+        px.recordDone(pr, vl)
+      }
+    } else {
+      DPrintf("\nFALLBACK for %v", reply.Err)
+      px.Propose(args, &reply)
+    }
+  }
 }
 
 //
@@ -639,7 +692,7 @@ func (px *Paxos) Status(seq int) (bool, interface{}) {
 func (px *Paxos) recordDone(peer int, val int) {
 	px.mu.Lock()
 	defer px.mu.Unlock()
-	DPrintf("\n%v: recording done %v, %v", px.me, peer, val)
+	//DPrintf("\n%v (L%v): recording done %v, %v", px.me, px.leader, peer, val)
 	oldVal := px.done[peer]
 	if val > oldVal {
 		px.done[peer] = val
@@ -663,7 +716,7 @@ func (px *Paxos) Kill() {
 
 	// Destroy the database
 	if persistent && !px.dbDeleted {
-		DPrintfPersist("\n%v: Destroying database... ", px.me)
+		DPrintfPersist("\n%v (L%v): Destroying database... ", px.me)
 		err := levigo.DestroyDatabase(px.dbName, px.dbOpts)
 		if err != nil {
 			DPrintfPersist("\terror")
@@ -676,7 +729,7 @@ func (px *Paxos) Kill() {
 
 func (px *Paxos) KillSaveDisk() {
 	// Kill the server
-	DPrintf("\n%v: Killing the server", px.me)
+	DPrintf("\n%v (L%v): Killing the server", px.me)
 	px.dead = true
 	if px.l != nil {
 		px.l.Close()
@@ -704,7 +757,7 @@ func (px *Paxos) dbWriteInstance(seq int, toWrite Proposal) {
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Writing instance %v to database... ", px.me, seq)
+	toPrint += fmt.Sprintf("\n%v (L%v): Writing instance %v to database... ", px.me, px.leader, seq)
 	// Encode the instance into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
@@ -741,7 +794,7 @@ func (px *Paxos) dbGetInstance(toGet int) Proposal {
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Reading instance %v from database... ", px.me, toGet)
+	toPrint += fmt.Sprintf("\n%v (L%v): Reading instance %v from database... ", px.me, px.leader, toGet)
 	// Read entry from database if it exists
 	key := "instance_" + strconv.Itoa(toGet)
 	entryBytes, err := px.db.Get(px.dbReadOptions, []byte(key))
@@ -781,7 +834,7 @@ func (px *Paxos) dbDeleteInstance(seq int) {
 		return
 	}
 
-	DPrintfPersist("\n%v: Deleting instance %v from the database... ", px.me, seq)
+	DPrintfPersist("\n%v (L%v): Deleting instance %v from the database... ", px.me, px.leader, seq)
 	// Delete entry if it exists
 	key := "instance_" + strconv.Itoa(seq)
 	err := px.db.Delete(px.dbWriteOptions, []byte(key))
@@ -803,7 +856,7 @@ func (px *Paxos) dbWriteDone() {
 		return
 	}
 
-	DPrintfPersist("\n%v: Writing 'done' state to database... ", px.me)
+	DPrintfPersist("\n%v (L%v): Writing 'done' state to database... ", px.me)
 	// Encode the "done" map into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
@@ -831,7 +884,7 @@ func (px *Paxos) dbWriteMaxInstance(max int) {
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v: Writing max instance %v to database... ", px.me, max)
+	toPrint += fmt.Sprintf("\n%v (L%v): Writing max instance %v to database... ", px.me, px.leader, max)
 	// Encode the number into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
@@ -866,7 +919,7 @@ func (px *Paxos) dbInit(tag string) {
 		return
 	}
 
-	DPrintfPersist("\n%v: Initializing database", px.me)
+	DPrintfPersist("\n%v (L%v): Initializing database", px.me)
 
 	// Register Proposal struct since we will encode/decode it using gob
 	// Calling this probably isn't necessary, but being explicit for now
@@ -879,12 +932,12 @@ func (px *Paxos) dbInit(tag string) {
 	dbDir := "/home/ubuntu/mexos/src/paxos/persist/"
 	px.dbName = dbDir + "paxosDB_" + tag + "_" + strconv.Itoa(px.me)
 	os.MkdirAll(dbDir, 0777)
-	DPrintfPersist("\n\t%v: DB Name: %s", px.me, px.dbName)
+	DPrintfPersist("\n\t%v: DB Name: %s", px.me, px.leader, px.dbName)
 	var err error
 	px.db, err = levigo.Open(px.dbName, px.dbOpts)
 	if err != nil {
-		DPrintfPersist("\n\t%v: Error opening database! \n\t%s", px.me, fmt.Sprint(err))
-		fmt.Printf("\n\t%v: Error opening database! \n\t%s", px.me, fmt.Sprint(err))
+		DPrintfPersist("\n\t%v: Error opening database! \n\t%s", px.me, px.leader, fmt.Sprint(err))
+		fmt.Printf("\n\t%v: Error opening database! \n\t%s", px.me, px.leader, fmt.Sprint(err))
 	} else {
 		DPrintfPersist("\n\t%v: Database opened successfully", px.me)
 	}
@@ -964,7 +1017,7 @@ func (px *Paxos) startup(tag string) {
 			var reply RecoverReply
 			ok := px.callWrap(server, "Paxos.FetchRecovery", args, &reply)
 			if ok && !reply.Err {
-				DPrintfPersist("\n\t%v: Got %v", px.me, reply)
+				DPrintfPersist("\n\t%v: Got %v", px.me, px.leader, reply)
 				for peer, doneVal := range reply.Done {
 					px.recordDone(peer, doneVal)
 				}
@@ -991,7 +1044,7 @@ func (px *Paxos) startup(tag string) {
 		// Ask peer for sequences that I should have but that are not decided,
 		instance := px.getInstance(seq)
 		if instance.Decided {
-			DPrintfPersist("\n\t%v: Sequence %v is already decided", px.me, seq)
+			DPrintfPersist("\n\t%v: Sequence %v is already decided", px.me, px.leader, seq)
 			continue
 		}
 		haveSeq := false
@@ -1001,7 +1054,7 @@ func (px *Paxos) startup(tag string) {
 				if index == px.me {
 					continue
 				}
-				DPrintfPersist("\n\t%v: Asking %v for sequence %v", px.me, index, seq)
+				DPrintfPersist("\n\t%v: Asking %v for sequence %v", px.me, px.leader, index, seq)
 				var reply RecoverReply
 				ok := px.callWrap(server, "Paxos.FetchRecovery", args, &reply)
 				if ok && !reply.Err {
@@ -1010,7 +1063,7 @@ func (px *Paxos) startup(tag string) {
 						px.instances[seq] = Proposal{instance.Prepare, instance.Accept, instance.Value, instance.Decided}
 						px.dbWriteInstance(seq, px.instances[seq])
 					}
-					DPrintfPersist("\n\t\t%v: Got %v", px.me, px.instances[seq])
+					DPrintfPersist("\n\t\t%v: Got %v", px.me, px.leader, px.instances[seq])
 					haveSeq = true
 					break
 				}
@@ -1022,18 +1075,18 @@ func (px *Paxos) startup(tag string) {
 func (px *Paxos) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
 	px.mu.Lock()
 	defer px.mu.Unlock()
-	DPrintfPersist("\n%v: Got Fetch request", px.me)
+	DPrintfPersist("\n%v (L%v): Got Fetch request", px.me)
 	reply.Done = make(map[int]int)
 	if args.Seq == -1 {
 		for peer, doneVal := range px.done {
 			reply.Done[peer] = doneVal
 		}
 		reply.MaxInstance = px.maxInstance
-		DPrintfPersist("\n%v: sending %v", px.me, reply)
+		DPrintfPersist("\n%v (L%v): sending %v", px.me, px.leader, reply)
 	} else {
 		instance := px.getInstance(args.Seq)
 		reply.Instance = Proposal{instance.Prepare, instance.Accept, instance.Value, instance.Decided}
-		DPrintfPersist("\n%v: sending %v", px.me, reply)
+		DPrintfPersist("\n%v (L%v): sending %v", px.me, px.leader, reply)
 	}
 	reply.Err = false
 	return nil
@@ -1055,9 +1108,10 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool, tag string) *P
 		px.reachable[i] = true
 	}
 	px.deaf = false
-
+  px.leader = -1
 	// Paxos state
 	px.instances = make(map[int]Proposal)
+	px.proposed = make(map[int]bool)
 	px.maxInstance = -1
 	px.done = make(map[int]int)
 	for i := 0; i < len(px.peers); i++ {
