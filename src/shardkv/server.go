@@ -18,7 +18,7 @@ import "github.com/jmhodges/levigo"
 import "bytes"
 import "strings"
 
-const Debug = 0
+const Debug = 1
 const startport = 2300
 const DebugPersist = 0
 const printRPCerrors = false
@@ -1034,6 +1034,7 @@ func StartServer(gid int64, shardmasters []string,
 	kv.gid = gid
 	kv.sm = shardmaster.MakeClerk(shardmasters, kv.network)
 	kv.config = kv.sm.Query(0) //hangs here, since shardmaster doesn't work
+	DPrintf("got here\n")
 	kv.store = make(map[string]string)
 	kv.response = make(map[int64]string)
 	kv.minSeq = -1
@@ -1088,14 +1089,7 @@ func StartServer(gid int64, shardmasters []string,
 					conn.Close()
 				} else if kv.unreliable && (rand.Int63()%1000) < 200 {
 					// process the request but force discard of reply.
-					if kv.network {
-						c1 := conn.(*net.TCPConn)
-						f, _ := c1.File()
-						err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
-						if err != nil {
-							fmt.Printf("shutdown: %v\n", err)
-						}
-					} else {
+					if !kv.network {
 						c1 := conn.(*net.UnixConn)
 						f, _ := c1.File()
 						err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
@@ -1123,7 +1117,7 @@ func StartServer(gid int64, shardmasters []string,
 			time.Sleep(250 * time.Millisecond)
 		}
 	}()
-
+	DPrintf("server started")
 	return kv
 }
 
