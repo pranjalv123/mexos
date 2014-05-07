@@ -19,8 +19,7 @@ import "bytes"
 import "strings"
 
 const Debug = 1
-const startport = 2300
-const DebugPersist = 0
+const DebugPersist = 1
 const printRPCerrors = false
 
 const persistent = true
@@ -1061,8 +1060,8 @@ func StartServer(gid int64, shardmasters []string,
 
 	if kv.network {
 		port := servers[me][len(servers[me])-5 : len(servers[me])]
-		log.Printf("I am peers[%d] = $s, about to listen on port %s\n", me,
-			port, servers[me])
+		log.Printf("I am peers[%d] = %s, about to listen on port %s\n", me,
+			servers[me],port)
 		l, e := net.Listen("tcp", port)
 		if e != nil {
 			log.Fatal("listen error: ", e)

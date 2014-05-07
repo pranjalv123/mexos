@@ -17,7 +17,7 @@ import "github.com/jmhodges/levigo"
 import "bytes"
 
 const Debug = 1
-const DebugPersist = 0
+const DebugPersist = 1
 const printRPCerrors = false
 
 // Note: if persistent and recovery are not enabled,
