@@ -8,6 +8,7 @@ import "time"
 import "paxos"
 import "sync"
 import "os"
+import "io"
 import "syscall"
 import "encoding/gob"
 import "math/rand"
@@ -29,14 +30,14 @@ const recovery = true
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
-		fmt.Printf(format, a...)
+		log.Printf(format, a...)
 	}
 	return
 }
 
 func DPrintfPersist(format string, a ...interface{}) (n int, err error) {
 	if DebugPersist > 0 {
-		fmt.Printf(format, a...)
+		log.Printf(format, a...)
 	}
 	return
 }
