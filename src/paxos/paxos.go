@@ -38,9 +38,8 @@ import "bytes"
 const startport = 2100
 const printRPCerrors = false
 
-const enableLeader = 1
-const persistent = true
-const recovery = true
+const persistent = false
+const recovery = false
 
 const Debug = 0
 const DebugPersist = 0
