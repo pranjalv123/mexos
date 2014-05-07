@@ -16,7 +16,7 @@ import "strconv"
 import "github.com/jmhodges/levigo"
 import "bytes"
 
-const Debug = 0
+const Debug = 1
 const DebugPersist = 0
 const printRPCerrors = false
 
@@ -389,11 +389,12 @@ func (sm *ShardMaster) Move(args *MoveArgs, reply *MoveReply) error {
 
 // Respond to a query about a particular configuration
 func (sm *ShardMaster) Query(args *QueryArgs, reply *QueryReply) error {
+	DPrintf("%d) Query: %d\n", sm.me, args.Num) 
 	for sm.recovering && !sm.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
 	sm.mu.Lock()
-	DPrintf("%d) Query: %d\n", sm.me, args.Num)
+
 
 	newOp := Op{1, int64(args.Num), nil, 0}
 
@@ -840,6 +841,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	if !printRPCerrors {
 		disableLog()
 		rpcs.Register(sm)
+		fmt.Println("registering")
 		enableLog()
 	} else {
 		rpcs.Register(sm)
@@ -869,21 +871,16 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 
 	go func() {
 		for sm.dead == false {
+		    	DPrintf("About to wait for connection...\n")
 			conn, err := sm.l.Accept()
+			DPrintf("received incoming connection")
 			if err == nil && sm.dead == false {
 				if sm.deaf || (sm.unreliable && (rand.Int63()%1000) < 100) {
 					// discard the request.
 					conn.Close()
 				} else if sm.unreliable && (rand.Int63()%1000) < 200 {
 					// process the request but force discard of reply.
-					if sm.network {
-						c1 := conn.(*net.TCPConn)
-						f, _ := c1.File()
-						err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
-						if err != nil {
-							fmt.Printf("shutdown: %v\n", err)
-						}
-					} else {
+					if !sm.network {
 						c1 := conn.(*net.UnixConn)
 						f, _ := c1.File()
 						err := syscall.Shutdown(int(f.Fd()), syscall.SHUT_WR)
@@ -893,6 +890,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 					}
 					go rpcs.ServeConn(conn)
 				} else {
+					DPrintf("serving incoming connection")
 					go rpcs.ServeConn(conn)
 				}
 			} else if err == nil {
@@ -904,7 +902,6 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 			}
 		}
 	}()
-
 	return sm
 }
 

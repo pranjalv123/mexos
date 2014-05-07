@@ -103,7 +103,7 @@ func main() {
  			"   paxos|shardmaster|shardkv")
 		os.Exit(1)
 	}
-	for (!done) {}
+	select {}
 }
 
 func whoami(peers []string) int {
