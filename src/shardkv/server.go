@@ -21,6 +21,8 @@ import "strings"
 const Debug = 1
 const DebugPersist = 1
 const printRPCerrors = false
+const Log = 1
+var logfile *os.File
 
 const persistent = true
 const recovery = true
@@ -842,6 +844,7 @@ func (kv *ShardKV) dbInit() {
 	DPrintfPersist("\n\t%v-%v: DB Name: %s", kv.gid, kv.me, kv.dbName)
 	var err error
 	kv.db, err = levigo.Open(kv.dbName, kv.dbOpts)
+	enableLog() //need this here to fix logging issues
 	if err != nil {
 		DPrintfPersist("\n\t%v-%v: Error opening database! \n\t%s", kv.gid, kv.me, fmt.Sprint(err))
 	} else {
@@ -1020,6 +1023,20 @@ func StartServer(gid int64, shardmasters []string,
 	servers []string, me int, network bool) *ShardKV {
 	gob.Register(Op{})
 
+	var err error
+	if Log == 1 {
+		//set up logging
+		os.Remove("shardmaster.log")
+		logfile, err = os.OpenFile("shardkv.log", os.O_RDWR | os.O_CREATE | os.O_APPEND | os.O_SYNC, 0666)
+		
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		} else {
+			log.Printf("opened shardkv.log for logging")
+		}
+		enableLog()
+	}
+	
 	//fmt.Println("running shardkv.StartServer(), network = ",network)
 
 	kv := new(ShardKV)
@@ -1027,13 +1044,13 @@ func StartServer(gid int64, shardmasters []string,
 	kv.me = me
 	kv.network = network
 
-	DPrintf("got here\n")
+	DPrintf("about to query for new config\n")
 
 	// ShardKV state
 	kv.gid = gid
 	kv.sm = shardmaster.MakeClerk(shardmasters, kv.network)
 	kv.config = kv.sm.Query(0) //hangs here, since shardmaster doesn't work
-	DPrintf("got here\n")
+	DPrintf("got new config\n")
 	kv.store = make(map[string]string)
 	kv.response = make(map[int64]string)
 	kv.minSeq = -1
@@ -1124,9 +1141,17 @@ type NullWriter int
 
 func (NullWriter) Write([]byte) (int, error) { return 0, nil }
 
+
 func enableLog() {
-	log.SetOutput(os.Stderr)
+	if Log == 1 {
+		//to file and stderr
+		log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+	} else {
+		//just stderr
+		log.SetOutput(os.Stdout)
+	}
 }
+
 
 func disableLog() {
 	log.SetOutput(new(NullWriter))

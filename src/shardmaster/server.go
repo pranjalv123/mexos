@@ -20,6 +20,7 @@ const Debug = 1
 const DebugPersist = 1
 const printRPCerrors = true
 const Log = 1
+var logfile *os.File
 
 // Note: if persistent and recovery are not enabled,
 // some of the persistence tests fail by panic (divide-by-zero in balance)
@@ -29,6 +30,9 @@ const recovery = true
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
 		log.Printf(format, a...)
+		if Log == 1 {
+			logfile.Sync()
+		}
 	}
 	return
 }
@@ -36,6 +40,9 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 func DPrintfPersist(format string, a ...interface{}) (n int, err error) {
 	if DebugPersist > 0 {
 		log.Printf(format, a...)
+		if Log == 1 {
+			logfile.Sync()
+		}
 	}
 	return
 }
@@ -646,13 +653,12 @@ func (sm *ShardMaster) dbInit() {
 	if sm.dead {
 		return
 	}
-
 	DPrintfPersist("\n%v: Initializing database", sm.me)
 
 	// Register Proposal struct since we will encode/decode it using gob
 	// Calling this probably isn't necessary, but being explicit for now
-	gob.Register(Config{})
 
+	gob.Register(Config{})
 	// Open database (create it if it doesn't exist)
 	sm.dbOpts = levigo.NewOptions()
 	sm.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
@@ -663,6 +669,7 @@ func (sm *ShardMaster) dbInit() {
 	DPrintfPersist("\n\t%v: DB Name: %s", sm.me, sm.dbName)
 	var err error
 	sm.db, err = levigo.Open(sm.dbName, sm.dbOpts)
+	enableLog()//needs to be here, otherwise logging stops working after
 	if err != nil {
 		DPrintfPersist("\n\t%v: Error opening database! \n\t%s", sm.me, fmt.Sprint(err))
 	} else {
@@ -815,16 +822,20 @@ func (sm *ShardMaster) FetchRecovery(args *RecoverArgs, reply *RecoverReply) err
 //
 func StartServer(servers []string, me int, network bool) *ShardMaster {
 	gob.Register(Op{})
-	var f *os.File//logfile
 	var err error
 	if Log == 1 {
 		//set up logging
-		f, err = os.OpenFile("shardmaster.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+		os.Remove("shardmaster.log")
+		logfile, err = os.OpenFile("shardmaster.log", os.O_RDWR | os.O_CREATE | os.O_APPEND | os.O_SYNC, 0666)
+
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
+		} else {
+			log.Printf("opened shardmaster.log for logging")
 		}
-		enableLog(f)
+		enableLog()
 	}
+
 	sm := new(ShardMaster)
 	// Network stuff
 	sm.me = me
@@ -850,7 +861,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 		disableLog()
 		rpcs.Register(sm)
 		fmt.Println("registering")
-		enableLog(f)
+		enableLog()
 	} else {
 		rpcs.Register(sm)
 	}
@@ -917,10 +928,10 @@ type NullWriter int
 
 func (NullWriter) Write([]byte) (int, error) { return 0, nil }
 
-func enableLog(f *os.File) {
+func enableLog() {
 	if Log == 1 {
 		//to file and stderr
-		log.SetOutput(io.MultiWriter(f, os.Stdout))
+		log.SetOutput(io.MultiWriter(logfile, os.Stdout))
 	} else {
 		//just stderr
 		log.SetOutput(os.Stdout)
