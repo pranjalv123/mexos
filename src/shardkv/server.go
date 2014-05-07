@@ -1060,7 +1060,7 @@ func StartServer(gid int64, shardmasters []string,
 	kv.px = paxos.Make(servers, me, rpcs, kv.network, "shardkv_"+fmt.Sprint(kv.gid))
 
 	if kv.network {
-		port := servers[me][len(servers[me])-6 : len(servers[me])-1]
+		port := servers[me][len(servers[me])-5 : len(servers[me])]
 		log.Printf("I am peers[%d] = $s, about to listen on port %s\n", me,
 			port, servers[me])
 		l, e := net.Listen("tcp", port)
