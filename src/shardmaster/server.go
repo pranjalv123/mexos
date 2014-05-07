@@ -848,9 +848,9 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	sm.px = paxos.Make(servers, me, rpcs, network, "shardmaster")
 
 	if sm.network {
-		port := servers[me][len(servers[me])-6 : len(servers[me])-1]
-		log.Printf("I am peers[%d] = $s, about to listen on port %s\n", me,
-			port, servers[me])
+		port := servers[me][len(servers[me])-5 : len(servers[me])]
+		fmt.Printf("I am peers[%d] = %s, about to listen on port %s\n", me,
+				servers[me], port)
 		l, e := net.Listen("tcp", port)
 		if e != nil {
 			log.Fatal("listen error: ", e)
