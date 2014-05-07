@@ -12,13 +12,14 @@ import "encoding/gob"
 import "math/rand"
 import "time"
 import "strconv"
-
+import "io"
 import "github.com/jmhodges/levigo"
 import "bytes"
 
 const Debug = 1
 const DebugPersist = 1
-const printRPCerrors = false
+const printRPCerrors = true
+const Log = 1
 
 // Note: if persistent and recovery are not enabled,
 // some of the persistence tests fail by panic (divide-by-zero in balance)
@@ -27,14 +28,14 @@ const recovery = true
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
-		fmt.Printf(format, a...)
+		log.Printf(format, a...)
 	}
 	return
 }
 
 func DPrintfPersist(format string, a ...interface{}) (n int, err error) {
 	if DebugPersist > 0 {
-		fmt.Printf(format, a...)
+		log.Printf(format, a...)
 	}
 	return
 }
@@ -814,9 +815,16 @@ func (sm *ShardMaster) FetchRecovery(args *RecoverArgs, reply *RecoverReply) err
 //
 func StartServer(servers []string, me int, network bool) *ShardMaster {
 	gob.Register(Op{})
-
-	//fmt.Println("running shardmaster.StartServer(), network = ",network)
-
+	var f *os.File//logfile
+	var err error
+	if Log == 1 {
+		//set up logging
+		f, err = os.OpenFile("shardmaster.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		}
+		enableLog(f)
+	}
 	sm := new(ShardMaster)
 	// Network stuff
 	sm.me = me
@@ -842,7 +850,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 		disableLog()
 		rpcs.Register(sm)
 		fmt.Println("registering")
-		enableLog()
+		enableLog(f)
 	} else {
 		rpcs.Register(sm)
 	}
@@ -909,8 +917,14 @@ type NullWriter int
 
 func (NullWriter) Write([]byte) (int, error) { return 0, nil }
 
-func enableLog() {
-	log.SetOutput(os.Stderr)
+func enableLog(f *os.File) {
+	if Log == 1 {
+		//to file and stderr
+		log.SetOutput(io.MultiWriter(f, os.Stdout))
+	} else {
+		//just stderr
+		log.SetOutput(os.Stdout)
+	}
 }
 
 func disableLog() {
