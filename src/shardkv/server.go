@@ -1027,7 +1027,7 @@ func StartServer(gid int64, shardmasters []string,
 	var err error
 	if Log == 1 {
 		//set up logging
-		os.Remove("shardmaster.log")
+		os.Remove("shardkv.log")
 		logfile, err = os.OpenFile("shardkv.log", os.O_RDWR | os.O_CREATE | os.O_APPEND | os.O_SYNC, 0666)
 		
 		if err != nil {
