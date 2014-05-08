@@ -14,8 +14,6 @@ import "flag"
 const network = true
 
 func main() {
-	done := false
-	
 	var npaxos = flag.Int("npaxos", 3, "number of paxos instances")
 	var ngroups = flag.Int("ngroups", 3, "number of shard groups")
 	var nmasters = flag.Int("nmasters", 1, "number of shardmasters per shard group")
@@ -75,7 +73,7 @@ func main() {
 			fmt.Printf("peers: %v\n", masters)
 			fmt.Printf("me: %d\n", me)
 			fmt.Println("Success!")
-			for (!done) {}
+			select {}
 		}
 		var gid int64
 		peers := make([]string, *ngroups) 
