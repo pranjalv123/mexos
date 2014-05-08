@@ -44,7 +44,7 @@ const recovery = false
 const Debug = 0
 const DebugPersist = 0
 
-const enableLeader = 1
+const enableLeader = 0
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -72,6 +72,7 @@ type Proposal struct {
 
 type Paxos struct {
 	mu        sync.Mutex
+	fu        sync.Mutex
 	l         net.Listener
 	dead      bool
 	dbDeleted bool
@@ -332,10 +333,18 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 
 	// Check if proposal number is high enough
 	if args.PID > prop.Prepare {
-    px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
+    if prop.Decided {
+      px.instances[args.Instance] = Proposal{args.PID + 1, prop.Accept, prop.Value, prop.Decided}
+    } else {
+      px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
+    }
     px.dbWriteInstance(args.Instance, px.instances[args.Instance])
     reply.Err = false
-    reply.PID = prop.Accept
+    if prop.Decided {
+      reply.PID = args.PID + 1
+    } else {
+      reply.PID = prop.Accept
+    }
     reply.Value = prop.Value
     reply.Leader = args.Server
     reply.Decided = prop.Decided
