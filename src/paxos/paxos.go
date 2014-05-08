@@ -44,7 +44,7 @@ const recovery = false
 const Debug = 0
 const DebugPersist = 0
 
-const enableLeader = 0
+const enableLeader = 1
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -127,6 +127,7 @@ type PrepareArgs struct {
 type PrepareReply struct {
 	Err   bool
 	PID   int
+  Decided bool
 	Value interface{}
 	Done  map[int]int
   Leader   int
@@ -334,10 +335,10 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
     px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
     px.dbWriteInstance(args.Instance, px.instances[args.Instance])
     reply.Err = false
-		reply.PID = prop.Accept
-		reply.Value = prop.Value
+    reply.PID = prop.Accept
+    reply.Value = prop.Value
     reply.Leader = args.Server
-    px.leader = -1
+    px.leader = args.Server
 	}
 	px.mu.Unlock()
 
@@ -365,7 +366,10 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 		newDone[dk] = dv
 	}
 
-	if args.PID >= prop.Prepare || (args.Server == px.leader && enableLeader > 0) {
+  if prop.Decided && args.Value != prop.Value && enableLeader > 0 {
+    DPrintf("\n%v (L%v): Received accept for dead", px.me, px.leader)
+    reply.PID = args.PID
+  } else if args.PID >= prop.Prepare && (args.Server == px.leader || enableLeader == 0) {
 		px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, prop.Decided}
 		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
 		reply.Err = false
@@ -436,18 +440,23 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 	}
 
 
-  if px.proposed[seq] {
+	px.mu.Lock()
+  if px.proposed[seq] && enableLeader > 0 {
     DPrintf("\n%v (L%v): Ignoring proposal for instance %v (%v)", px.me, px.leader, seq, v)
     reply.Err = false
     reply.Done = newDone
     reply.Leader = px.leader
+    px.mu.Unlock()
     return nil
   } else {
     DPrintf("\n%v (L%v): Starting proposal for instance %v (%v)", px.me, px.leader, seq, v)
     px.proposed[seq] = true
   }
 
-	px.mu.Lock()
+  if px.leader != px.me {
+    px.leader = -1
+  }
+
 	prop := px.getInstance(seq)
 	px.mu.Unlock()
 	nPID := 0
@@ -457,12 +466,12 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		hPID := -1
 		hValue := v
 		ok := 0
+
+    hValuePrime := make(map[interface{}]int)
     
     if enableLeader == 2 {
       px.leader = -1
     }
-
-
 
     if px.leader == px.me && enableLeader > 0 {
       ok = total
@@ -477,12 +486,29 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
             px.recordDone(dk, dv)
           }
           ok += 1
+
           // Record highest prepare number / value among responses
           if reply.PID > hPID {
+            hValuePrime = make(map[interface{}]int)
             hPID = reply.PID
             hValue = reply.Value
+          } 
+          if reply.PID == hPID {
+            if _,ok := hValuePrime[reply.Value]; ok {
+              hValuePrime[reply.Value] += 1
+            } else {
+              hValuePrime[reply.Value] = 1
+            }
           }
         }
+      }
+    }
+    
+    hValueCount := -1
+    for k,v := range hValuePrime {
+      if v > hValueCount {
+        hValue = k
+        hValueCount = v
       }
     }
 
@@ -510,10 +536,12 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
           for dk,dv := range reply.Done {
             px.recordDone(dk, dv)
           }
-          ok += 1          
+          ok += 1
         } else {
-          if reply.Leader != px.me {
+          if reply.Leader != px.me && enableLeader > 0 {
+            DPrintf("\nRESETTING THINGS")
             px.leader = -1
+            break
           }
         }
       }
@@ -529,6 +557,7 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 			} else {
 				nPID = nPID + 1
 			}
+      px.leader = -1
 			continue
 		}
 
@@ -729,7 +758,7 @@ func (px *Paxos) Kill() {
 
 func (px *Paxos) KillSaveDisk() {
 	// Kill the server
-	DPrintf("\n%v (L%v): Killing the server", px.me)
+	DPrintf("\n%v: Killing the server", px.me)
 	px.dead = true
 	if px.l != nil {
 		px.l.Close()
