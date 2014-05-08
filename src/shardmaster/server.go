@@ -12,7 +12,7 @@ import "encoding/gob"
 import "math/rand"
 import "time"
 import "strconv"
-import "io"
+//import "io"
 import "github.com/jmhodges/levigo"
 import "bytes"
 
@@ -890,9 +890,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 
 	go func() {
 		for sm.dead == false {
-		    	DPrintf("About to wait for connection...\n")
 			conn, err := sm.l.Accept()
-			DPrintf("received incoming connection")
 			if err == nil && sm.dead == false {
 				if sm.deaf || (sm.unreliable && (rand.Int63()%1000) < 100) {
 					// discard the request.
@@ -909,7 +907,6 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 					}
 					go rpcs.ServeConn(conn)
 				} else {
-					DPrintf("serving incoming connection")
 					go rpcs.ServeConn(conn)
 				}
 			} else if err == nil {
@@ -931,7 +928,8 @@ func (NullWriter) Write([]byte) (int, error) { return 0, nil }
 func enableLog() {
 	if Log == 1 {
 		//to file and stderr
-		log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+		//log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+		log.SetOutput(logfile)
 	} else {
 		//just stderr
 		log.SetOutput(os.Stdout)

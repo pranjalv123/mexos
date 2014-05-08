@@ -8,7 +8,7 @@ import "time"
 import "paxos"
 import "sync"
 import "os"
-import "io"
+//import "io"
 import "syscall"
 import "encoding/gob"
 import "math/rand"
@@ -1134,7 +1134,6 @@ func StartServer(gid int64, shardmasters []string,
 			time.Sleep(250 * time.Millisecond)
 		}
 	}()
-	DPrintf("server started")
 	return kv
 }
 
@@ -1146,7 +1145,8 @@ func (NullWriter) Write([]byte) (int, error) { return 0, nil }
 func enableLog() {
 	if Log == 1 {
 		//to file and stderr
-		log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+		//log.SetOutput(io.MultiWriter(logfile, os.Stdout))
+		log.SetOutput(logfile)
 	} else {
 		//just stderr
 		log.SetOutput(os.Stdout)
