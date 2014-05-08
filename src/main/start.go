@@ -18,6 +18,7 @@ func main() {
 	var ngroups = flag.Int("ngroups", 3, "number of shard groups")
 	var nmasters = flag.Int("nmasters", 1, "number of shardmasters per shard group")
 	var nreplicas = flag.Int("nreplicas", 3, "number of kvshard replicas per group")
+	var clean =  flag.Bool("clean", false, "clean the db")
 	
 	flag.Parse()
 	args := flag.Args()
@@ -30,6 +31,9 @@ func main() {
 	switch args[0] {
 	case "paxos":
 		fmt.Println("Attempting to start paxos server...")
+		if *clean {
+			cleanDB("paxos")
+		}
 		peers := test.GetPaxos(*npaxos) 
 		me := whoami(peers)
 		if me == -1 {
@@ -43,6 +47,9 @@ func main() {
 
 	case "shardmaster":
 		fmt.Println("Attempting to start shardmaster server...")
+		if *clean {
+			cleanDB("shardmaster")
+		}
 		peers, _ := test.GetShardmasters(*nmasters, *ngroups)
 		me := whoami(peers)
 		if me == -1 {
@@ -69,6 +76,9 @@ func main() {
 		me := whoami(masters)
 		if me != -1 {
 			fmt.Println("Starting shardmaster instead.")
+			if *clean {
+				cleanDB("shardmaster")
+			}
 			shardmaster.StartServer(masters, me, network)
 			fmt.Printf("peers: %v\n", masters)
 			fmt.Printf("me: %d\n", me)
@@ -90,6 +100,9 @@ func main() {
 				"or masters: %v\n",
 				getIP(), metapeers, masters)
 			os.Exit(1)
+		}
+		if *clean {
+			cleanDB("shardkv")
 		}
 		fmt.Println("masters:",masters)
 		fmt.Printf("peers: %v\n", peers)
@@ -129,4 +142,25 @@ func getIP() string {
 
 	ip := strings.TrimSpace(string(out))
 	return ip
+}
+
+
+func cleanDB(server string)  {
+	//ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
+	fmt.Printf("cleaning db....\n")
+	cmd := ""
+	switch server {
+	case "paxos": cmd = "/home/ubuntu/mexos/src/paxos/cleanPersist"
+	case "shardmaster": cmd = "/home/ubuntu/mexos/src/shardmaster/cleanPersist"
+	case "shardkv": cmd = "/home/ubuntu/mexos/src/shardkv/cleanPersist"
+	default:
+		fmt.Println("invalid switch in cleanDB()")
+		os.Exit(1)
+	}
+	_, err := exec.Command(cmd).Output()
+	//out, err := exec.Command("./getip").Output()
+	if err != nil {
+		fmt.Printf("Could not clean db: %s\n", err)
+		os.Exit(1)
+	}
 }
