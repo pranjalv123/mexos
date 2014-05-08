@@ -10,6 +10,7 @@ import "time"
 import "fmt"
 //import "sync"
 import "math/rand"
+import "log"
 
 // Use for checking PutHash                                                                 
 func NextValue(hprev string, val string) string {
@@ -23,8 +24,8 @@ func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]strin
 
 	//number of masters per group
 	const numMasters = 1
-	kvPorts, smPorts, gids := GetShardkvs(numMasters, numReplicas, numGroups)
-
+	kvPorts, smPorts, gids := GetShardkvs(numReplicas, numMasters, numGroups)
+	fmt.Printf("kvports = %v, smports = %v\n", kvPorts, smPorts)
 	//clean := func() { shardkvCleanup(kvServers); smCleanup(smServers) }
 	return smPorts, gids, kvPorts
 }
@@ -38,12 +39,15 @@ func TestBasic(t *testing.T) {
 	fmt.Printf("\nTest: Basic Join/Leave...")
 
 	smClerk := shardmaster.MakeClerk(smPorts, true)
+	log.Printf("got here1")
 	smClerk.Join(gids[0], kvPorts[0])
-
+	log.Printf("got here2")
 	kvClerk := shardkv.MakeClerk(smPorts, true)
-
+	log.Printf("got here3")
 	kvClerk.Put("a", "x")
+	log.Printf("got here4")
 	v := kvClerk.PutHash("a", "b")
+	log.Printf("got here5")
 	if v != "x" {
 		t.Fatalf("Puthash got wrong value")
 	}
@@ -51,7 +55,7 @@ func TestBasic(t *testing.T) {
 	if kvClerk.Get("a") != ov {
 		t.Fatalf("Get got wrong value")
 	}
-
+	log.Printf("got here6")
 	keys := make([]string, 10)
 	vals := make([]string, len(keys))
 	for i := 0; i < len(keys); i++ {
