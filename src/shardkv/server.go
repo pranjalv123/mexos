@@ -306,6 +306,11 @@ func (kv *ShardKV) Get(args *GetArgs, reply *KVReply) error {
 
 // Accept a Put request
 func (kv *ShardKV) Put(args *PutArgs, reply *KVReply) error {
+	if args.DoHash {
+		DPrintf("%d.%d.%d) PutHash: %s -> %s\n", kv.gid, kv.me, kv.config.Num, args.Key, args.Value)
+	} else {
+		DPrintf("%d.%d.%d) Put: %s -> %s\n", kv.gid, kv.me, kv.config.Num, args.Key, args.Value)
+	}
 	for kv.recovering && !kv.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
@@ -323,10 +328,8 @@ func (kv *ShardKV) Put(args *PutArgs, reply *KVReply) error {
 	newOp := Op{}
 	if args.DoHash {
 		newOp.Op = 3
-		DPrintf("%d.%d.%d) PutHash: %s -> %s\n", kv.gid, kv.me, kv.config.Num, args.Key, args.Value)
 	} else {
 		newOp.Op = 2
-		DPrintf("%d.%d.%d) Put: %s -> %s\n", kv.gid, kv.me, kv.config.Num, args.Key, args.Value)
 	}
 	newOp.OpID = args.ID
 	newOp.Key = args.Key
