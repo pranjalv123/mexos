@@ -12,14 +12,16 @@ import "encoding/gob"
 import "math/rand"
 import "time"
 import "strconv"
+
 //import "io"
 import "github.com/jmhodges/levigo"
 import "bytes"
 
-const Debug = 1
-const DebugPersist = 1
-const printRPCerrors = true
-const Log = 1
+const Debug = 0
+const DebugPersist = 0
+const printRPCerrors = false
+const Log = 0
+
 var logfile *os.File
 
 // Note: if persistent and recovery are not enabled,
@@ -397,12 +399,11 @@ func (sm *ShardMaster) Move(args *MoveArgs, reply *MoveReply) error {
 
 // Respond to a query about a particular configuration
 func (sm *ShardMaster) Query(args *QueryArgs, reply *QueryReply) error {
-	DPrintf("%d) Query: %d\n", sm.me, args.Num) 
+	DPrintf("%d) Query: %d\n", sm.me, args.Num)
 	for sm.recovering && !sm.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
 	sm.mu.Lock()
-
 
 	newOp := Op{1, int64(args.Num), nil, 0}
 
@@ -669,7 +670,7 @@ func (sm *ShardMaster) dbInit() {
 	DPrintfPersist("\n\t%v: DB Name: %s", sm.me, sm.dbName)
 	var err error
 	sm.db, err = levigo.Open(sm.dbName, sm.dbOpts)
-	enableLog()//needs to be here, otherwise logging stops working after
+	enableLog() //needs to be here, otherwise logging stops working after
 	if err != nil {
 		DPrintfPersist("\n\t%v: Error opening database! \n\t%s", sm.me, fmt.Sprint(err))
 	} else {
@@ -826,7 +827,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	if Log == 1 {
 		//set up logging
 		os.Remove("shardmaster.log")
-		logfile, err = os.OpenFile("shardmaster.log", os.O_RDWR | os.O_CREATE | os.O_APPEND | os.O_SYNC, 0666)
+		logfile, err = os.OpenFile("shardmaster.log", os.O_RDWR|os.O_CREATE|os.O_APPEND|os.O_SYNC, 0666)
 
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
@@ -860,7 +861,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	if !printRPCerrors {
 		disableLog()
 		rpcs.Register(sm)
-		fmt.Println("registering")
+		//fmt.Println("registering")
 		enableLog()
 	} else {
 		rpcs.Register(sm)
@@ -871,7 +872,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	if sm.network {
 		port := servers[me][len(servers[me])-5 : len(servers[me])]
 		fmt.Printf("I am peers[%d] = %s, about to listen on port %s\n", me,
-				servers[me], port)
+			servers[me], port)
 		l, e := net.Listen("tcp", port)
 		if e != nil {
 			log.Fatal("listen error: ", e)

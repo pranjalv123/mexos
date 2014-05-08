@@ -1085,7 +1085,7 @@ func TestFileRPCCountPrePrepare(test *testing.T) {
 
 	// TODO figure out what expected count should be
 	// will probably depend on chosen implementation
-	fmt.Printf("RPC count: %v (expected max ?)", rpcCount)
+	fmt.Printf("\n\tRPC count: %v (expected max ?)", rpcCount)
 
 	fmt.Printf("\n\tPassed")
 }

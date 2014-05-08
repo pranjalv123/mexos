@@ -8,6 +8,7 @@ import "time"
 import "paxos"
 import "sync"
 import "os"
+
 //import "io"
 import "syscall"
 import "encoding/gob"
@@ -22,11 +23,17 @@ import "strings"
 const Debug = 1
 const DebugPersist = 1
 const printRPCerrors = false
-const Log = 1
+const Log = 0
+
 var logfile *os.File
 
 const persistent = true
 const recovery = true
+const writeToMemory = true    // Whether responses/store should be written to memory (as well as disk / disk cache)
+const dbUseCache = true       // Whether database should use a built-in cache
+const dbUseCompression = true // Whether database should compress entries
+
+//const memoryLimit = 1000000000 // Memory limit in bytes (not used yet)
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -84,13 +91,14 @@ type ShardKV struct {
 	recovering     bool
 }
 
-// Get the desired response, either from memory or disk
-func (kv *ShardKV) getResponse(id int64) (string, bool) {
-	response, exists := kv.response[id]
-	if !exists {
-		response, exists = kv.dbGetResponse(id)
+// Write the desired key/value to memory and/or disk
+func (kv *ShardKV) putValue(key string, value string) {
+	// Write to memory if using memory
+	if writeToMemory {
+		kv.store[key] = value
 	}
-	return response, exists
+	// Write to disk if persistent is enabled
+	kv.dbPut(key, value)
 }
 
 // Get the desired value, either from memory or disk
@@ -100,6 +108,25 @@ func (kv *ShardKV) getValue(key string) (string, bool) {
 		value, exists = kv.dbGet(key)
 	}
 	return value, exists
+}
+
+// Write the desired response to memory and/or disk
+func (kv *ShardKV) putResponse(id int64, value string) {
+	// Write to memory if using memory
+	if writeToMemory {
+		kv.response[id] = value
+	}
+	// Write to disk if persistent is enabled
+	kv.dbWriteResponse(id, value)
+}
+
+// Get the desired response, either from memory or disk
+func (kv *ShardKV) getResponse(id int64) (string, bool) {
+	response, exists := kv.response[id]
+	if !exists {
+		response, exists = kv.dbGetResponse(id)
+	}
+	return response, exists
 }
 
 // Process log entries up until the given sequence
@@ -121,38 +148,31 @@ func (kv *ShardKV) processLog(maxSeq int) {
 					DPrintf("%d.%d.%d) Log %d: Op #%d - GET(%s)\n", kv.gid, kv.me, kv.config.Num, i, op.OpID, op.Key)
 					// Write the response to memory and disk
 					val, _ := kv.getValue(op.Key)
-					kv.dbWriteResponse(op.OpID, val)
-					kv.response[op.OpID] = val
+					kv.putResponse(op.OpID, val)
 				} else if op.Op == 2 {
 					DPrintf("%d.%d.%d) Log %d: Op #%d - PUT(%s, %s)\n", kv.gid, kv.me, kv.config.Num, i, op.OpID, op.Key, op.Value)
 					// Write the response to memory and disk
 					val, _ := kv.getValue(op.Key)
-					kv.dbWriteResponse(op.OpID, val)
-					kv.response[op.OpID] = val
-					// Write the value to memory and disk
-					kv.dbPut(op.Key, op.Value)
-					kv.store[op.Key] = op.Value
+					kv.putResponse(op.OpID, val)
+					// Write the value to memory and/or disk
+					kv.putValue(op.Key, op.Value)
 				} else if op.Op == 3 {
 					DPrintf("%d.%d.%d) Log %d: Op #%d - PUTHASH(%s, %s)\n", kv.gid, kv.me, kv.config.Num, i, op.OpID, op.Key, op.Value)
 					// Write the response to memory and disk
 					val, _ := kv.getValue(op.Key)
-					kv.dbWriteResponse(op.OpID, val)
-					kv.response[op.OpID] = val
+					kv.putResponse(op.OpID, val)
 					// Write the value to memory and disk
 					val = strconv.Itoa(int(hash(val + op.Value)))
-					kv.dbPut(op.Key, val)
-					kv.store[op.Key] = val
+					kv.putValue(op.Key, val)
 				} else if op.Op == 4 {
 					DPrintf("%d.%d.%d) Log %d: Op #%d - RECONFIGURE(%d)\n", kv.gid, kv.me, kv.config.Num, i, op.OpID, op.ConfigNum)
 					// Write the new shard data to memory and disk
 					for nk, nv := range op.Store {
-						kv.dbPut(nk, nv)
-						kv.store[nk] = nv
+						kv.putValue(nk, nv)
 					}
 					// Write the new responses to memory and disk
 					for nk, nv := range op.Response {
-						kv.dbWriteResponse(nk, nv)
-						kv.response[nk] = nv
+						kv.putResponse(nk, nv)
 					}
 					// Record the new config in memory and disk
 					kv.config = kv.sm.Query(op.ConfigNum)
@@ -380,9 +400,22 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 		shardStore[k] = v
 	}
 
+	responses := make(map[int64]string)
+	idsInMemory := make(map[int64]bool)
+	// Copy responses from memory
+	for id, value := range kv.response {
+		responses[id] = value
+		idsInMemory[id] = true
+	}
+	// Copy responses from disk if not in memory
+	for id, value := range kv.dbGetResponses(idsInMemory) {
+		DPrintfPersist("\n\t%v-%v: got response data (%v, %v)", kv.gid, kv.me, id, value)
+		responses[id] = value
+	}
+
 	reply.Err = OK
 	reply.Store = shardStore
-	reply.Response = kv.response
+	reply.Response = responses
 	return nil
 }
 
@@ -516,6 +549,69 @@ func (kv *ShardKV) KillSaveDisk() {
 	}
 }
 
+// Get responses from database
+// Excludes any of the given ids
+func (kv *ShardKV) dbGetResponses(exclude map[int64]bool) map[int64]string {
+	responses := make(map[int64]string)
+	if !persistent {
+		return responses
+	}
+	DPrintfPersist("\n%v-%v: dbGetResponses Waiting for dbLock", kv.gid, kv.me)
+	kv.dbLock.Lock()
+	DPrintfPersist("\n%v-%v: dbGetResponses Got dbLock", kv.gid, kv.me)
+	defer func() {
+		kv.dbLock.Unlock()
+		DPrintfPersist("\n%v-%v: dbGetResponses Released dbLock", kv.gid, kv.me)
+	}()
+	if kv.dead {
+		return responses
+	}
+
+	toPrint := ""
+	toPrint += fmt.Sprintf("\n%v-%v: Reading responses from database... ", kv.gid, kv.me)
+	// Turn off cache-filling while doing bulk read
+	kv.dbReadOptions.SetFillCache(false)
+	defer kv.dbReadOptions.SetFillCache(dbUseCache)
+	// Get database iterator
+	iterator := kv.db.NewIterator(kv.dbReadOptions)
+	defer iterator.Close()
+	iterator.SeekToFirst()
+	DPrintfPersist("\n%v-%v: dbGetResponses starting iteration", kv.gid, kv.me)
+	for iterator.Valid() {
+		keyBytes := iterator.Key()
+		keyString := string(keyBytes)
+		if strings.Index(keyString, "response_") < 0 {
+			iterator.Next()
+			toPrint += "\n\tSkipping key " + keyString
+			continue
+		}
+		keyString = keyString[len("response_"):]
+		key, err := strconv.ParseInt(keyString, 10, 64)
+		if exclude[key] || err != nil {
+			iterator.Next()
+			toPrint += "\n\tSkipping key " + keyString
+			continue
+		}
+
+		valueBytes := iterator.Value()
+		bufferVal := *bytes.NewBuffer(valueBytes)
+		decoderVal := gob.NewDecoder(&bufferVal)
+		var value string
+		err = decoderVal.Decode(&value)
+		if err != nil {
+			toPrint += fmt.Sprintf("\n\terror decoding value for %v", key)
+			iterator.Next()
+			continue
+		}
+		toPrint += fmt.Sprintf("\n\tRead (%v, %v)", key, value)
+		responses[key] = value
+		iterator.Next()
+	}
+
+	DPrintfPersist(toPrint)
+	return responses
+}
+
 // Get key/values pairs for given shard from database
 // Excludes any of the given keys
 func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool) map[string]string {
@@ -536,6 +632,9 @@ func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool) map[string]str
 
 	toPrint := ""
 	toPrint += fmt.Sprintf("\n%v-%v: Reading shard %v from database... ", kv.gid, kv.me, shard)
+	// Turn off cache-filling while doing bulk read
+	kv.dbReadOptions.SetFillCache(false)
+	defer kv.dbReadOptions.SetFillCache(dbUseCache)
 	// Get database iterator
 	iterator := kv.db.NewIterator(kv.dbReadOptions)
 	defer iterator.Close()
@@ -840,7 +939,14 @@ func (kv *ShardKV) dbInit() {
 
 	// Open database (create it if it doesn't exist)
 	kv.dbOpts = levigo.NewOptions()
-	kv.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
+	if dbUseCache {
+		kv.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
+	}
+	if dbUseCompression {
+		kv.dbOpts.SetCompression(levigo.SnappyCompression)
+	} else {
+		kv.dbOpts.SetCompression(levigo.NoCompression)
+	}
 	kv.dbOpts.SetCreateIfMissing(true)
 	dbDir := "/home/ubuntu/mexos/src/shardkv/persist/"
 	kv.dbName = dbDir + "shardkvDB_" + fmt.Sprint(kv.gid) + "_" + strconv.Itoa(kv.me)
@@ -858,6 +964,7 @@ func (kv *ShardKV) dbInit() {
 	// Create options for reading/writing entries
 	kv.dbReadOptions = levigo.NewReadOptions()
 	kv.dbWriteOptions = levigo.NewWriteOptions()
+	kv.dbReadOptions.SetFillCache(dbUseCache)
 
 	// Read minSeq from database if it exists
 	minSeqBytes, err := kv.db.Get(kv.dbReadOptions, []byte("minSeq"))
@@ -915,7 +1022,7 @@ func (kv *ShardKV) startup(servers []string) {
 	if !recovery {
 		return
 	}
-	// Get minSeq and configNum from a peer
+	// Get minSeq and configNum from the most updated peer that responds
 	if len(servers) == 1 {
 		return
 	}
@@ -938,7 +1045,6 @@ func (kv *ShardKV) startup(servers []string) {
 					kv.dbWriteConfigNum(kv.config.Num)
 				}
 				haveState = true
-				break
 			}
 		}
 	}
@@ -965,12 +1071,10 @@ func (kv *ShardKV) startup(servers []string) {
 				if ok && !reply.Err {
 					DPrintf("\n\t: %v-%v Got shard %v from %v\n", kv.gid, kv.me, shard, index)
 					for k, v := range reply.Store {
-						kv.store[k] = v
-						kv.dbPut(k, v)
+						kv.putValue(k, v)
 					}
 					for k, v := range reply.Response {
-						kv.response[k] = v
-						kv.dbWriteResponse(k, v)
+						kv.putResponse(k, v)
 					}
 					haveShard = true
 					break
@@ -1031,8 +1135,8 @@ func StartServer(gid int64, shardmasters []string,
 	if Log == 1 {
 		//set up logging
 		os.Remove("shardkv.log")
-		logfile, err = os.OpenFile("shardkv.log", os.O_RDWR | os.O_CREATE | os.O_APPEND | os.O_SYNC, 0666)
-		
+		logfile, err = os.OpenFile("shardkv.log", os.O_RDWR|os.O_CREATE|os.O_APPEND|os.O_SYNC, 0666)
+
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
 		} else {
@@ -1040,7 +1144,7 @@ func StartServer(gid int64, shardmasters []string,
 		}
 		enableLog()
 	}
-	
+
 	//fmt.Println("running shardkv.StartServer(), network = ",network)
 
 	kv := new(ShardKV)
@@ -1082,7 +1186,7 @@ func StartServer(gid int64, shardmasters []string,
 	if kv.network {
 		port := servers[me][len(servers[me])-5 : len(servers[me])]
 		log.Printf("I am peers[%d] = %s, about to listen on port %s\n", me,
-			servers[me],port)
+			servers[me], port)
 		l, e := net.Listen("tcp", port)
 		if e != nil {
 			log.Fatal("listen error: ", e)
@@ -1144,7 +1248,6 @@ type NullWriter int
 
 func (NullWriter) Write([]byte) (int, error) { return 0, nil }
 
-
 func enableLog() {
 	if Log == 1 {
 		//to file and stderr
@@ -1155,7 +1258,6 @@ func enableLog() {
 		log.SetOutput(os.Stdout)
 	}
 }
-
 
 func disableLog() {
 	log.SetOutput(new(NullWriter))
