@@ -44,7 +44,7 @@ const recovery = false
 const Debug = 0
 const DebugPersist = 0
 
-const enableLeader = 1
+const enableLeader = 0
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -367,7 +367,7 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 		newDone[dk] = dv
 	}
 
-  if prop.Decided && args.Value != prop.Value && enableLeader > 0 {
+  if enableLeader > 0 && prop.Decided && args.Value != prop.Value {
     DPrintf("\n%v (L%v): Received accept for dead", px.me, px.leader)
     reply.PID = args.PID
   } else if args.PID >= prop.Prepare && (args.Server == px.leader[args.Instance] || enableLeader == 0) {
@@ -505,7 +505,7 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
               hValue = reply.Value
             }
           } 
-          if reply.PID == hPID && !hDecided {
+          if reply.PID == hPID && !hDecided && enableLeader > 0 {
             if _,ok := hValuePrime[reply.Value]; ok {
               hValuePrime[reply.Value] += 1
             } else {
@@ -516,14 +516,16 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
       }
     }
     
+    if enableLeader > 0 {
     hValueCount := -1
     for k,v := range hValuePrime {
-      if v > hValueCount {
+      if v > hValueCount && k != nil {
         if !hDecided {
           hValue = k
         }
         hValueCount = v
       }
+    }
     }
 
 		// If prepare was rejected, start over with new proposal value
@@ -728,6 +730,7 @@ func (px *Paxos) Status(seq int) (bool, interface{}) {
 	px.mu.Lock()
 	prop := px.getInstance(seq)
 	px.mu.Unlock()
+
 	return prop.Decided, prop.Value
 }
 
