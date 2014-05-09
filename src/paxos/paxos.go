@@ -38,8 +38,8 @@ import "bytes"
 const startport = 2100
 const printRPCerrors = false
 
-const persistent = true
-const recovery = true
+const persistent = false
+const recovery = false
 
 const Debug = 0
 const DebugPersist = 0
@@ -472,8 +472,6 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		hValue := v
 		ok := 0
 
-    hValuePrime := make(map[interface{}]int)
-    
     if enableLeader == 2 {
       px.leader[seq] = -1
     }
@@ -501,36 +499,16 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 
           // Record highest prepare number / value among responses
           if reply.PID > hPID {
-            hValuePrime = make(map[interface{}]int)
             hPID = reply.PID
             if !hDecided {
               hValue = reply.Value
             }
           } 
-          if reply.PID == hPID && !hDecided && enableLeader > 0 {
-            if _,ok := hValuePrime[reply.Value]; ok {
-              hValuePrime[reply.Value] += 1
-            } else {
-              hValuePrime[reply.Value] = 1
-            }
-          }
         }
       }
     }
     DPrintf("\n%v (L%v): Has %v for sequence %v", px.me, px.leader[seq], v, seq)
     
-    if enableLeader > 0 {
-    hValueCount := -1
-    for k,v := range hValuePrime {
-      if v > hValueCount && k != nil {
-        if !hDecided {
-          hValue = k
-        }
-        hValueCount = v
-      }
-    }
-    }
-
 		// If prepare was rejected, start over with new proposal value
 		if ok <= total/2 {
 			px.mu.Lock()

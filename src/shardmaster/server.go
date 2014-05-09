@@ -26,8 +26,8 @@ var logfile *os.File
 
 // Note: if persistent and recovery are not enabled,
 // some of the persistence tests fail by panic (divide-by-zero in balance)
-const persistent = true
-const recovery = true
+const persistent = false
+const recovery = false
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
