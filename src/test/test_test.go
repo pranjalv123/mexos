@@ -12,6 +12,10 @@ import "sync"
 import "math/rand"
 import "log"
 
+const numGroups = 1
+const numReplicas = 10
+const numMasters = 1
+
 // Use for checking PutHash                                                                 
 func NextValue(hprev string, val string) string {
         h := hash(hprev + val)
@@ -23,7 +27,6 @@ func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]strin
 	runtime.GOMAXPROCS(4)
 
 	//number of masters per group
-	const numMasters = 1
 	kvPorts, smPorts, gids := GetShardkvs(numReplicas, numMasters, numGroups)
 	fmt.Printf("kvports = %v, smports = %v\n", kvPorts, smPorts)
 	//clean := func() { shardkvCleanup(kvServers); smCleanup(smServers) }
@@ -31,8 +34,6 @@ func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]strin
 }
 
 func TestBasic(t *testing.T) {
-	numGroups := 3
-	numReplicas := 3
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
@@ -95,8 +96,6 @@ func TestBasic(t *testing.T) {
 }
 
 func TestMove(t *testing.T) {
-	numGroups := 3
-	numReplicas := 3
 	smPorts, gids, kvPorts := setup("move", false, numGroups, numReplicas)
 
 	fmt.Printf("\nTest: Shards really move...")
@@ -163,8 +162,6 @@ func TestMove(t *testing.T) {
 
 
 func TestLimp(t *testing.T) {
-	numGroups := 3
-	numReplicas := 3
 	smPorts, gids, kvPorts := setup("limp", false, numGroups, numReplicas)
 
 	fmt.Printf("\nTest: Reconfiguration with some dead replicas...")
@@ -236,9 +233,8 @@ func TestLimp(t *testing.T) {
 }
 
 func doConcurrent(t *testing.T, unreliable bool) {
-	numGroups := 3
-	numReplicas := 3
-	smPorts, gids, kvPorts := setup("conc"+strconv.FormatBool(unreliable), unreliable, numGroups, numReplicas)
+	smPorts, gids, kvPorts := setup("conc"+strconv.FormatBool(unreliable), 
+		unreliable, numGroups, numReplicas)
 
 	// Start listening on reboot channel in case we're testing persistence
 	//rebootDone := 0
@@ -265,13 +261,15 @@ func doConcurrent(t *testing.T, unreliable bool) {
 				v := kvClerk.PutHash(key, nv)
 				if v != last {
 					ok = false
-					t.Fatalf("PutHash(%v) expected %v got %v\n", key, last, v)
+					t.Fatalf("PutHash(%v) expected %v got %v\n",
+						key, last, v)
 				}
 				last = NextValue(last, nv)
 				v = kvClerk.Get(key)
 				if v != last {
 					ok = false
-					t.Fatalf("Get(%v) expected %v got %v\n", key, last, v)
+					t.Fatalf("Get(%v) expected %v got %v\n", 
+						key, last, v)
 				}
 
 				mysmClerk.Move(rand.Int()%shardmaster.NShards,
@@ -300,8 +298,6 @@ func TestFileConcurrent(t *testing.T) {
 }
 
 func BenchmarkClientLatencyOneShard(benchmark *testing.B) {
-	numGroups := 3
-	numReplicas := 3
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
@@ -319,8 +315,6 @@ func BenchmarkClientLatencyOneShard(benchmark *testing.B) {
 }
 
 func BenchmarkClientLatencyManyShard(benchmark *testing.B) {
-	numGroups := 3
-	numReplicas := 3
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
@@ -341,14 +335,12 @@ func BenchmarkClientLatencyManyShard(benchmark *testing.B) {
 
 
 func TestManyClientOneShard(t *testing.T) {
-	numGroups := 3
-	numReplicas := 3
-	nclients := 45
+	nclients := 10
 	nseconds := 10
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
-	fmt.Printf("\nBenchmark: many clients, one shards...\n")
+	fmt.Printf("\nBenchmark: many clients, one shard...\n")
 
 	
 	smClerk := shardmaster.MakeClerk(smPorts, true)
@@ -363,8 +355,7 @@ func TestManyClientOneShard(t *testing.T) {
 			tStart := time.Now()
 			count := 0
 			for time.Since(tStart).Seconds() < float64(nseconds) {
-				ck.Put(strconv.Itoa(rand.Int()), 
-					strconv.Itoa(rand.Int()))
+				ck.PutHash("a", strconv.Itoa(rand.Int()))
 				count++
 			}
 			counts[i] = count
@@ -374,6 +365,29 @@ func TestManyClientOneShard(t *testing.T) {
 	time.Sleep(toWait)
 	
 	tot := 0
+	for _,c := range(counts) {
+		tot += c
+	}
+	fmt.Printf("%f operations per second\n", float64(tot)/float64(nseconds))
+
+	fmt.Printf("\nBenchmark: many clients, many shards...\n")
+	for i := 0; i < nclients; i++ {
+		go func(i int) {
+			ck := shardkv.MakeClerk(smPorts, true)
+			tStart := time.Now()
+			count := 0
+			for time.Since(tStart).Seconds() < float64(nseconds) {
+				ck.PutHash(strconv.Itoa(rand.Int()), 
+					strconv.Itoa(rand.Int()))
+				count++
+			}
+			counts[i] = count
+		}(i)
+	}
+
+	time.Sleep(toWait)
+	
+	tot = 0
 	for _,c := range(counts) {
 		tot += c
 	}
