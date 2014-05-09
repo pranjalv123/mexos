@@ -20,8 +20,8 @@ import "github.com/jmhodges/levigo"
 import "bytes"
 import "strings"
 
-const Debug = 1
-const DebugPersist = 1
+const Debug = 0
+const DebugPersist = 0
 const printRPCerrors = false
 const Log = 0
 
