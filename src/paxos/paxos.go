@@ -1195,7 +1195,7 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool, tag string) *P
 		// prepare to receive connections from clients.
 		// change "unix" to "tcp" to use over a network.
 		if px.network {
-			l, e := net.Listen("tcp", ":"+strconv.Itoa(startport+me))
+			l, e := net.Listen("tcp", ":"+strconv.Itoa(startport))
 			if e != nil {
 				log.Fatal("listen error: ", e)
 			}
