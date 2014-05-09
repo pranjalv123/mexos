@@ -23,15 +23,17 @@ const (
 type Err string
 
 type PutArgs struct {
-	Key    string
-	Value  string
-	DoHash bool // For PutHash
-	ID     int64
+	Key      string
+	Value    string
+	DoHash   bool // For PutHash
+	ID       int64
+	ClientID int64
 }
 
 type GetArgs struct {
-	Key string
-	ID  int64
+	Key      string
+	ID       int64
+	ClientID int64
 }
 
 type KVReply struct {
@@ -48,6 +50,7 @@ type FetchReply struct {
 	Err      Err
 	Store    map[string]string
 	Response map[int64]string
+	Seen     map[int64]bool
 }
 
 type RecoverArgs struct {
@@ -60,6 +63,7 @@ type RecoverReply struct {
 	CurrentConfig shardmaster.Config
 	Store         map[string]string
 	Response      map[int64]string
+	Seen          map[int64]bool
 	Err           bool
 }
 

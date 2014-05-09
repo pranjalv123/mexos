@@ -38,8 +38,8 @@ import "bytes"
 const startport = 2100
 const printRPCerrors = false
 
-const persistent = false
-const recovery = false
+const persistent = true
+const recovery = true
 
 const Debug = 0
 const DebugPersist = 0
@@ -83,7 +83,7 @@ type Paxos struct {
 	done         map[int]int
 	doneChannels map[int]chan bool
 	leader       map[int]int
-  proposed     map[int]bool
+	proposed     map[int]bool
 
 	// Networking stuff
 	unreliable bool
@@ -117,36 +117,36 @@ type RecoverReply struct {
 }
 
 type PrepareArgs struct {
-  Server int
+	Server   int
 	Instance int
 	PID      int
 	Done     map[int]int
-  Leader   int
+	Leader   int
 }
 
 type PrepareReply struct {
-	Err   bool
-	PID   int
-  Decided bool
-	Value interface{}
-	Done  map[int]int
-  Leader   int
+	Err     bool
+	PID     int
+	Decided bool
+	Value   interface{}
+	Done    map[int]int
+	Leader  int
 }
 
 type AcceptArgs struct {
-  Server int
+	Server   int
 	Instance int
 	PID      int
 	Value    interface{}
 	Done     map[int]int
-  Leader   int
+	Leader   int
 }
 
 type AcceptReply struct {
-	Err  bool
-	PID  int
-	Done map[int]int
-  Leader   int
+	Err    bool
+	PID    int
+	Done   map[int]int
+	Leader int
 }
 
 type DecideArgs struct {
@@ -155,13 +155,13 @@ type DecideArgs struct {
 	PID      int
 	Value    interface{}
 	Done     map[int]int
-  Leader   int
+	Leader   int
 }
 
 type DecideReply struct {
-	Err  bool
-	Done map[int]int
-  Leader   int
+	Err    bool
+	Done   map[int]int
+	Leader int
 }
 
 type ProposeArgs struct {
@@ -171,9 +171,9 @@ type ProposeArgs struct {
 }
 
 type ProposeReply struct {
-	Err  bool
-	Done map[int]int
-  Leader   int
+	Err    bool
+	Done   map[int]int
+	Leader int
 }
 
 //
@@ -332,14 +332,14 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 
 	// Check if proposal number is high enough
 	if args.PID > prop.Prepare {
-    px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
-    px.dbWriteInstance(args.Instance, px.instances[args.Instance])
-    reply.Err = false
-    reply.PID = prop.Accept
-    reply.Value = prop.Value
-    reply.Leader = args.Server
-    reply.Decided = prop.Decided
-    px.leader[args.Instance] = args.Server
+		px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
+		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
+		reply.Err = false
+		reply.PID = prop.Accept
+		reply.Value = prop.Value
+		reply.Leader = args.Server
+		reply.Decided = prop.Decided
+		px.leader[args.Instance] = args.Server
 	}
 	px.mu.Unlock()
 
@@ -367,23 +367,23 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 		newDone[dk] = dv
 	}
 
-  if enableLeader > 0 && prop.Decided && args.Value != prop.Value {
-    DPrintf("\n%v (L%v): Received accept for dead", px.me, px.leader)
-    reply.PID = args.PID
-  } else if args.PID >= prop.Prepare && (args.Server == px.leader[args.Instance] || enableLeader == 0) {
+	if enableLeader > 0 && prop.Decided && args.Value != prop.Value {
+		DPrintf("\n%v (L%v): Received accept for dead", px.me, px.leader)
+		reply.PID = args.PID
+	} else if args.PID >= prop.Prepare && (args.Server == px.leader[args.Instance] || enableLeader == 0) {
 		px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, prop.Decided}
 		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
 		reply.Err = false
 		reply.PID = args.PID
-    px.leader[args.Instance] = args.Server
-  }
+		px.leader[args.Instance] = args.Server
+	}
 	px.mu.Unlock()
 
 	for dk, dv := range px.done {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
-  reply.Leader = px.leader[args.Instance]
+	reply.Leader = px.leader[args.Instance]
 
 	return nil
 }
@@ -396,9 +396,9 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 	px.dbWriteInstance(args.Instance, px.instances[args.Instance])
 
 	px.leader[args.Instance] = args.Server
-  if _,ok := px.leader[args.Instance+1]; !ok {
-    px.leader[args.Instance+1] = args.Server
-  }
+	if _, ok := px.leader[args.Instance+1]; !ok {
+		px.leader[args.Instance+1] = args.Server
+	}
 
 	if args.Instance > px.maxInstance {
 		px.maxInstance = args.Instance
@@ -425,7 +425,7 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
-  reply.Leader = px.leader[args.Instance]
+	reply.Leader = px.leader[args.Instance]
 
 	return nil
 }
@@ -443,23 +443,22 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		newDone[dk] = dv
 	}
 
-
 	px.mu.Lock()
-  if px.proposed[seq] && enableLeader > 0 {
-    DPrintf("\n%v (L%v): Ignoring proposal for instance %v (%v)", px.me, px.leader, seq, v)
-    reply.Err = false
-    reply.Done = newDone
-    reply.Leader = px.leader[seq]
-    px.mu.Unlock()
-    return nil
-  } else {
-    DPrintf("\n%v (L%v): Starting proposal for instance %v (%v)", px.me, px.leader, seq, v)
-    px.proposed[seq] = true
-  }
+	if px.proposed[seq] && enableLeader > 0 {
+		DPrintf("\n%v (L%v): Ignoring proposal for instance %v (%v)", px.me, px.leader, seq, v)
+		reply.Err = false
+		reply.Done = newDone
+		reply.Leader = px.leader[seq]
+		px.mu.Unlock()
+		return nil
+	} else {
+		DPrintf("\n%v (L%v): Starting proposal for instance %v (%v)", px.me, px.leader, seq, v)
+		px.proposed[seq] = true
+	}
 
-  if px.leader[seq] != px.me {
-    px.leader[seq] = -1
-  }
+	if px.leader[seq] != px.me {
+		px.leader[seq] = -1
+	}
 
 	prop := px.getInstance(seq)
 	px.mu.Unlock()
@@ -468,65 +467,65 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 	for !prop.Decided && !px.dead {
 		total := len(px.peers)
 		hPID := -1
-    hDecided := false
+		hDecided := false
 		hValue := v
 		ok := 0
 
-    hValuePrime := make(map[interface{}]int)
-    
-    if enableLeader == 2 {
-      px.leader[seq] = -1
-    }
+		hValuePrime := make(map[interface{}]int)
 
-    if px.leader[seq] == px.me && enableLeader > 0 {
-      ok = total
-    } else {
-      // Send Prepare requests to everyone (and record piggybacked done response)
-      DPrintf("\n%v (L%v): Sending prepare for sequence %v", px.me, px.leader, seq)
-      for i := 0; i < len(px.peers); i++ {
-        args := &PrepareArgs{px.me, seq, nPID, newDone, px.leader[seq]}
-        var reply PrepareReply
-        if px.callAcceptor(i, "Paxos.Prepare", args, &reply) && !reply.Err {
-          for dk,dv := range reply.Done {
-            px.recordDone(dk, dv)
-          }
-          ok += 1
+		if enableLeader == 2 {
+			px.leader[seq] = -1
+		}
 
-          if reply.Decided {
-            hDecided = true
-            hValue = reply.Value
-          }
+		if px.leader[seq] == px.me && enableLeader > 0 {
+			ok = total
+		} else {
+			// Send Prepare requests to everyone (and record piggybacked done response)
+			DPrintf("\n%v (L%v): Sending prepare for sequence %v", px.me, px.leader, seq)
+			for i := 0; i < len(px.peers); i++ {
+				args := &PrepareArgs{px.me, seq, nPID, newDone, px.leader[seq]}
+				var reply PrepareReply
+				if px.callAcceptor(i, "Paxos.Prepare", args, &reply) && !reply.Err {
+					for dk, dv := range reply.Done {
+						px.recordDone(dk, dv)
+					}
+					ok += 1
 
-          // Record highest prepare number / value among responses
-          if reply.PID > hPID {
-            hValuePrime = make(map[interface{}]int)
-            hPID = reply.PID
-            if !hDecided {
-              hValue = reply.Value
-            }
-          } 
-          if reply.PID == hPID && !hDecided && enableLeader > 0 {
-            if _,ok := hValuePrime[reply.Value]; ok {
-              hValuePrime[reply.Value] += 1
-            } else {
-              hValuePrime[reply.Value] = 1
-            }
-          }
-        }
-      }
-    }
-    
-    if enableLeader > 0 {
-    hValueCount := -1
-    for k,v := range hValuePrime {
-      if v > hValueCount && k != nil {
-        if !hDecided {
-          hValue = k
-        }
-        hValueCount = v
-      }
-    }
-    }
+					if reply.Decided {
+						hDecided = true
+						hValue = reply.Value
+					}
+
+					// Record highest prepare number / value among responses
+					if reply.PID > hPID {
+						hValuePrime = make(map[interface{}]int)
+						hPID = reply.PID
+						if !hDecided {
+							hValue = reply.Value
+						}
+					}
+					if reply.PID == hPID && !hDecided && enableLeader > 0 {
+						if _, ok := hValuePrime[reply.Value]; ok {
+							hValuePrime[reply.Value] += 1
+						} else {
+							hValuePrime[reply.Value] = 1
+						}
+					}
+				}
+			}
+		}
+
+		if enableLeader > 0 {
+			hValueCount := -1
+			for k, v := range hValuePrime {
+				if v > hValueCount && k != nil {
+					if !hDecided {
+						hValue = k
+					}
+					hValueCount = v
+				}
+			}
+		}
 
 		// If prepare was rejected, start over with new proposal value
 		if ok <= total/2 {
@@ -548,19 +547,19 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 			args := &AcceptArgs{px.me, seq, nPID, hValue, newDone, px.leader[seq]}
 			var reply AcceptReply
 			if px.callAcceptor(i, "Paxos.Accept", args, &reply) {
-        if !reply.Err {
-          for dk,dv := range reply.Done {
-            px.recordDone(dk, dv)
-          }
-          ok += 1
-        } else {
-          if reply.Leader != px.me && enableLeader > 0 {
-            DPrintf("\nRESETTING THINGS")
-            px.leader[seq] = -1
-            break
-          }
-        }
-      }
+				if !reply.Err {
+					for dk, dv := range reply.Done {
+						px.recordDone(dk, dv)
+					}
+					ok += 1
+				} else {
+					if reply.Leader != px.me && enableLeader > 0 {
+						DPrintf("\nRESETTING THINGS")
+						px.leader[seq] = -1
+						break
+					}
+				}
+			}
 		}
 
 		// If accept was rejected, start over with new proposal value
@@ -573,7 +572,7 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 			} else {
 				nPID = nPID + 1
 			}
-      px.leader[seq] = -1
+			px.leader[seq] = -1
 			continue
 		}
 
@@ -600,7 +599,7 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
-  reply.Leader = px.leader[seq]
+	reply.Leader = px.leader[seq]
 
 	return nil
 }
@@ -614,22 +613,22 @@ func (px *Paxos) callLeader(seq int, v interface{}) {
 	args := &ProposeArgs{seq, v, newDone}
 	var reply ProposeReply
 
-  if enableLeader == 2 {
-    px.leader[seq] = -1
-  }
+	if enableLeader == 2 {
+		px.leader[seq] = -1
+	}
 
 	if px.leader[seq] == px.me || px.leader[seq] == -1 || enableLeader == 0 {
-    px.Propose(args, &reply)
+		px.Propose(args, &reply)
 	} else {
-    if px.callWrap(px.peers[px.leader[seq]], "Paxos.Propose", args, &reply) && !reply.Err {
-      for pr,vl := range reply.Done {
-        px.recordDone(pr, vl)
-      }
-    } else {
-      DPrintf("\nFALLBACK for %v", reply.Err)
-      px.Propose(args, &reply)
-    }
-  }
+		if px.callWrap(px.peers[px.leader[seq]], "Paxos.Propose", args, &reply) && !reply.Err {
+			for pr, vl := range reply.Done {
+				px.recordDone(pr, vl)
+			}
+		} else {
+			DPrintf("\nFALLBACK for %v", reply.Err)
+			px.Propose(args, &reply)
+		}
+	}
 }
 
 //

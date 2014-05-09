@@ -7,11 +7,12 @@ import "sync"
 import "fmt"
 
 type Clerk struct {
-	mu      sync.Mutex // one RPC at a time
-	sm      *shardmaster.Clerk
-	config  shardmaster.Config
-	me      int64
-	network bool
+	mu       sync.Mutex // one RPC at a time
+	sm       *shardmaster.Clerk
+	config   shardmaster.Config
+	me       int64
+	network  bool
+	clientID int64
 }
 
 func MakeClerk(shardmasters []string, network bool) *Clerk {
@@ -19,6 +20,7 @@ func MakeClerk(shardmasters []string, network bool) *Clerk {
 	ck.sm = shardmaster.MakeClerk(shardmasters, network)
 	ck.me = nrand()
 	ck.network = network
+	ck.clientID = nrand()
 	return ck
 }
 
@@ -100,11 +102,11 @@ func (ck *Clerk) Get(key string) string {
 	defer ck.mu.Unlock()
 
 	shard := key2shard(key)
-	args := &GetArgs{key, nrand()}
+	args := &GetArgs{key, nrand(), ck.clientID}
 
 	for {
 		gid := ck.config.Shards[shard]
-		
+
 		servers, ok := ck.config.Groups[gid]
 
 		if ok {
@@ -134,32 +136,32 @@ func (ck *Clerk) PutExt(key string, value string, dohash bool) string {
 	defer ck.mu.Unlock()
 	DPrintf("got put")
 	shard := key2shard(key)
-	args := &PutArgs{key, value, dohash, nrand()}
+	args := &PutArgs{key, value, dohash, nrand(), ck.clientID}
 
 	for {
 		gid := ck.config.Shards[shard]
 
 		servers, ok := ck.config.Groups[gid]
 		DPrintf("Shards replication group is %v", servers)
-		DPrintf("Overall shard assignment is %v",  ck.config.Groups)
+		DPrintf("Overall shard assignment is %v", ck.config.Groups)
 		if ok {
 			// try each server in the shard's replication group.
 			for _, srv := range servers {
 				var reply KVReply
-				DPrintf("About to send Put rpc to %s.",srv)
+				DPrintf("About to send Put rpc to %s.", srv)
 				ok := call(srv, "ShardKV.Put", args, &reply, ck.network)
 				if ok && reply.Err == OK {
 					return reply.Value
-				} 				
+				}
 				if ok && (reply.Err == ErrWrongGroup) {
 					DPrintf("Err wrong group")
 					break
 				}
 			}
-			
+
 		}
 		time.Sleep(50 * time.Millisecond)
-			
+
 		// ask master for a new configuration.
 		prior := ck.config.Num
 		ck.config = ck.sm.Query(-1)

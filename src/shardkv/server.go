@@ -1,5 +1,6 @@
 package shardkv
 
+// ABOUT TO CHANGE RESPONSE STUFF
 import "net"
 import "fmt"
 import "net/rpc"
@@ -50,14 +51,16 @@ func DPrintfPersist(format string, a ...interface{}) (n int, err error) {
 }
 
 type Op struct {
-	Op    int //1 = Get, 2 = Put, 3 = PutHash, 4 = Reconfigure
-	OpID  int64
-	Key   string
-	Value string
+	Op       int //1 = Get, 2 = Put, 3 = PutHash, 4 = Reconfigure
+	OpID     int64
+	ClientID int64
+	Key      string
+	Value    string
 
 	ConfigNum int
-	Store     map[string]string
-	Response  map[int64]string
+	Store     map[string]string // key/value store
+	Response  map[int64]string  // client responses, indexed by client ID
+	Seen      map[int64]bool    // which ops have been seen, indexed by op ID
 }
 
 type ShardKV struct {
@@ -77,8 +80,9 @@ type ShardKV struct {
 	px       *paxos.Paxos
 	gid      int64 // my replica group ID
 	config   shardmaster.Config
-	store    map[string]string
-	response map[int64]string
+	store    map[string]string // key/value store
+	response map[int64]string  // client responses, indexed by client ID
+	seen     map[int64]bool    // which ops have been seen, indexed by op ID
 	minSeq   int
 
 	// Persistence stuff
@@ -110,21 +114,45 @@ func (kv *ShardKV) getValue(key string) (string, bool) {
 	return value, exists
 }
 
-// Write the desired response to memory and/or disk
-func (kv *ShardKV) putResponse(id int64, value string) {
+// Write the seen opID to memory and/or disk
+func (kv *ShardKV) putSeen(opID int64, seen bool) {
 	// Write to memory if using memory
 	if writeToMemory {
-		kv.response[id] = value
+		kv.seen[opID] = seen
 	}
 	// Write to disk if persistent is enabled
-	kv.dbWriteResponse(id, value)
+	kv.dbWriteSeen(opID, seen)
+}
+
+// Get whether the op is seen, either from memory or disk
+func (kv *ShardKV) getSeen(opID int64) bool {
+	seen := kv.seen[opID]
+	if !seen {
+		seen = kv.dbGetSeen(opID)
+	}
+	return seen
+}
+
+// Write the desired response to memory and/or disk
+func (kv *ShardKV) putResponse(opID int64, clientID int64, value string) {
+	// Write to memory if using memory
+	if writeToMemory {
+		kv.response[clientID] = value
+		kv.seen[opID] = true
+	}
+	// Write to disk if persistent is enabled
+	kv.dbWriteResponse(opID, clientID, value)
 }
 
 // Get the desired response, either from memory or disk
-func (kv *ShardKV) getResponse(id int64) (string, bool) {
-	response, exists := kv.response[id]
+func (kv *ShardKV) getResponse(opID int64, clientID int64) (string, bool) {
+	response := ""
+	exists := false
+	if kv.seen[opID] {
+		response, exists = kv.response[clientID]
+	}
 	if !exists {
-		response, exists = kv.dbGetResponse(id)
+		response, exists = kv.dbGetResponse(opID, clientID)
 	}
 	return response, exists
 }
@@ -148,19 +176,19 @@ func (kv *ShardKV) processLog(maxSeq int) {
 					DPrintf("%d.%d.%d) Log %d: Op #%d - GET(%s)\n", kv.gid, kv.me, kv.config.Num, i, op.OpID, op.Key)
 					// Write the response to memory and disk
 					val, _ := kv.getValue(op.Key)
-					kv.putResponse(op.OpID, val)
+					kv.putResponse(op.OpID, op.ClientID, val)
 				} else if op.Op == 2 {
 					DPrintf("%d.%d.%d) Log %d: Op #%d - PUT(%s, %s)\n", kv.gid, kv.me, kv.config.Num, i, op.OpID, op.Key, op.Value)
 					// Write the response to memory and disk
 					val, _ := kv.getValue(op.Key)
-					kv.putResponse(op.OpID, val)
+					kv.putResponse(op.OpID, op.ClientID, val)
 					// Write the value to memory and/or disk
 					kv.putValue(op.Key, op.Value)
 				} else if op.Op == 3 {
 					DPrintf("%d.%d.%d) Log %d: Op #%d - PUTHASH(%s, %s)\n", kv.gid, kv.me, kv.config.Num, i, op.OpID, op.Key, op.Value)
 					// Write the response to memory and disk
 					val, _ := kv.getValue(op.Key)
-					kv.putResponse(op.OpID, val)
+					kv.putResponse(op.OpID, op.ClientID, val)
 					// Write the value to memory and disk
 					val = strconv.Itoa(int(hash(val + op.Value)))
 					kv.putValue(op.Key, val)
@@ -171,8 +199,12 @@ func (kv *ShardKV) processLog(maxSeq int) {
 						kv.putValue(nk, nv)
 					}
 					// Write the new responses to memory and disk
-					for nk, nv := range op.Response {
-						kv.putResponse(nk, nv)
+					for clientID, value := range op.Response {
+						kv.putResponse(-1, clientID, value)
+					}
+					// Write seen op IDs to memory and disk
+					for opID, _ := range op.Seen {
+						kv.putSeen(opID, true)
 					}
 					// Record the new config in memory and disk
 					kv.config = kv.sm.Query(op.ConfigNum)
@@ -206,7 +238,7 @@ func (kv *ShardKV) processKV(op Op, reply *KVReply) {
 			return
 		}
 		// If duplicate request, use previous response
-		if v, seen := kv.getResponse(op.OpID); seen {
+		if v, seen := kv.getResponse(op.OpID, op.ClientID); seen {
 			DPrintf("%d.%d.%d) Already Seen Op %d\n", kv.gid, kv.me, kv.config.Num, op.OpID)
 			if v == "" {
 				reply.Err = ErrNoKey
@@ -231,7 +263,7 @@ func (kv *ShardKV) processKV(op Op, reply *KVReply) {
 					return
 				}
 				// If have seen op (duplicate or just decided), return response
-				if v, seen := kv.getResponse(op.OpID); seen {
+				if v, seen := kv.getResponse(op.OpID, op.ClientID); seen {
 					if v == "" {
 						reply.Err = ErrNoKey
 					} else {
@@ -253,7 +285,7 @@ func (kv *ShardKV) processKV(op Op, reply *KVReply) {
 }
 
 // Log and execute a reconfiguration
-func (kv *ShardKV) addReconfigure(num int, store map[string]string, response map[int64]string) {
+func (kv *ShardKV) addReconfigure(num int, store map[string]string, response map[int64]string, seen map[int64]bool) {
 	defer func() {
 		DPrintf("%d.%d.%d) Reconfigure Returns\n", kv.gid, kv.me, kv.config.Num)
 	}()
@@ -261,9 +293,11 @@ func (kv *ShardKV) addReconfigure(num int, store map[string]string, response map
 	newOp := Op{}
 	newOp.Op = 4
 	newOp.OpID = int64(num)
+	newOp.ClientID = -1
 	newOp.ConfigNum = num
 	newOp.Store = store
 	newOp.Response = response
+	newOp.Seen = seen
 	DPrintf("%d.%d.%d) Reconfigure: %d\n", kv.gid, kv.me, kv.config.Num, num)
 
 	for !kv.dead {
@@ -317,6 +351,7 @@ func (kv *ShardKV) Get(args *GetArgs, reply *KVReply) error {
 	newOp := Op{}
 	newOp.Op = 1
 	newOp.OpID = args.ID
+	newOp.ClientID = args.ClientID
 	newOp.Key = args.Key
 	DPrintf("%d.%d.%d) Get: %s\n", kv.gid, kv.me, kv.config.Num, args.Key)
 
@@ -352,6 +387,7 @@ func (kv *ShardKV) Put(args *PutArgs, reply *KVReply) error {
 		newOp.Op = 2
 	}
 	newOp.OpID = args.ID
+	newOp.ClientID = args.ClientID
 	newOp.Key = args.Key
 	newOp.Value = args.Value
 
@@ -413,9 +449,23 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 		responses[id] = value
 	}
 
+	seenIDs := make(map[int64]bool)
+	idsInMemory = make(map[int64]bool)
+	// Copy seen IDs from memory
+	for id, _ := range kv.seen {
+		seenIDs[id] = true
+		idsInMemory[id] = true
+	}
+	// Copy seen IDs from disk if not in memory
+	for id, _ := range kv.dbGetSeenIDs(idsInMemory) {
+		DPrintfPersist("\n\t%v-%v: got seen data %v", kv.gid, kv.me, id)
+		seenIDs[id] = true
+	}
+
 	reply.Err = OK
 	reply.Store = shardStore
 	reply.Response = responses
+	reply.Seen = seenIDs
 	return nil
 }
 
@@ -461,6 +511,7 @@ func (kv *ShardKV) tick() {
 	// Get store data and response data for new shards
 	newStore := make(map[string]string)
 	newResponse := make(map[int64]string)
+	newSeen := make(map[int64]bool)
 	if len(remoteGained) != 0 && !kv.dead {
 		DPrintf("%d.%d.%d) New Config needs %d\n", kv.gid, kv.me, kv.config.Num, remoteGained)
 		for _, shard := range remoteGained {
@@ -479,8 +530,11 @@ func (kv *ShardKV) tick() {
 						for k, v := range reply.Store {
 							newStore[k] = v
 						}
-						for k, v := range reply.Response {
-							newResponse[k] = v
+						for id, value := range reply.Response {
+							newResponse[id] = value
+						}
+						for id, _ := range reply.Seen {
+							newSeen[id] = true
 						}
 						break srvloop
 					} else {
@@ -492,7 +546,7 @@ func (kv *ShardKV) tick() {
 		}
 	}
 	// Log the reconfiguration
-	kv.addReconfigure(newConfig.Num, newStore, newResponse)
+	kv.addReconfigure(newConfig.Num, newStore, newResponse, newSeen)
 	DPrintf("%d.%d.%d) New Config adding %d\n", kv.gid, kv.me, kv.config.Num, newStore)
 }
 
@@ -547,6 +601,73 @@ func (kv *ShardKV) KillSaveDisk() {
 		kv.dbLock.Unlock()
 		kv.dbClosed = true
 	}
+}
+
+// Get seen IDs from database
+// Excludes any of the given ids
+func (kv *ShardKV) dbGetSeenIDs(exclude map[int64]bool) map[int64]bool {
+	responses := make(map[int64]bool)
+	if !persistent {
+		return responses
+	}
+	DPrintfPersist("\n%v-%v: dbGetSeenIDs Waiting for dbLock", kv.gid, kv.me)
+	kv.dbLock.Lock()
+	DPrintfPersist("\n%v-%v: dbGetSeenIDs Got dbLock", kv.gid, kv.me)
+	defer func() {
+		kv.dbLock.Unlock()
+		DPrintfPersist("\n%v-%v: dbGetSeenIDs Released dbLock", kv.gid, kv.me)
+	}()
+	if kv.dead {
+		return responses
+	}
+
+	toPrint := ""
+	toPrint += fmt.Sprintf("\n%v-%v: Reading seen IDs from database... ", kv.gid, kv.me)
+	// Turn off cache-filling while doing bulk read
+	kv.dbReadOptions.SetFillCache(false)
+	defer kv.dbReadOptions.SetFillCache(dbUseCache)
+	// Get database iterator
+	iterator := kv.db.NewIterator(kv.dbReadOptions)
+	defer iterator.Close()
+	iterator.SeekToFirst()
+	DPrintfPersist("\n%v-%v: dbGetSeenIDs starting iteration", kv.gid, kv.me)
+	for iterator.Valid() {
+		keyBytes := iterator.Key()
+		keyString := string(keyBytes)
+		if strings.Index(keyString, "seen_") < 0 {
+			iterator.Next()
+			toPrint += "\n\tSkipping key " + keyString
+			continue
+		}
+		keyString = keyString[len("seen_"):]
+		key, err := strconv.ParseInt(keyString, 10, 64)
+		if exclude[key] || err != nil {
+			iterator.Next()
+			toPrint += "\n\tSkipping key " + keyString
+			continue
+		}
+
+		valueBytes := iterator.Value()
+		bufferVal := *bytes.NewBuffer(valueBytes)
+		decoderVal := gob.NewDecoder(&bufferVal)
+		var value int
+		err = decoderVal.Decode(&value)
+		if err != nil {
+			toPrint += fmt.Sprintf("\n\terror decoding value for %v", key)
+			iterator.Next()
+			continue
+		}
+		toPrint += fmt.Sprintf("\n\tRead (%v, %v)", key, value)
+		if value == 1 {
+			responses[key] = true
+		} else {
+			responses[key] = false
+		}
+		iterator.Next()
+	}
+
+	DPrintfPersist(toPrint)
+	return responses
 }
 
 // Get responses from database
@@ -758,9 +879,96 @@ func (kv *ShardKV) dbPut(key string, value string) {
 	DPrintfPersist(toPrint)
 }
 
+// Tries to get whether the given ID has been seen
+func (kv *ShardKV) dbGetSeen(opID int64) bool {
+	if !persistent {
+		return false
+	}
+	DPrintfPersist("\n%v-%v: dbGetSeen Waiting for dbLock", kv.gid, kv.me)
+	kv.dbLock.Lock()
+	DPrintfPersist("\n%v-%v: dbGetSeen Got dbLock", kv.gid, kv.me)
+	defer func() {
+		kv.dbLock.Unlock()
+		DPrintfPersist("\n%v-%v: dbGetSeen Released dbLock", kv.gid, kv.me)
+	}()
+	if kv.dead {
+		return false
+	}
+
+	toPrint := ""
+	toPrint += fmt.Sprintf("\n%v-%v: Reading seen %v from database... ", kv.gid, kv.me, opID)
+	// Read entry from database if it exists
+	key := fmt.Sprintf("seen_%v", opID)
+	entryBytes, err := kv.db.Get(kv.dbReadOptions, []byte(key))
+
+	// Decode the entry if it exists, otherwise return empty
+	if err == nil && len(entryBytes) > 0 {
+		toPrint += "\tDecoding entry... "
+		buffer := *bytes.NewBuffer(entryBytes)
+		decoder := gob.NewDecoder(&buffer)
+		var entryDecoded int
+		err = decoder.Decode(&entryDecoded)
+		if err != nil {
+			toPrint += "\terror"
+		} else {
+			toPrint += "\tsuccess"
+			DPrintfPersist(toPrint)
+			return (entryDecoded == 1)
+		}
+	} else {
+		toPrint += fmt.Sprintf("\tNo entry found in database %s", fmt.Sprint(err))
+		DPrintfPersist(toPrint)
+		return false
+	}
+
+	DPrintfPersist(toPrint)
+	return false
+}
+
+// Writes the given client response to the database
+func (kv *ShardKV) dbWriteSeen(opID int64, seen bool) {
+	if !persistent {
+		return
+	}
+	DPrintfPersist("\n%v-%v: dbWriteSeen Waiting for dbLock", kv.gid, kv.me)
+	kv.dbLock.Lock()
+	DPrintfPersist("\n%v-%v: dbWriteSeen Got dbLock", kv.gid, kv.me)
+	defer func() {
+		kv.dbLock.Unlock()
+		DPrintfPersist("\n%v-%v: dbWriteSeen Released dbLock", kv.gid, kv.me)
+	}()
+	if kv.dead {
+		return
+	}
+
+	toPrint := ""
+	toPrint += fmt.Sprintf("\n%v-%v: Writing seen %v -> %v to database... ", kv.gid, kv.me, opID, seen)
+	// Encode the response into a byte array
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
+	seenVal := 1
+	if !seen {
+		seenVal = 0
+	}
+	err := enc.Encode(seenVal)
+	if err != nil {
+		DPrintfPersist("\terror encoding: %s", fmt.Sprint(err))
+	} else {
+		// Write the state to the database
+		key := fmt.Sprintf("seen_%v", opID)
+		err := kv.db.Put(kv.dbWriteOptions, []byte(key), buffer.Bytes())
+		if err != nil {
+			toPrint += fmt.Sprintf("\terror writing to database")
+		} else {
+			toPrint += fmt.Sprintf("\tsuccess")
+		}
+	}
+	DPrintfPersist(toPrint)
+}
+
 // Tries to get the desired response from the database
 // If it doesn't exist, returns empty string
-func (kv *ShardKV) dbGetResponse(toGet int64) (string, bool) {
+func (kv *ShardKV) dbGetResponse(opID int64, clientID int64) (string, bool) {
 	if !persistent {
 		return "", false
 	}
@@ -776,9 +984,18 @@ func (kv *ShardKV) dbGetResponse(toGet int64) (string, bool) {
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v-%v: Reading response %v from database... ", kv.gid, kv.me, toGet)
+	toPrint += fmt.Sprintf("\n%v-%v: Reading response %v (client %v) from database... ", kv.gid, kv.me, opID, clientID)
+	// Return false if opID has not been seen
+	seenKey := fmt.Sprintf("seen_%v", opID)
+	seenBytes, seenErr := kv.db.Get(kv.dbReadOptions, []byte(seenKey))
+	if seenErr != nil || len(seenBytes) == 0 {
+		toPrint += fmt.Sprintf("\topID has not been seen")
+		DPrintfPersist(toPrint)
+		return "", false
+	}
+
 	// Read entry from database if it exists
-	key := fmt.Sprintf("response_%v", toGet)
+	key := fmt.Sprintf("response_%v", clientID)
 	entryBytes, err := kv.db.Get(kv.dbReadOptions, []byte(key))
 
 	// Decode the entry if it exists, otherwise return empty
@@ -806,7 +1023,7 @@ func (kv *ShardKV) dbGetResponse(toGet int64) (string, bool) {
 }
 
 // Writes the given client response to the database
-func (kv *ShardKV) dbWriteResponse(id int64, response string) {
+func (kv *ShardKV) dbWriteResponse(opID int64, clientID int64, response string) {
 	if !persistent {
 		return
 	}
@@ -822,8 +1039,8 @@ func (kv *ShardKV) dbWriteResponse(id int64, response string) {
 	}
 
 	toPrint := ""
-	toPrint += fmt.Sprintf("\n%v-%v: Writing response %v -> %v to database... ", kv.gid, kv.me, id, response)
-	// Encode the response into a byte array
+	toPrint += fmt.Sprintf("\n%v-%v: Writing response %v (client %v) -> %v to database... ", kv.gid, kv.me, opID, clientID, response)
+	// Write the response for clientID
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
 	err := enc.Encode(response)
@@ -831,9 +1048,27 @@ func (kv *ShardKV) dbWriteResponse(id int64, response string) {
 		DPrintfPersist("\terror encoding: %s", fmt.Sprint(err))
 	} else {
 		// Write the state to the database
-		key := fmt.Sprintf("response_%v", id)
+		key := fmt.Sprintf("response_%v", clientID)
 		err := kv.db.Put(kv.dbWriteOptions, []byte(key), buffer.Bytes())
 		if err != nil {
+			toPrint += fmt.Sprintf("\terror writing to database")
+		} else {
+			toPrint += fmt.Sprintf("\tsuccess")
+		}
+	}
+	DPrintfPersist(toPrint)
+
+	// Write that opID has been seen
+	var seenBuffer bytes.Buffer
+	seenEnc := gob.NewEncoder(&seenBuffer)
+	seenErr := seenEnc.Encode(1)
+	if seenErr != nil {
+		DPrintfPersist("\terror encoding: %s", fmt.Sprint(seenErr))
+	} else {
+		// Write the state to the database
+		key := fmt.Sprintf("seen_%v", opID)
+		seenErr := kv.db.Put(kv.dbWriteOptions, []byte(key), seenBuffer.Bytes())
+		if seenErr != nil {
 			toPrint += fmt.Sprintf("\terror writing to database")
 		} else {
 			toPrint += fmt.Sprintf("\tsuccess")
@@ -1073,8 +1308,11 @@ func (kv *ShardKV) startup(servers []string) {
 					for k, v := range reply.Store {
 						kv.putValue(k, v)
 					}
-					for k, v := range reply.Response {
-						kv.putResponse(k, v)
+					for clientID, value := range reply.Response {
+						kv.putResponse(-1, clientID, value)
+					}
+					for opID, seen := range reply.Seen {
+						kv.putSeen(opID, seen)
 					}
 					haveShard = true
 					break
@@ -1112,6 +1350,7 @@ func (kv *ShardKV) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
 		DPrintfPersist("\n%v-%verr: %v, fetchReply err: %v", kv.gid, kv.me, err, fetchReply.Err)
 		reply.Response = fetchReply.Response
 		reply.Store = fetchReply.Store
+		reply.Seen = fetchReply.Seen
 	}
 
 	DPrintfPersist("\n%v-%v: sending %v", kv.gid, kv.me, reply)
@@ -1161,6 +1400,7 @@ func StartServer(gid int64, shardmasters []string,
 	DPrintf("got new config\n")
 	kv.store = make(map[string]string)
 	kv.response = make(map[int64]string)
+	kv.seen = make(map[int64]bool)
 	kv.minSeq = -1
 
 	// Peristence stuff
