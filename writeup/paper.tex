@@ -80,9 +80,28 @@ The goals of the project are:
 We created an extensive system to try and accurately measure performance. In addition to writing many benchmarks, we also modified the original RPC system so that we could run the servers in an AWS cluster and observe the performance on a real network. 
 
 \subsection{Throughput and Latency}
+Avg client latency w/ out paxos optimizations:
+one shard, 3 groups w/ 3 replicas = 15.4ms/op
+many shards, 3 groups w/ 3 replicas = 21.8ms/op
+
+Avg client throughput w/ out paxos optimizations:
+one shard, 3 groups w/ 3 replicas = 65 requests/second
+many shards, 3 groups w/ 3 replicas = 46 requets/second
+
+Client requests per second:
+3 groups w/ 3 replicas:
+~179 requests per second (saturates at around 50 users)
+
 
 \subsection{Bottlenecks}
 Although we made significant improvements performance-wise, we identified a number of bottlenecks.
+
+One notable bottleneck is disk writes. The database library we used,
+levedb, uses a cache and is quite fast. However, in the process of
+debugging networked RPCs, we implemented simple logging. This logging
+slowed down the operations by nearly a factor of ten. This was a good
+demonstration of how care must be taken in even the most mundane
+aspects, such as logging.
 
 \subsubsection{Paxos}
 
@@ -93,16 +112,5 @@ We did a project.
 
 %{\footnotesize \bibliographystyle{acm}
 %\bibliography{paper}}
-%\newpage
-%\section{\\Appendix A: Alternative Emergency Alert Scheme}
-% the \\ insures the section title is centered below the phrase: Appendix B
-% See Appendix A for  (NOTE: perhaps the base station could note the empty 
-%space, and then take advantage of the periodicity to send a broadcast packet 
-%that would allow sensors to opportunistically fill in the blank, thus 
-%increasing the success rate).(NOTE: opportunistic make up listed in last note
-%could allow for the two sensors to randomly switch to open slots, potentially
-% getting rid of the collision state). (NOTE: unless the fill-in-the-blank
-%scheme is uses, in which case the base station will be fully aware of any 
-%re-mappings as it dictated them in the first place!).
 %\newpage
 \end{document}
