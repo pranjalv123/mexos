@@ -11,7 +11,7 @@ import "sync"
 
 const onlyBenchmarks = false
 const runOldTests = true
-const runNewTests = true
+const runNewTests = false
 
 // Make a port using the given tag and host number
 func makePort(tag string, host int) string {
@@ -832,7 +832,7 @@ func TestFileForgetMem(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
-  return
+
 	runtime.GOMAXPROCS(4)
 
 	fmt.Printf("\nTest: Paxos frees forgotten instance memory ...")
