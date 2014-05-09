@@ -166,6 +166,11 @@ func TestFileBasic(t *testing.T) {
 	}
 
 	rebootDone = 1
+	fmt.Printf("\n\tMemory usage          : %v", getMemoryUsage())
+	fmt.Printf("\n\tPaxos Disk usage      : %v", getPaxosDiskUsage())
+	fmt.Printf("\n\tShardmaster Disk usage: %v", getShardMasterDiskUsage())
+	fmt.Printf("\n\tShardKV Disk usage    : %v", getShardKVDiskUsage())
+	fmt.Printf("\n\tTotal Disk usage      : %v", getDiskUsage())
 	fmt.Printf("\n\tPassed\n")
 	time.Sleep(2 * time.Second)
 }

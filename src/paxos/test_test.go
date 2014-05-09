@@ -290,9 +290,9 @@ func TestFilePersistenceBasic(test *testing.T) {
 	fmt.Printf("\nTest Persistence, single failure, save disk ...")
 	// Put all servers in the same partition
 	partitionServers(test, tag, numServers, []int{0, 1, 2, 3, 4}, []int{}, []int{})
-	// Get agreement on an instance (only wait for majority)
+	// Get agreement on an instance
 	paxosServers[0].Start(0, 0)
-	waitForDecisionMajority(test, paxosServers, 0)
+	waitForDecision(test, paxosServers, 0, numServers)
 	// Kill one server, make sure it stops
 	paxosServers[0].KillSaveDisk()
 	time.Sleep(1 * time.Second)
@@ -893,7 +893,7 @@ func TestFileForgetMem(test *testing.T) {
 	runtime.ReadMemStats(&m2)
 
 	if m2.Alloc > (m1.Alloc / 2) {
-		test.Fatalf("memory use did not shrink enough")
+		test.Fatalf("memory use did not shrink enough (m2: %v, m1: %v", m2.Alloc, m1.Alloc)
 	}
 
 	fmt.Printf("\n\tPassed")

@@ -38,13 +38,23 @@ import "bytes"
 const startport = 2100
 const printRPCerrors = false
 
-const persistent = true
-const recovery = true
-
 const Debug = 0
 const DebugPersist = 0
 
 const enableLeader = 0
+
+const persistent = true
+const recovery = true
+const writeToMemory = true     // Whether responses/store should be written to memory (as well as disk / disk cache)
+const dbUseCompression = true  // Whether database should compress entries
+const dbUseCache = true        // Whether database should use a built-in cache
+const dbCacheSize = 1000000000 // Size of database cache (ignored if dbUseCache is false)
+const memoryLimit = 2000000000 // Memory limit in bytes
+
+// Will use these to check that dbCacheSize doesn't overflow an int
+// (int size is either 32 or 64 bits depending on implementation)
+const MaxUint = ^uint(0)
+const MaxInt = int(^uint(0) >> 1)
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -103,6 +113,17 @@ type Paxos struct {
 	dbLock         sync.Mutex
 	dbMaxInstance  int
 	recovering     bool
+
+	// Behavioral Options
+	// NOTE: If shardkv/shardmaster is set to send settings to paxos, the below
+	// options will be overwritten
+	persistent       bool
+	recovery         bool
+	dbUseCompression bool
+	dbUseCache       bool
+	dbCacheSize      int
+	writeToMemory    bool
+	memoryLimit      int64
 }
 
 type RecoverArgs struct {
@@ -274,20 +295,32 @@ func (px *Paxos) callAcceptor(index int, name string, args interface{}, reply in
 	}
 }
 
+// Writes the given proposal to memory and/or disk
+func (px *Paxos) putInstance(seq int, proposal Proposal) {
+	if px.writeToMemory {
+		px.instances[seq] = proposal
+	}
+	px.dbWriteInstance(seq, proposal)
+}
+
 // Get the instance of the given sequence number
 // If haven't heard about it, creats a new instance for that sequence
 // Also updates px.maxInstance
 func (px *Paxos) getInstance(seq int) Proposal {
+	prop := Proposal{-1, -1, nil, false}
+	ok := false
 	// Load instance from memory if available
 	// otherwise look in database
-	if _, ok := px.instances[seq]; !ok {
-		px.instances[seq] = px.dbGetInstance(seq)
+	if prop, ok = px.instances[seq]; !ok {
+		prop = px.dbGetInstance(seq)
+		if px.writeToMemory {
+			px.instances[seq] = prop
+		}
 	} else {
 		if seq > px.maxInstance {
 			px.maxInstance = seq
 		}
 	}
-	prop := px.instances[seq]
 	return prop
 }
 
@@ -299,18 +332,13 @@ func (px *Paxos) doneCollector() {
 		// Find out min instance to preserve
 		min := px.Min()
 		// Delete any instances not already deleted
-		if min > oldMin {
-			px.mu.Lock()
-			for k := range px.instances {
-				if k < min {
-					px.instances[k] = Proposal{-1, -1, nil, false}
-					delete(px.instances, k)
-					px.dbDeleteInstance(k)
-				}
-			}
-			px.mu.Unlock()
-			oldMin = min
+		px.mu.Lock()
+		for min > oldMin {
+			delete(px.instances, oldMin)
+			px.dbDeleteInstance(oldMin)
+			oldMin += 1
 		}
+		px.mu.Unlock()
 		time.Sleep(100 * time.Millisecond)
 	}
 }
@@ -326,14 +354,13 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 	reply.Err = true
 
 	newDone := make(map[int]int)
-	for dk, dv := range px.done {
+	for dk, dv := range px.getDone() {
 		newDone[dk] = dv
 	}
 
 	// Check if proposal number is high enough
 	if args.PID > prop.Prepare {
-		px.instances[args.Instance] = Proposal{args.PID, prop.Accept, prop.Value, prop.Decided}
-		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
+		px.putInstance(args.Instance, Proposal{args.PID, prop.Accept, prop.Value, prop.Decided})
 		reply.Err = false
 		reply.PID = prop.Accept
 		reply.Value = prop.Value
@@ -343,7 +370,7 @@ func (px *Paxos) Prepare(args *PrepareArgs, reply *PrepareReply) error {
 	}
 	px.mu.Unlock()
 
-	for dk, dv := range px.done {
+	for dk, dv := range px.getDone() {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
@@ -363,7 +390,7 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 	reply.Err = true
 
 	newDone := make(map[int]int)
-	for dk, dv := range px.done {
+	for dk, dv := range px.getDone() {
 		newDone[dk] = dv
 	}
 
@@ -371,15 +398,14 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 		DPrintf("\n%v (L%v): Received accept for dead", px.me, px.leader)
 		reply.PID = args.PID
 	} else if args.PID >= prop.Prepare && (args.Server == px.leader[args.Instance] || enableLeader == 0) {
-		px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, prop.Decided}
-		px.dbWriteInstance(args.Instance, px.instances[args.Instance])
+		px.putInstance(args.Instance, Proposal{args.PID, args.PID, args.Value, prop.Decided})
 		reply.Err = false
 		reply.PID = args.PID
 		px.leader[args.Instance] = args.Server
 	}
 	px.mu.Unlock()
 
-	for dk, dv := range px.done {
+	for dk, dv := range px.getDone() {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
@@ -392,8 +418,7 @@ func (px *Paxos) Accept(args *AcceptArgs, reply *AcceptReply) error {
 func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 	px.mu.Lock()
 	DPrintf("\n%v (L%v): Received decide for sequence %v (%v)", px.me, px.leader, args.Instance, args.Value)
-	px.instances[args.Instance] = Proposal{args.PID, args.PID, args.Value, true}
-	px.dbWriteInstance(args.Instance, px.instances[args.Instance])
+	px.putInstance(args.Instance, Proposal{args.PID, args.PID, args.Value, true})
 
 	px.leader[args.Instance] = args.Server
 	if _, ok := px.leader[args.Instance+1]; !ok {
@@ -410,7 +435,7 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 		px.recordDone(dk, dv)
 	}
 	newDone := make(map[int]int)
-	for dk, dv := range px.done {
+	for dk, dv := range px.getDone() {
 		newDone[dk] = dv
 	}
 
@@ -421,7 +446,7 @@ func (px *Paxos) Decide(args *DecideArgs, reply *DecideReply) error {
 		delete(px.doneChannels, args.Instance)
 	}
 
-	for dk, dv := range px.done {
+	for dk, dv := range px.getDone() {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
@@ -439,7 +464,7 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		px.recordDone(dk, dv)
 	}
 	newDone := make(map[int]int)
-	for dk, dv := range px.done {
+	for dk, dv := range px.getDone() {
 		newDone[dk] = dv
 	}
 
@@ -595,7 +620,7 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 		break
 	}
 
-	for dk, dv := range px.done {
+	for dk, dv := range px.getDone() {
 		newDone[dk] = dv
 	}
 	reply.Done = newDone
@@ -606,8 +631,8 @@ func (px *Paxos) Propose(args *ProposeArgs, reply *ProposeReply) error {
 
 func (px *Paxos) callLeader(seq int, v interface{}) {
 	newDone := make(map[int]int)
-	for k, v := range px.done {
-		newDone[k] = v
+	for dk, dv := range px.getDone() {
+		newDone[dk] = dv
 	}
 
 	args := &ProposeArgs{seq, v, newDone}
@@ -702,8 +727,9 @@ func (px *Paxos) Min() int {
 	for px.recovering && !px.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
-	minDone := px.done[px.me]
-	for _, v := range px.done {
+	done := px.getDone()
+	minDone := done[px.me]
+	for _, v := range done {
 		if v < minDone {
 			minDone = v
 		}
@@ -738,11 +764,23 @@ func (px *Paxos) recordDone(peer int, val int) {
 	px.mu.Lock()
 	defer px.mu.Unlock()
 	//DPrintf("\n%v (L%v): recording done %v, %v", px.me, px.leader, peer, val)
-	oldVal := px.done[peer]
+	done := px.getDone()
+	oldVal := done[peer]
 	if val > oldVal {
-		px.done[peer] = val
-		px.dbWriteDone()
+		if px.writeToMemory {
+			px.done[peer] = val
+		}
+		done[peer] = val
+		px.dbWriteDone(done)
 	}
+}
+
+// Gets the "done" values from memory or disk
+func (px *Paxos) getDone() map[int]int {
+	if px.writeToMemory {
+		return px.done
+	}
+	return px.dbReadDone()
 }
 
 // Set a channel which can be used to listen for when a sequence is decided
@@ -760,7 +798,7 @@ func (px *Paxos) Kill() {
 	px.KillSaveDisk()
 
 	// Destroy the database
-	if persistent && !px.dbDeleted {
+	if px.persistent && !px.dbDeleted {
 		DPrintfPersist("\n%v (L%v): Destroying database... ", px.me)
 		err := levigo.DestroyDatabase(px.dbName, px.dbOpts)
 		if err != nil {
@@ -780,7 +818,7 @@ func (px *Paxos) KillSaveDisk() {
 		px.l.Close()
 	}
 	// Close the database
-	if persistent && !px.dbClosed {
+	if px.persistent && !px.dbClosed {
 		px.dbLock.Lock()
 		px.db.Close()
 		px.dbReadOptions.Close()
@@ -792,7 +830,7 @@ func (px *Paxos) KillSaveDisk() {
 
 // Writes the given instance to the database
 func (px *Paxos) dbWriteInstance(seq int, toWrite Proposal) {
-	if !persistent {
+	if !px.persistent {
 		return
 	}
 	px.dbLock.Lock()
@@ -829,7 +867,7 @@ func (px *Paxos) dbWriteInstance(seq int, toWrite Proposal) {
 // Tries to get the desired instance from the database
 // If it doesn't exist, returns empty Proposal
 func (px *Paxos) dbGetInstance(toGet int) Proposal {
-	if !persistent {
+	if !px.persistent {
 		return Proposal{-1, -1, nil, false}
 	}
 	px.dbLock.Lock()
@@ -870,7 +908,7 @@ func (px *Paxos) dbGetInstance(toGet int) Proposal {
 
 // Deletes the given instance from the database
 func (px *Paxos) dbDeleteInstance(seq int) {
-	if !persistent {
+	if !px.persistent {
 		return
 	}
 	px.dbLock.Lock()
@@ -890,9 +928,46 @@ func (px *Paxos) dbDeleteInstance(seq int) {
 	}
 }
 
+// Read Paxos "done" state from database if it exists
+func (px *Paxos) dbReadDone() map[int]int {
+	done := make(map[int]int)
+	for i := 0; i < len(px.peers); i++ {
+		done[i] = -1
+	}
+	if !px.persistent {
+		return done
+	}
+	px.dbLock.Lock()
+	defer px.dbLock.Unlock()
+	if px.dead {
+		return done
+	}
+
+	doneBytes, err := px.db.Get(px.dbReadOptions, []byte("done"))
+	if err == nil && len(doneBytes) > 0 {
+		// Decode the "done" state
+		DPrintfPersist("\n\t%v: Decoding stored 'done' state... ", px.me)
+		buffer := *bytes.NewBuffer(doneBytes)
+		decoder := gob.NewDecoder(&buffer)
+		var doneDecoded map[int]int
+		err = decoder.Decode(&doneDecoded)
+		if err != nil {
+			DPrintfPersist("\terror decoding: %s", fmt.Sprint(err))
+		} else {
+			for peer, doneVal := range doneDecoded {
+				done[peer] = doneVal
+			}
+			DPrintfPersist("\tsuccess %v --- %v", doneDecoded, done)
+		}
+	} else {
+		DPrintfPersist("\n\t%v: No stored 'done' state to load", px.me)
+	}
+	return done
+}
+
 // Write the "done" state to the database
-func (px *Paxos) dbWriteDone() {
-	if !persistent {
+func (px *Paxos) dbWriteDone(done map[int]int) {
+	if !px.persistent {
 		return
 	}
 	px.dbLock.Lock()
@@ -905,7 +980,7 @@ func (px *Paxos) dbWriteDone() {
 	// Encode the "done" map into a byte array
 	var buffer bytes.Buffer
 	enc := gob.NewEncoder(&buffer)
-	err := enc.Encode(px.done)
+	err := enc.Encode(done)
 	if err != nil {
 		DPrintfPersist("\terror encoding")
 	} else {
@@ -914,14 +989,14 @@ func (px *Paxos) dbWriteDone() {
 		if err != nil {
 			DPrintfPersist("\terror writing to database")
 		} else {
-			DPrintfPersist("\tsuccess %v", px.done)
+			DPrintfPersist("\tsuccess %v", done)
 		}
 	}
 }
 
 // Writes the persisted max instance number to the database
 func (px *Paxos) dbWriteMaxInstance(max int) {
-	if !persistent {
+	if !px.persistent {
 		return
 	}
 	if px.dead {
@@ -953,7 +1028,7 @@ func (px *Paxos) dbWriteMaxInstance(max int) {
 // Initialize database for persistence
 // and load any previously written "done" state
 func (px *Paxos) dbInit(tag string) {
-	if !persistent {
+	if !px.persistent {
 		return
 	}
 	px.dbLock.Lock()
@@ -972,6 +1047,19 @@ func (px *Paxos) dbInit(tag string) {
 
 	// Open database (create it if it doesn't exist)
 	px.dbOpts = levigo.NewOptions()
+	if px.dbUseCache {
+		if px.dbCacheSize > MaxInt {
+			fmt.Printf("\nDesired cache size %v is too large... using %v instead\n", px.dbCacheSize, MaxInt)
+			px.dbOpts.SetCache(levigo.NewLRUCache(MaxInt))
+		} else {
+			px.dbOpts.SetCache(levigo.NewLRUCache(px.dbCacheSize))
+		}
+	}
+	if px.dbUseCompression {
+		px.dbOpts.SetCompression(levigo.SnappyCompression)
+	} else {
+		px.dbOpts.SetCompression(levigo.NoCompression)
+	}
 	px.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
 	px.dbOpts.SetCreateIfMissing(true)
 	dbDir := "/home/ubuntu/mexos/src/paxos/persist/"
@@ -990,6 +1078,7 @@ func (px *Paxos) dbInit(tag string) {
 	// Create options for reading/writing entries
 	px.dbReadOptions = levigo.NewReadOptions()
 	px.dbWriteOptions = levigo.NewWriteOptions()
+	px.dbReadOptions.SetFillCache(px.dbUseCache)
 
 	// Read Paxos "done" state from database if it exists
 	doneBytes, err := px.db.Get(px.dbReadOptions, []byte("done"))
@@ -1003,10 +1092,12 @@ func (px *Paxos) dbInit(tag string) {
 		if err != nil {
 			DPrintfPersist("\terror decoding: %s", fmt.Sprint(err))
 		} else {
-			for peer, doneVal := range doneDecoded {
-				px.done[peer] = doneVal
+			if px.writeToMemory {
+				for peer, doneVal := range doneDecoded {
+					px.done[peer] = doneVal
+				}
 			}
-			DPrintfPersist("\tsuccess %v --- %v", doneDecoded, px.done)
+			DPrintfPersist("\tsuccess %v --- %v", doneDecoded, doneDecoded)
 		}
 	} else {
 		DPrintfPersist("\n\t%v: No stored 'done' state to load", px.me)
@@ -1044,7 +1135,7 @@ func (px *Paxos) startup(tag string) {
 	px.recovering = true
 	DPrintfPersist("\n%v Marked recovery true", px.me)
 	px.dbInit(tag)
-	if !recovery {
+	if !px.recovery {
 		return
 	}
 	// Get 'done' array and maxInstance from a peer
@@ -1075,8 +1166,9 @@ func (px *Paxos) startup(tag string) {
 		}
 	}
 
-	minDone := px.done[px.me]
-	for _, v := range px.done {
+	done := px.getDone()
+	minDone := done[px.me]
+	for _, v := range done {
 		if v < minDone {
 			minDone = v
 		}
@@ -1105,8 +1197,7 @@ func (px *Paxos) startup(tag string) {
 				if ok && !reply.Err {
 					instance := reply.Instance
 					if instance.Decided {
-						px.instances[seq] = Proposal{instance.Prepare, instance.Accept, instance.Value, instance.Decided}
-						px.dbWriteInstance(seq, px.instances[seq])
+						px.putInstance(seq, Proposal{instance.Prepare, instance.Accept, instance.Value, instance.Decided})
 					}
 					DPrintfPersist("\n\t\t%v: Got %v", px.me, px.leader, px.instances[seq])
 					haveSeq = true
@@ -1123,7 +1214,8 @@ func (px *Paxos) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
 	DPrintfPersist("\n%v (L%v): Got Fetch request", px.me)
 	reply.Done = make(map[int]int)
 	if args.Seq == -1 {
-		for peer, doneVal := range px.done {
+		done := px.getDone()
+		for peer, doneVal := range done {
 			reply.Done[peer] = doneVal
 		}
 		reply.MaxInstance = px.maxInstance
@@ -1144,6 +1236,16 @@ func (px *Paxos) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
 //
 func Make(peers []string, me int, rpcs *rpc.Server, network bool, tag string) *Paxos {
 	px := &Paxos{}
+
+	// Read memory options
+	px.persistent = persistent
+	px.recovery = recovery
+	px.dbUseCompression = dbUseCompression
+	px.dbUseCache = dbUseCache
+	px.dbCacheSize = dbCacheSize
+	px.writeToMemory = writeToMemory
+	px.memoryLimit = memoryLimit
+
 	// Network stuff
 	px.peers = peers
 	px.me = me
@@ -1153,6 +1255,7 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool, tag string) *P
 		px.reachable[i] = true
 	}
 	px.deaf = false
+
 	// Paxos state
 	px.instances = make(map[int]Proposal)
 	px.leader = make(map[int]int)

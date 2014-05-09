@@ -24,10 +24,18 @@ const Log = 0
 
 var logfile *os.File
 
-// Note: if persistent and recovery are not enabled,
-// some of the persistence tests fail by panic (divide-by-zero in balance)
 const persistent = true
 const recovery = true
+const writeToMemory = true     // Whether responses/store should be written to memory (as well as disk / disk cache)
+const dbUseCompression = true  // Whether database should compress entries
+const dbUseCache = true        // Whether database should use a built-in cache
+const dbCacheSize = 1000000000 // Size of database cache (ignored if dbUseCache is false)
+const memoryLimit = 2000000000 // Memory limit in bytes
+
+// Will use these to check that dbCacheSize doesn't overflow an int
+// (int size is either 32 or 64 bits depending on implementation)
+const MaxUint = ^uint(0)
+const MaxInt = int(^uint(0) >> 1)
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -77,6 +85,17 @@ type ShardMaster struct {
 	dbLock         sync.Mutex
 	dbMaxConfig    int
 	recovering     bool
+
+	// Behavioral Options
+	// NOTE: If shardkv is set to send settings to shardmaster, the below
+	// options will be overwritten
+	persistent       bool
+	recovery         bool
+	dbUseCompression bool
+	dbUseCache       bool
+	dbCacheSize      int
+	writeToMemory    bool
+	memoryLimit      int64
 }
 
 type Op struct {
@@ -84,6 +103,14 @@ type Op struct {
 	GID     int64
 	Servers []string
 	Shard   int
+}
+
+// Store a config to memory and/or disk
+func (sm *ShardMaster) putConfig(configNum int, newConfig Config) {
+	sm.dbWriteConfig(configNum, newConfig)
+	if sm.writeToMemory {
+		sm.configs[configNum] = &newConfig
+	}
 }
 
 // Get the desired configuration from memory or disk
@@ -97,7 +124,9 @@ func (sm *ShardMaster) getConfig(configNum int) Config {
 	// Read from memory if possible, otherwise from disk
 	if config, exists = sm.configs[configNum]; !exists {
 		if config, exists = sm.dbGetConfig(configNum); exists {
-			sm.configs[configNum] = config
+			if sm.writeToMemory {
+				sm.configs[configNum] = config
+			}
 		}
 	}
 	return *config
@@ -169,8 +198,7 @@ func (sm *ShardMaster) createJoinConfig(gid int64, servers []string) {
 	// Balance loading
 	newConfig.Shards = sm.balance(gids, oldConfig.Shards)
 	// Add new configuration
-	sm.dbWriteConfig(sm.maxConfig, newConfig)
-	sm.configs[sm.maxConfig] = &newConfig
+	sm.putConfig(sm.maxConfig, newConfig)
 }
 
 // Create a new configuration which removes the given group
@@ -192,8 +220,7 @@ func (sm *ShardMaster) createLeaveConfig(gid int64) {
 	// Balance loading
 	newConfig.Shards = sm.balance(gids, oldConfig.Shards)
 	// Add the new configuration
-	sm.dbWriteConfig(sm.maxConfig, newConfig)
-	sm.configs[sm.maxConfig] = &newConfig
+	sm.putConfig(sm.maxConfig, newConfig)
 }
 
 // Creat configuration with the given shard assigned to the given group
@@ -216,8 +243,7 @@ func (sm *ShardMaster) createMoveConfig(gid int64, shard int) {
 		newConfig.Groups[k] = v
 	}
 	// Add new configuration
-	sm.dbWriteConfig(sm.maxConfig, newConfig)
-	sm.configs[sm.maxConfig] = &newConfig
+	sm.putConfig(sm.maxConfig, newConfig)
 }
 
 // Processes all unprocessed log entries up to the given sequence
@@ -460,7 +486,7 @@ func (sm *ShardMaster) Kill() {
 	sm.px.Kill()
 
 	// Close the database
-	if persistent && !sm.dbClosed {
+	if sm.persistent && !sm.dbClosed {
 		sm.dbLock.Lock()
 		sm.db.Close()
 		sm.dbReadOptions.Close()
@@ -470,7 +496,7 @@ func (sm *ShardMaster) Kill() {
 	}
 
 	// Destroy the database
-	if persistent && !sm.dbDeleted {
+	if sm.persistent && !sm.dbDeleted {
 		DPrintfPersist("\n%v: Destroying database... ", sm.me)
 		err := levigo.DestroyDatabase(sm.dbName, sm.dbOpts)
 		if err != nil {
@@ -492,7 +518,7 @@ func (sm *ShardMaster) KillSaveDisk() {
 	sm.px.KillSaveDisk()
 
 	// Close the database
-	if persistent && !sm.dbClosed {
+	if sm.persistent && !sm.dbClosed {
 		sm.dbLock.Lock()
 		sm.db.Close()
 		sm.dbReadOptions.Close()
@@ -504,7 +530,7 @@ func (sm *ShardMaster) KillSaveDisk() {
 
 // Writes the given instance to the database
 func (sm *ShardMaster) dbWriteConfig(configNum int, toWrite Config) {
-	if !persistent {
+	if !sm.persistent {
 		return
 	}
 	sm.dbLock.Lock()
@@ -541,7 +567,7 @@ func (sm *ShardMaster) dbWriteConfig(configNum int, toWrite Config) {
 // Tries to get the desired config from the database
 // If it doesn't exist, returns empty Config
 func (sm *ShardMaster) dbGetConfig(toGet int) (*Config, bool) {
-	if !persistent {
+	if !sm.persistent {
 		return &Config{}, false
 	}
 	sm.dbLock.Lock()
@@ -582,7 +608,7 @@ func (sm *ShardMaster) dbGetConfig(toGet int) (*Config, bool) {
 
 // Writes the max processed sequence number to the database
 func (sm *ShardMaster) dbWriteProcessedSeq(seq int) {
-	if !persistent {
+	if !sm.persistent {
 		return
 	}
 	if sm.dead {
@@ -612,7 +638,7 @@ func (sm *ShardMaster) dbWriteProcessedSeq(seq int) {
 
 // Writes the persisted max config number to the database
 func (sm *ShardMaster) dbWriteMaxConfig(max int) {
-	if !persistent {
+	if !sm.persistent {
 		return
 	}
 	if sm.dead {
@@ -644,7 +670,7 @@ func (sm *ShardMaster) dbWriteMaxConfig(max int) {
 // Initialize database for persistence
 // and load any previously written 'maxConfig' and 'processedSeq' state
 func (sm *ShardMaster) dbInit() {
-	if !persistent {
+	if !sm.persistent {
 		return
 	}
 	sm.dbLock.Lock()
@@ -662,6 +688,19 @@ func (sm *ShardMaster) dbInit() {
 	gob.Register(Config{})
 	// Open database (create it if it doesn't exist)
 	sm.dbOpts = levigo.NewOptions()
+	if sm.dbUseCache {
+		if sm.dbCacheSize > MaxInt {
+			fmt.Printf("\nDesired cache size %v is too large... using %v instead\n", sm.dbCacheSize, MaxInt)
+			sm.dbOpts.SetCache(levigo.NewLRUCache(MaxInt))
+		} else {
+			sm.dbOpts.SetCache(levigo.NewLRUCache(sm.dbCacheSize))
+		}
+	}
+	if sm.dbUseCompression {
+		sm.dbOpts.SetCompression(levigo.SnappyCompression)
+	} else {
+		sm.dbOpts.SetCompression(levigo.NoCompression)
+	}
 	sm.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
 	sm.dbOpts.SetCreateIfMissing(true)
 	dbDir := "/home/ubuntu/mexos/src/shardmaster/persist/"
@@ -680,6 +719,7 @@ func (sm *ShardMaster) dbInit() {
 	// Create options for reading/writing entries
 	sm.dbReadOptions = levigo.NewReadOptions()
 	sm.dbWriteOptions = levigo.NewWriteOptions()
+	sm.dbReadOptions.SetFillCache(sm.dbUseCache)
 
 	// Read max instance from database if it exists
 	sm.dbMaxConfig = 0
@@ -730,7 +770,7 @@ func (sm *ShardMaster) startup(servers []string) {
 	sm.recovering = true
 	DPrintfPersist("\n%v Marked recovery true", sm.me)
 	sm.dbInit()
-	if !recovery {
+	if !sm.recovery {
 		return
 	}
 	// Get processSeq and maxConfig from a peer
@@ -777,8 +817,7 @@ func (sm *ShardMaster) startup(servers []string) {
 				ok := call(server, "ShardMaster.FetchRecovery", args, &reply, sm.network)
 				if ok && !reply.Err {
 					replyConfig := reply.RequestedConfig
-					sm.configs[config] = &replyConfig
-					sm.dbWriteConfig(config, replyConfig)
+					sm.putConfig(config, replyConfig)
 					DPrintfPersist("\n\t\t%v: Got %v for config %v", sm.me, *sm.configs[config], config)
 					haveConfig = true
 					sm.maxConfig = config
@@ -823,6 +862,7 @@ func (sm *ShardMaster) FetchRecovery(args *RecoverArgs, reply *RecoverReply) err
 //
 func StartServer(servers []string, me int, network bool) *ShardMaster {
 	gob.Register(Op{})
+
 	var err error
 	if Log == 1 {
 		//set up logging
@@ -838,6 +878,15 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	}
 
 	sm := new(ShardMaster)
+	// Read memory options
+	sm.persistent = persistent
+	sm.recovery = recovery
+	sm.dbUseCompression = dbUseCompression
+	sm.dbUseCache = dbUseCache
+	sm.dbCacheSize = dbCacheSize
+	sm.writeToMemory = writeToMemory
+	sm.memoryLimit = memoryLimit
+
 	// Network stuff
 	sm.me = me
 	sm.network = network

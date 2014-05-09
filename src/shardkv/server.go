@@ -1,6 +1,5 @@
 package shardkv
 
-// ABOUT TO CHANGE RESPONSE STUFF
 import "net"
 import "fmt"
 import "net/rpc"
@@ -21,6 +20,9 @@ import "github.com/jmhodges/levigo"
 import "bytes"
 import "strings"
 
+import "runtime"
+import "os/exec"
+
 const Debug = 0
 const DebugPersist = 0
 const printRPCerrors = false
@@ -28,13 +30,23 @@ const Log = 0
 
 var logfile *os.File
 
+// DATABASE / MEMORY CONFIGURATION
+// Remember to set the corresponding variables in shardmaster and paxos
+// for accurate testing!
 const persistent = true
 const recovery = true
-const writeToMemory = true    // Whether responses/store should be written to memory (as well as disk / disk cache)
-const dbUseCache = true       // Whether database should use a built-in cache
-const dbUseCompression = true // Whether database should compress entries
+const writeToMemory = true     // Whether responses/store should be written to memory (as well as disk / disk cache)
+const dbUseCompression = true  // Whether database should compress entries
+const dbUseCache = true        // Whether database should use a built-in cache
+const dbCacheSize = 1000000000 // Size of database cache (ignored if dbUseCache is false)
+const memoryLimit = 2000000000 // Memory limit in bytes
+const copySettingsToPaxos = true
+const copySettingsToShardmaster = true
 
-//const memoryLimit = 1000000000 // Memory limit in bytes (not used yet)
+// Will use these to check that dbCacheSize doesn't overflow an int
+// (int size is either 32 or 64 bits depending on implementation)
+const MaxUint = ^uint(0)
+const MaxInt = int(^uint(0) >> 1)
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug > 0 {
@@ -1172,10 +1184,15 @@ func (kv *ShardKV) dbInit() {
 
 	DPrintfPersist("\n%v-%v: Initializing database", kv.gid, kv.me)
 
-	// Open database (create it if it doesn't exist)
+	// Set up database options
 	kv.dbOpts = levigo.NewOptions()
 	if dbUseCache {
-		kv.dbOpts.SetCache(levigo.NewLRUCache(3 << 30))
+		if dbCacheSize > MaxInt {
+			fmt.Printf("\nDesired cache size %v is too large... using %v instead\n", dbCacheSize, MaxInt)
+			kv.dbOpts.SetCache(levigo.NewLRUCache(MaxInt))
+		} else {
+			kv.dbOpts.SetCache(levigo.NewLRUCache(dbCacheSize))
+		}
 	}
 	if dbUseCompression {
 		kv.dbOpts.SetCompression(levigo.SnappyCompression)
@@ -1187,6 +1204,7 @@ func (kv *ShardKV) dbInit() {
 	kv.dbName = dbDir + "shardkvDB_" + fmt.Sprint(kv.gid) + "_" + strconv.Itoa(kv.me)
 	os.MkdirAll(dbDir, 0777)
 	DPrintfPersist("\n\t%v-%v: DB Name: %s", kv.gid, kv.me, kv.dbName)
+	// Open database (create it if it doesn't exist)
 	var err error
 	kv.db, err = levigo.Open(kv.dbName, kv.dbOpts)
 	enableLog() //need this here to fix logging issues
@@ -1482,6 +1500,96 @@ func StartServer(gid int64, shardmasters []string,
 		}
 	}()
 	return kv
+}
+
+// Returns the number of KB currently used by program memory
+func getMemoryUsage() int {
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+	return int(memStats.Alloc / 1000)
+}
+
+// Gets disk space used by only my shardKV databases
+func (kv *ShardKV) getMyDiskUsage() int {
+	return getSingleDiskUsage(kv.dbName)
+}
+
+// Gets disk space used by shardKV databases
+func getShardKVDiskUsage() int {
+	return getSingleDiskUsage("/home/ubuntu/mexos/src/shardkv/persist/")
+}
+
+// Gets disk space used by shardmaster databases
+func getShardMasterDiskUsage() int {
+	return getSingleDiskUsage("/home/ubuntu/mexos/src/shardmaster/persist/")
+}
+
+// Gets disk space used by paxos databases
+func getPaxosDiskUsage() int {
+	return getSingleDiskUsage("/home/ubuntu/mexos/src/paxos/persist/")
+}
+
+// Gets disk space used by paxos, shardmaster, and shardKV databases
+func getDiskUsage() int {
+	paxosUsage := getPaxosDiskUsage()
+	shardmasterUsage := getShardMasterDiskUsage()
+	shardKVUsage := getShardKVDiskUsage()
+	return paxosUsage + shardmasterUsage + shardKVUsage
+}
+
+// Returns the number of KB currently used by given directory
+func getSingleDiskUsage(dir string) int {
+	for i := 0; i < 10; i++ {
+		cmd := exec.Command("du", "-h", "-s", dir)
+		cmd.Stdin = strings.NewReader("some input")
+		var outBytes bytes.Buffer
+		cmd.Stdout = &outBytes
+		err := cmd.Run()
+		if err != nil {
+			//fmt.Printf("\nerror getting disk usage: %s", fmt.Sprint(err))
+			time.Sleep(2 * time.Millisecond)
+			continue
+		}
+
+		out := outBytes.String()
+		sizeInG := false
+		sizeInM := false
+		sizeInK := true
+		numEnd := strings.Index(out, "K")
+		if numEnd < 0 {
+			sizeInK = false
+			sizeInM = true
+			numEnd = strings.Index(out, "M")
+			if numEnd < 0 {
+				sizeInM = false
+				sizeInG = true
+				numEnd = strings.Index(out, "G")
+				if numEnd < 0 {
+					//fmt.Printf("\nerror getting disk usage: no size indicator: %s", out)
+					time.Sleep(2 * time.Millisecond)
+					continue
+				}
+			}
+		}
+
+		usage, err := strconv.ParseFloat(out[0:numEnd], 64)
+		if err != nil {
+			//fmt.Printf("\nerror getting disk usage: con't convert to float: %s (%s)", out[0:numEnd], out)
+			time.Sleep(2 * time.Millisecond)
+			continue
+		}
+		if sizeInK {
+		}
+		if sizeInM {
+			usage *= 1000
+		}
+		if sizeInG {
+			usage *= 1000000
+		}
+
+		return int(usage)
+	}
+	return -1
 }
 
 type NullWriter int
