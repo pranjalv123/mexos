@@ -832,6 +832,7 @@ func TestFileForgetMem(test *testing.T) {
 	if onlyBenchmarks || !runOldTests {
 		return
 	}
+
 	runtime.GOMAXPROCS(4)
 
 	fmt.Printf("\nTest: Paxos frees forgotten instance memory ...")
