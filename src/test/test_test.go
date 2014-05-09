@@ -338,3 +338,44 @@ func BenchmarkClientLatencyManyShard(benchmark *testing.B) {
 		kvClerk.Put(strconv.Itoa(rand.Int()), strconv.Itoa(rand.Int()))
 	}
 }
+
+
+func TestManyClientOneShard(t *testing.T) {
+	numGroups := 3
+	numReplicas := 3
+	nclients := 45
+	nseconds := 10
+	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
+	//defer clean()
+
+	fmt.Printf("\nBenchmark: many clients, one shards...\n")
+
+	
+	smClerk := shardmaster.MakeClerk(smPorts, true)
+	for i := 0; i < len(gids); i++ {
+		smClerk.Join(gids[i], kvPorts[i])
+	}
+	
+	counts := make([]int, nclients)
+	for i := 0; i < nclients; i++ {
+		go func(i int) {
+			ck := shardkv.MakeClerk(smPorts, true)
+			tStart := time.Now()
+			count := 0
+			for time.Since(tStart).Seconds() < float64(nseconds) {
+				ck.Put(strconv.Itoa(rand.Int()), 
+					strconv.Itoa(rand.Int()))
+				count++
+			}
+			counts[i] = count
+		}(i)
+	}
+	toWait := 12 * time.Second
+	time.Sleep(toWait)
+	
+	tot := 0
+	for _,c := range(counts) {
+		tot += c
+	}
+	fmt.Printf("%f operations per second\n", float64(tot)/float64(nseconds))
+}
