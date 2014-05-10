@@ -297,7 +297,6 @@ func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
 	}
 	sm.mu.Lock()
 
-
 	newOp := Op{2, args.GID, args.Servers, 0}
 
 	for !sm.dead {
@@ -817,7 +816,7 @@ func (sm *ShardMaster) startup(servers []string) {
 				if ok && !reply.Err {
 					replyConfig := reply.RequestedConfig
 					sm.putConfig(config, replyConfig)
-					DPrintfPersist("\n\t\t%v: Got %v for config %v", sm.me, *sm.configs[config], config)
+					DPrintfPersist("\n\t\t%v: Got %v for config %v", sm.me, replyConfig, config)
 					haveConfig = true
 					sm.maxConfig = config
 					break
@@ -875,7 +874,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 		}
 		enableLog()
 	}
-	DPrintf("Shardamaster %s server started with peers",servers[me],servers)
+	DPrintf("Shardamaster %s server started with peers", servers[me], servers)
 	sm := new(ShardMaster)
 	// Read memory options
 	sm.persistent = persistent
