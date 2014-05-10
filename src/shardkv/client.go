@@ -165,7 +165,8 @@ func (ck *Clerk) PutExt(key string, value string, dohash bool) string {
 		// ask master for a new configuration.
 		prior := ck.config.Num
 		ck.config = ck.sm.Query(-1)
-		DPrintf("Prior config %d new is %d", prior, ck.config.Num)
+		DPrintf("Prior config %d new is %d: %v", prior, ck.config.Num,
+			ck.config.Shards,)
 	}
 	return ""
 }

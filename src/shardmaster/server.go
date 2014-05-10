@@ -17,8 +17,8 @@ import "strconv"
 import "github.com/jmhodges/levigo"
 import "bytes"
 
-const Debug = 0
-const DebugPersist = 0
+const Debug = 1
+const DebugPersist = 1
 const printRPCerrors = false
 const Log = 0
 
@@ -291,11 +291,12 @@ func (sm *ShardMaster) processLog(maxSeq int) {
 
 // Accept a Join request
 func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
+	DPrintf("%d) Join: %d -> %s\n", sm.me, args.GID, args.Servers)
 	for sm.recovering && !sm.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
 	sm.mu.Lock()
-	DPrintf("%d) Join: %d -> %s\n", sm.me, args.GID, args.Servers)
+
 
 	newOp := Op{2, args.GID, args.Servers, 0}
 
