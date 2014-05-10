@@ -73,6 +73,7 @@ func main() {
 		//group 101: 10.0.0.107, 10.0.0.108, 10.0.0.109
 		//group 102: 10.0.0.110, 10.0.0.111, 10.0.0.112
 		metapeers, masters, groups := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
+		
 		me := whoami(masters)
 		if me != -1 {
 			fmt.Println("Starting shardmaster instead.")
@@ -90,7 +91,7 @@ func main() {
 		for i, v := range metapeers {
 			peers = v
 			me = whoami(v)
-			gid = groups[i]
+			gid = i
 			if me != -1 {
 				break
 			}
