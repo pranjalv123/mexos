@@ -41,7 +41,7 @@ const printRPCerrors = false
 const Debug = 0
 const DebugPersist = 0
 
-const enableLeader = 1
+const enableLeader = 0
 
 const persistent = true
 const recovery = true

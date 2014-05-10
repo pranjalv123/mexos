@@ -12,9 +12,9 @@ import "sync"
 import "math/rand"
 import "log"
 
-const numGroups = 1
-const numReplicas = 10
-const numMasters = 1
+const numGroups = 4
+const numReplicas = 2
+const numMasters = 2
 
 // Use for checking PutHash                                                                 
 func NextValue(hprev string, val string) string {
@@ -301,7 +301,7 @@ func BenchmarkClientLatencyOneShard(benchmark *testing.B) {
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
-	fmt.Printf("\nBenchmark: client latency, one shard...")
+	fmt.Printf("\nBenchmark: client latency, one shard...\n")
 
 	smClerk := shardmaster.MakeClerk(smPorts, true)
 	smClerk.Join(gids[0], kvPorts[0])
@@ -318,7 +318,7 @@ func BenchmarkClientLatencyManyShard(benchmark *testing.B) {
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
-	fmt.Printf("\nBenchmark: client latency, many shards...")
+	fmt.Printf("\nBenchmark: client latency, many shards...\n")
 
 	smClerk := shardmaster.MakeClerk(smPorts, true)
 	for i := 0; i < len(gids); i++ {
@@ -335,7 +335,7 @@ func BenchmarkClientLatencyManyShard(benchmark *testing.B) {
 
 
 func TestManyClientOneShard(t *testing.T) {
-	nclients := 15
+	nclients := 35
 	nseconds := 10
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
