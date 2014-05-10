@@ -23,10 +23,10 @@ import "strings"
 import "runtime"
 import "os/exec"
 
-const Debug = 1
-const DebugPersist = 1
+const Debug = 0
+const DebugPersist = 0
 const printRPCerrors = false
-const Log = 1
+const Log = 0
 
 var logfile *os.File
 
