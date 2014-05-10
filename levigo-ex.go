@@ -56,5 +56,5 @@ func write_data(data []byte, db *levigo.DB, nitems int, keysize int, valsize int
 func main() {
 	db := db_create()
 	data := gen_data(1 << 24)
-	write_data(data, db, 10000000, 16, 256)
+	write_data(data, db, 1000000, 4, 4)
 }
