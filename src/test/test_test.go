@@ -400,3 +400,22 @@ func TestManyClientOneShard(t *testing.T) {
 	}
 	fmt.Printf("%f operations per second\n", float64(tot)/float64(nseconds))
 }
+
+
+func TestDiskRecovery(t *testing.T) {
+	numBytes := 1073741824 //1GB
+	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
+	//defer clean()
+	
+	fmt.Printf("\nDisk recovery benchmark...\n")
+
+	smClerk := shardmaster.MakeClerk(smPorts, true)
+	smClerk.Join(gids[0], kvPorts[0])
+	ck := shardkv.MakeClerk(smPorts, true)
+
+	for i := 0; i < numBytes; i+=16 {
+		ck.Put(strconv.Itoa(rand.Int()), strconv.Itoa(rand.Int()))
+	}
+	
+	fmt.Printf("\n1GB of data written to database...\n")
+}

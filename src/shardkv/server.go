@@ -24,9 +24,9 @@ import "runtime"
 import "os/exec"
 
 const Debug = 0
-const DebugPersist = 0
+const DebugPersist = 1
 const printRPCerrors = false
-const Log = 0
+const Log = 1
 
 var logfile *os.File
 
@@ -56,7 +56,7 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 
 func DPrintfPersist(format string, a ...interface{}) (n int, err error) {
 	if DebugPersist > 0 {
-		log.Printf(format, a...)
+		fmt.Printf(format, a...)
 	}
 	return
 }
@@ -1301,11 +1301,11 @@ func (kv *ShardKV) dbInit() {
 func (kv *ShardKV) startup(servers []string) {
 	defer func() {
 		kv.recovering = false
-		DPrintfPersist("\n%v-%v Marked recovery false", kv.gid, kv.me)
+		log.Printf("\n%v-%v Marked recovery false", kv.gid, kv.me)
 	}()
 	// Initialize database, check if state is stored
 	kv.recovering = true
-	DPrintfPersist("\n%v-%v Marked recovery true", kv.gid, kv.me)
+	log.Printf("\n%v-%v Marked recovery true", kv.gid, kv.me)
 	kv.dbInit()
 	if !recovery {
 		return
