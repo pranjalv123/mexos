@@ -98,7 +98,7 @@ sockets. We use a few flags and configurations to run different modes
 localhost TCP).
 
 Below we describe the different tests. All tests are located at
-'mexos/src/<name>/test_test.go' unless otherwise noted.
+'mexos/src/$<$name$>$/test\_test.go' unless otherwise noted.
 
 \emph{paxos:} Paxos specific tests
 
@@ -154,45 +154,106 @@ when requests all go to the same replica group and when they are
 evenly spread across all replica groups (assuming the staff-provided
 key2shard isn't biased).
 
-These charts need to be re-done, numbers were off because of a code bug.
+% Please add the following required packages to your document preamble:
+% \usepackage[table,xcdraw]{xcolor}
+% If you use beamer only pass ``xcolor=table'' option, i.e. \documentclass[xcolor=table]{beamer}
 \begin{table}[h]
 \begin{tabular}{|l|l|l|l|}
 \hline
-\multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Vanilla Paxos}}}                              \\ \hline
+\multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Vanilla Paxos}}}                           \\ \hline
                               & \textbf{Avg. Client Latency} & \textbf{Avg. Client Thruput} & \textbf{System Thruput} \\ \hline
 \multicolumn{4}{|c|}{\textit{PutHash to one key}}                                                                     \\ \hline
-\textbf{1 group, 3 replicas}  & 21.6ms/op                    & 46 requests/s                & 85 requests/s           \\ \hline
-\textbf{1 group, 10 replicas} & 52.7ms/op                    & 19 requests/s                & 19 requests/s           \\ \hline
-\textbf{3 groups, 3 replicas} & 15.4ms/op                    & 65 requests/s                & 70 requests/s           \\ \hline
-\multicolumn{4}{|c|}{\textit{PutHash to many keys}}                                                                 \\ \hline
-\textbf{1 group, 3 replicas}  & 20.5ms/op                    & 49 requests/s                & 78 requests/s           \\ \hline
-\textbf{1 group, 10 replicas} & 74ms/op                      & 14 requests/s                & 19 requests/s           \\ \hline
-\textbf{3 groups, 3 replicas} & 21.8ms/op                    & 46 requests/s                & 179 requests/s          \\ \hline
+\textbf{1 group, 3 replicas}  & 40.3 ms/op                   & 24.8 requests/s              & 27 requests/s           \\ \hline
+\textbf{1 group, 10 replicas} & 5370 ms/op                   & 0.18 requests/s              & 2 requests/s            \\ \hline
+\textbf{3 groups, 3 replicas} & 62 ms/op                     &                              & 22 requests/s           \\ \hline
+\multicolumn{4}{|c|}{\textit{PutHash to many keys}}                                                                   \\ \hline
+\textbf{1 group, 3 replicas}  & 40.7 ms/op                   & 24.5 requests/s              & 30 requests/s           \\ \hline
+\textbf{1 group, 10 replicas} & 282 ms/op                    & 3.5 requests/s               & 7 requests/s            \\ \hline
+\textbf{3 groups, 3 replicas} & 214 ms/op                    & 4.6 requests/s               & 67 requests/s           \\ \hline
 \end{tabular}
 \end{table}
 
-%----------------------------------------------------------------------
-
+% Please add the following required packages to your document preamble:
+% \usepackage[table,xcdraw]{xcolor}
+% If you use beamer only pass ``xcolor=table'' option, i.e. \documentclass[xcolor=table]{beamer}
 \begin{table}[h]
 \begin{tabular}{|l|l|l|l|}
 \hline
 \multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Multipaxos}}}                              \\ \hline
                               & \textbf{Avg. Client Latency} & \textbf{Avg. Client Thruput} & \textbf{System Thruput} \\ \hline
 \multicolumn{4}{|c|}{\textit{PutHash to one key}}                                                                     \\ \hline
-\textbf{1 group, 3 replicas}  & 14.2ms/op                    & 70.4 requests/s              & 88.8 requests/s         \\ \hline
-\textbf{1 group, 10 replicas} & 36.9ms/op                    & 27 requests/s                & 31 requests/s           \\ \hline
-\textbf{3 groups, 3 replicas} & 14.1ms/op                    & 70.9 requests/s              & 86 requests/s           \\ \hline
+\textbf{1 group, 3 replicas}  & 27 ms/op                     & 37 requests/s                & 47 requests/s           \\ \hline
+\textbf{1 group, 10 replicas} & 2360 ms/op                   & 0.42 requests/s              & 3.4 requests/s          \\ \hline
+\textbf{3 groups, 3 replicas} & 22 ms/op                     & 45 requests/s                & 45 requests/s           \\ \hline
 \multicolumn{4}{|c|}{\textit{PutHash to many keys}}                                                                   \\ \hline
-\textbf{1 group, 3 replicas}  & 13.3ms/op                    & 75.2 requests/s              & 87.4 requests/s         \\ \hline
-\textbf{1 group, 10 replicas} & 37.7ms/op                    & 26.5 requests/s              & 31 requests/s           \\ \hline
-\textbf{3 groups, 3 replicas} & 15.8ms/op                    & 63.3 requests/s              & 200 requests/s          \\ \hline
+\textbf{1 group, 3 replicas}  & 25 ms/op                     & 40 requests/s                & 45 requests/s           \\ \hline
+\textbf{1 group, 10 replicas} & 130 ms/op                    & 7 requests/s                 & 10.3 requests/s         \\ \hline
+\textbf{3 groups, 3 replicas} & 40 ms/op                     & 25 requests/s                & 124 requests/s          \\ \hline
 \end{tabular}
 \end{table}
 
+For a single group case, the difference between three replicas and ten is
+striking. The more replicas, the more traffic is needed for a paxos
+agreement. Figure 1 demonstrates how throughput suffers as the number
+of replicas increases. One other interesting effect is that as the
+number of replicas increases, the larger the gap there is between the
+single key and multi-key cases. Because there is one group, all puts
+touch the same servers. We are unsure what causes this.
+
+Adding more groups increases throughput, however. For evenly
+distributed traffic, going from one group to 3 nearly triples the
+throughput. Figure 2 shows that this trend continues, so adding groups
+linearly improves the throughput of the system. The table shows that
+average throughput for a single client may suffer, but this is
+probably because the system throughput benchmark creates many clients,
+while the client throughput test creates a single client. Having
+multiple clients increases the liklihood that a client must wait to
+see its request served, since the replicas may be busy serving another
+client's request.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{
+\includegraphics[scale=.50]{replicas.png}}
+\caption{Performance of a one-group configuration rapidly deteriorates as the number of replicas increases}
+\label{fig:replicas}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{
+\includegraphics[scale=.5]{groups.png}}
+\caption{Performance increases linearly as the number of groups increases. There is probably a saturation point, but we didn't have enough cluster machines to reach it.}
+\label{fig:groups}
+\end{figure}
+
 \subsubsection{Paxos RPC Counts}
 
+Multipaxos decreases the number of RPCs needed to reach agreement.
+
+% Please add the following required packages to your document preamble:
+% \usepackage[table,xcdraw]{xcolor}
+% If you use beamer only pass ``xcolor=table'' option, i.e. \documentclass[xcolor=table]{beamer}
+\begin{table}[H]
+\centering
+\makebox[\textwidth][c]{
+\begin{tabular}{|l|l|l|}
+\hline
+\multicolumn{3}{|c|}{\cellcolor[HTML]{C0C0C0}\textbf{Paxos RPC Counts}}                  \\ \hline
+                                 & \textbf{Single Proposer} & \textbf{Multiple Proposer} \\ \hline
+\textbf{Normal Paxos}            & 30                       & 89            \\ \hline
+\textbf{Paxos with Leaders}      & 20                       & 27                         \\ \hline
+\textbf{Leaders and Pre-prepare} & 17                       & 20                         \\ \hline
+\end{tabular}
+}
+\end{table}
+
 \subsubsection{Disk Recovery}
-For disk recovery, the bottleneck was...
+Raw time to write 1GB to database, HDD:  21.470750409s
+
+Raw time to write 1GB to database, SSD:  6.1470524260s
+
+Recovery time of a 1GB database using our system: TBD
 
 \subsection{Bottlenecks}
 Although we made significant improvements performance-wise, we
@@ -208,39 +269,21 @@ aspects, such as logging.
 Another bottleneck is network capacity and/or number of messages. As
 shown in the latency and thoughput section, the increasing the number
 of replicas has an adverse effect on performance since each operation
-requires communication with a majority of replicas. Using multipaxos
-improves the performance since it decreases the number of RPCs needed
-to commit an operation. 
-
-
-\begin{figure}[H]
-\centering
-\makebox[\textwidth][c]{
-\includegraphics[scale=.66]{replicas.png}}
-\caption{Performance of a one-group configuration rapidly dteriorates as the number of replicas increases}
-\label{fig:replicas}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\makebox[\textwidth][c]{
-\includegraphics[scale=.66]{groups.png}}
-\caption{Performance increases linearly as the number of groups increases. There is probably a saturation point, but we didn't have enough cluster machines to reach it.}
-\label{fig:groups}
-\end{figure}
-
+requires communication with a majority of replicas. 
 
 Increasing the number of replica groups increases the performance of
 the system for normal operation, especially under heavy load with
 evenly distributed key requests. This is especially noticable in the
 system throughput metric.  The number of groups roughly corresponds to
-how parallelizable the operations are. 
+how parallelizable the operations are.
 
-Another benefit of the paxos optimizations is that with
-fewer messages, less disk space is used since less paxos state data
-needs to be saved. We also suspect that using UDP would also improve
-throughput, as servers that do not recieve a response already
-re-transmit their request, making the TCP ack system redundant.
+Using multipaxos reduces the amount of network communication required,
+which improves the throughput and latency by about a factor of
+two. Multipaxos also reduces the amount of paxos state information,
+since prepares are pre-determined. This saves some disk space.  We
+also suspect that using UDP would also improve throughput, as servers
+that do not recieve a response already re-transmit their request,
+making the TCP ack system redundant.
 
 \section{Conclusion}
 We did a project.
