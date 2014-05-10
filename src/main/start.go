@@ -16,7 +16,7 @@ const network = true
 func main() {
 	var npaxos = flag.Int("npaxos", 3, "number of paxos instances")
 	var ngroups = flag.Int("ngroups", 3, "number of shard groups")
-	var nmasters = flag.Int("nmasters", 1, "number of shardmasters per shard group")
+	var nmasters = flag.Int("nmasters", 3, "number of shardmasters per shard group")
 	var nreplicas = flag.Int("nreplicas", 3, "number of kvshard replicas per group")
 	var clean =  flag.Bool("clean", false, "clean the db")
 	

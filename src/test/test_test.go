@@ -335,7 +335,7 @@ func BenchmarkClientLatencyManyShard(benchmark *testing.B) {
 
 
 func TestManyClientOneShard(t *testing.T) {
-	nclients := 10
+	nclients := 15
 	nseconds := 10
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
