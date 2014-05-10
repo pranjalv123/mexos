@@ -1235,7 +1235,7 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool, tag string) *P
 	px.me = me
 	px.network = network
 	px.reachable = make([]bool, len(px.peers))
-	for i, _ := range px.peers {
+	for i := range px.peers {
 		px.reachable[i] = true
 	}
 	px.deaf = false
