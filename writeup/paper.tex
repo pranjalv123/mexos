@@ -154,6 +154,7 @@ when requests all go to the same replica group and when they are
 evenly spread across all replica groups (assuming the staff-provided
 key2shard isn't biased).
 
+These charts need to be re-done, numbers were off because of a code bug.
 \begin{table}[h]
 \begin{tabular}{|l|l|l|l|}
 \hline
@@ -210,6 +211,24 @@ of replicas has an adverse effect on performance since each operation
 requires communication with a majority of replicas. Using multipaxos
 improves the performance since it decreases the number of RPCs needed
 to commit an operation. 
+
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{
+\includegraphics[scale=.66]{replicas.png}}
+\caption{Performance of a one-group configuration rapidly dteriorates as the number of replicas increases}
+\label{fig:replicas}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{
+\includegraphics[scale=.66]{groups.png}}
+\caption{Performance increases linearly as the number of groups increases. There is probably a saturation point, but we didn't have enough cluster machines to reach it.}
+\label{fig:groups}
+\end{figure}
+
 
 Increasing the number of replica groups increases the performance of
 the system for normal operation, especially under heavy load with
