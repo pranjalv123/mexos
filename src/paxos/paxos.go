@@ -1146,7 +1146,6 @@ func (px *Paxos) startup(tag string) {
 					px.maxInstance = reply.MaxInstance
 				}
 				haveState = true
-				break
 			}
 		}
 	}

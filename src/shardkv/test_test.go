@@ -101,7 +101,7 @@ func TestFileBasic(t *testing.T) {
 	if !runOldTests {
 		return
 	}
-	numGroups := 4
+	numGroups := 3
 	numReplicas := 2
 	smPorts, gids, kvPorts, kvServers, clean := setup("basic", false, numGroups, numReplicas)
 	defer clean()
@@ -153,20 +153,20 @@ func TestFileBasic(t *testing.T) {
 	// are keys still there after leaves?
 	for g := 0; g < len(gids)-1; g++ {
 		smClerk.Leave(gids[g])
-		fmt.Printf("group 10%d left\n",g)
+		fmt.Printf("group 10%d left\n", g)
 		time.Sleep(1 * time.Second)
 		for i := 0; i < len(keys); i++ {
-			fmt.Printf("getting %v\n",keys[i])
+			fmt.Printf("getting %v\n", keys[i])
 			v := kvClerk.Get(keys[i])
-			fmt.Printf("got %v",keys[i])
+			fmt.Printf("got %v", keys[i])
 			if v != vals[i] {
 				t.Fatalf("leaving; wrong value; g=%v k=%v wanted=%v got=%v",
 					g, keys[i], vals[i], v)
 			}
 			vals[i] = strconv.Itoa(rand.Int())
-			fmt.Printf("putting %v\n",keys[i])
+			fmt.Printf("putting %v\n", keys[i])
 			kvClerk.Put(keys[i], vals[i])
-			fmt.Printf("put success %v\n",keys[i])
+			fmt.Printf("put success %v\n", keys[i])
 		}
 	}
 
@@ -275,7 +275,9 @@ func TestFileLimp(t *testing.T) {
 	}
 
 	for g := 0; g < len(kvServers); g++ {
-		kvServers[g][rand.Int()%len(kvServers[g])].Kill()
+		toKill := rand.Int() % len(kvServers[g])
+		//fmt.Printf("\nKilling %v-%v = %v", g, toKill, g*3+toKill)
+		kvServers[g][toKill].Kill()
 	}
 
 	keys := make([]string, 10)
@@ -304,7 +306,7 @@ func TestFileLimp(t *testing.T) {
 	// are keys still there after leaves?
 	for g := 0; g < len(gids)-1; g++ {
 		smClerk.Leave(gids[g])
-		time.Sleep(2 * time.Second)
+		time.Sleep(5 * time.Second)
 		for i := 0; i < len(kvServers[g]); i++ {
 			kvServers[g][i].Kill()
 		}
@@ -606,6 +608,9 @@ func TestFileMemory(t *testing.T) {
 	// Many keys with large values
 	for i := targetSize * 1000 / valueSize; i >= 0; i-- {
 		if (i == 99) && (targetSize*1000/valueSize > 99) {
+			fmt.Printf(" ")
+		}
+		if (i == 9) && (targetSize*1000/valueSize > 9) {
 			fmt.Printf(" ")
 		}
 		fmt.Printf("%v", i)

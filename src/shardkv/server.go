@@ -104,6 +104,8 @@ type ShardKV struct {
 	db             *levigo.DB
 	dbLock         sync.Mutex
 	recovering     bool
+	sending        bool
+	sendingTo      string
 }
 
 // Write the desired key/value to memory and/or disk
@@ -348,7 +350,7 @@ func (kv *ShardKV) addReconfigure(num int, store map[string]string, response map
 
 // Accept a Get request
 func (kv *ShardKV) Get(args *GetArgs, reply *KVReply) error {
-	for kv.recovering && !kv.dead {
+	for (kv.recovering || kv.sending) && !kv.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
 	kv.mu.Lock()
@@ -377,7 +379,7 @@ func (kv *ShardKV) Put(args *PutArgs, reply *KVReply) error {
 	} else {
 		DPrintf("%d.%d.%d) Put: %s -> %s\n", kv.gid, kv.me, kv.config.Num, args.Key, args.Value)
 	}
-	for kv.recovering && !kv.dead {
+	for (kv.recovering || kv.sending) && !kv.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
 	kv.mu.Lock()
@@ -411,7 +413,21 @@ func (kv *ShardKV) Fetch(args *FetchArgs, reply *FetchReply) error {
 	for kv.recovering && !kv.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
+	for kv.sending && args.Sender != kv.sendingTo {
+		time.Sleep(10 * time.Millisecond)
+	}
 	return kv.fetchHandler(args, reply)
+}
+
+// Respond to acknowledgement that Fetch is complete
+func (kv *ShardKV) FetchComplete(args *FetchArgs, reply *FetchReply) error {
+	//if args.Sender == kv.sendingTo {
+	kv.sending = false
+	kv.sendingTo = ""
+	DPrintf("\n%v.%v: Marking sending complete", kv.gid, kv.me)
+	reply.Complete = true
+	//}
+	return nil
 }
 
 // This helper "fetch" method now exists because both Fetch
@@ -420,7 +436,6 @@ func (kv *ShardKV) Fetch(args *FetchArgs, reply *FetchReply) error {
 func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 	//kv.mu.Lock()
 	defer func() {
-		DPrintf("%d.%d.%d) Fetch Returns: %s\n", kv.gid, kv.me, kv.config.Num, reply.Store)
 		//kv.mu.Unlock()
 	}()
 
@@ -431,6 +446,12 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 		reply.Err = ErrNoKey
 		return nil
 	}
+
+	// Mark sending as true so no client requests will
+	// be processed until the transfer is complete
+	DPrintf("\n%v.%v: Marking sending started", kv.gid, kv.me)
+	kv.sending = true
+	kv.sendingTo = args.Sender
 
 	// Assume all responses can fit in memory (only one per client)
 	responses := make(map[int64]string)
@@ -471,11 +492,15 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 	DPrintfPersist("\n\tStarting to copy store, memory usage = %v MB", getMemoryUsage()/1000)
 	for k, v := range kv.store {
 		if key2shard(k) == args.Shard && !args.Exclude[k] {
+			DPrintfPersist("\n\t\tCopying entry")
 			shardStore[k] = v
 			keysCopied[k] = true
+		} else {
+			DPrintfPersist("\n\t\tSkipping entry")
 		}
 		DPrintfPersist("\n\t\tCopying, memory usage = %v MB", getMemoryUsage()/1000)
 		if getMemoryUsage()/1000 > memoryThreshold {
+			DPrintfPersist("\n\t\tMarking complete as false")
 			complete = false
 			break
 		}
@@ -493,7 +518,11 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 	reply.Store = shardStore
 	reply.Response = responses
 	reply.Seen = seenIDs
-	reply.Complete = (complete && finished)
+	reply.Complete = (complete && (finished || len(shardFromDisk) == 0))
+	DPrintf("%d.%d.%d) Fetch Returns: %s, complete: %v\n", kv.gid, kv.me, kv.config.Num, reply.Store, reply.Complete)
+	if reply.Err != OK {
+		kv.sending = false
+	}
 	return nil
 }
 
@@ -502,7 +531,7 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 // if so, re-configure.
 //
 func (kv *ShardKV) tick() {
-	for kv.recovering && !kv.dead {
+	for (kv.recovering || kv.sending) && !kv.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
 	kv.mu.Lock()
@@ -550,6 +579,7 @@ func (kv *ShardKV) tick() {
 			for !kv.dead && !haveShard {
 				for sid, srv := range servers {
 					keysReceived := make(map[string]bool)
+					numTries := 0
 					badResponse := false
 					// Keep getting data until entire shard is transferred
 					for !kv.dead && !haveShard && !badResponse {
@@ -557,7 +587,7 @@ func (kv *ShardKV) tick() {
 							fmt.Printf("\nAsking for more!")
 						}
 						DPrintf("%d.%d.%d) Attempting to get Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
-						args := &FetchArgs{newConfig.Num, shard, keysReceived}
+						args := &FetchArgs{newConfig.Num, shard, keysReceived, fmt.Sprintf("%v-%v", kv.gid, kv.me)}
 						var reply FetchReply
 						ok := call(srv, "ShardKV.Fetch", args, &reply, kv.network)
 						if ok && (reply.Err == OK) {
@@ -573,11 +603,64 @@ func (kv *ShardKV) tick() {
 								newSeen[id] = true
 							}
 							if reply.Complete {
+								DPrintf("%d.%d.%d) Got Complete Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
 								haveShard = true
+								// Keep sending ack of Fetch until success
+								waitChan := make(chan int)
+								go func(server string) {
+									ackSuccess := false
+									ackArgs := &FetchArgs{}
+									ackArgs.Sender = fmt.Sprintf("%v-%v", kv.gid, kv.me)
+									var ackReply FetchReply
+									waitChan <- 1
+									for !kv.dead && !ackSuccess {
+										DPrintf("\n%v.%v: Sending fetch complete to %s", kv.gid, kv.me, server)
+										ackOK := call(server, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
+										ackSuccess = ackOK && ackReply.Complete
+										if !ackSuccess {
+											time.Sleep(10 * time.Millisecond)
+										}
+									}
+									DPrintf("\n%v.%v: Done sending fetch complete to %s", kv.gid, kv.me, server)
+								}(srv)
+								<-waitChan
 							}
-						} else {
+						}
+						if ok && (reply.Err != OK) && len(keysReceived) == 0 {
 							DPrintf("%d.%d.%d) Failed to get Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
 							badResponse = true
+						}
+						if !ok && numTries > 5 {
+							DPrintf("%d.%d.%d) Failed to get Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
+							badResponse = true
+							// If we are declaring it dead,
+							// Send it an ack of Fetch until success
+							// In case it wakes up
+							waitChan := make(chan int)
+							go func(server string) {
+								ackSuccess := false
+								ackArgs := &FetchArgs{}
+								ackArgs.Sender = fmt.Sprintf("%v-%v", kv.gid, kv.me)
+								var ackReply FetchReply
+								waitChan <- 1
+								for srv == server {
+									time.Sleep(10 * time.Millisecond)
+								}
+								for !kv.dead && !ackSuccess && (srv != server) {
+									DPrintf("\n%v.%v: Sending fetch complete to %s", kv.gid, kv.me, server)
+									ackOK := call(server, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
+									ackSuccess = ackOK && ackReply.Complete
+									if !ackSuccess {
+										time.Sleep(10 * time.Millisecond)
+									}
+								}
+								DPrintf("\n%v.%v: Done sending fetch complete to %s", kv.gid, kv.me, server)
+							}(srv)
+							<-waitChan
+						}
+						if !ok {
+							numTries++
+							time.Sleep(5 * time.Millisecond)
 						}
 					}
 				}
@@ -587,7 +670,7 @@ func (kv *ShardKV) tick() {
 	}
 	// Log the reconfiguration
 	kv.addReconfigure(newConfig.Num, newStore, newResponse, newSeen)
-	DPrintf("%d.%d.%d) New Config adding %d\n", kv.gid, kv.me, kv.config.Num, newStore)
+	DPrintf("%d.%d.%d) New Config adding config %v, store %v\n", kv.gid, kv.me, kv.config.Num, newConfig.Num, newStore)
 }
 
 // please don't change this function.
@@ -1315,7 +1398,7 @@ func (kv *ShardKV) startup(servers []string) {
 		return
 	}
 	haveState := false
-	args := RecoverArgs{-1, -1, make(map[string]bool)}
+	args := RecoverArgs{-1, -1, make(map[string]bool), ""}
 	for !kv.dead && !haveState {
 		for index, server := range servers {
 			if index == kv.me {
@@ -1355,13 +1438,14 @@ func (kv *ShardKV) startup(servers []string) {
 				// Keep getting shard data until entire store is transfered
 				// or until server doesn't respond
 				keysReceived := make(map[string]bool)
+				numTries := 0
 				badResponse := false
 				for !kv.dead && !haveShard && !badResponse {
 					if len(keysReceived) > 0 {
 						fmt.Printf("\nAsking for more!")
 					}
 					DPrintfPersist("\n\t%v-%v: Asking %v for shard %v", kv.gid, kv.me, index, shard)
-					args := RecoverArgs{kv.config.Num, shard, keysReceived}
+					args := RecoverArgs{kv.config.Num, shard, keysReceived, fmt.Sprintf("%v-%v", kv.gid, kv.me)}
 					var reply RecoverReply
 					ok := call(server, "ShardKV.FetchRecovery", args, &reply, kv.network)
 					if ok && !reply.Err {
@@ -1380,9 +1464,61 @@ func (kv *ShardKV) startup(servers []string) {
 						// otherwise ask for more of the store
 						if reply.Complete {
 							haveShard = true
+							// Keep sending ack of Fetch until success
+							waitChan := make(chan int)
+							go func(srv string) {
+								ackSuccess := false
+								ackArgs := &FetchArgs{}
+								ackArgs.Sender = fmt.Sprintf("%v-%v", kv.gid, kv.me)
+								var ackReply FetchReply
+								waitChan <- 1
+								for !kv.dead && !ackSuccess {
+									ackOK := call(srv, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
+									ackSuccess = ackOK && ackReply.Complete
+									if !ackSuccess {
+										time.Sleep(10 * time.Millisecond)
+									}
+								}
+							}(server)
+							<-waitChan
 						}
-					} else {
+					}
+					if reply.Err && ok && len(keysReceived) == 0 {
+						// Move on to another peer if this one got an eror
+						// or didn't respond, but only move on if
+						// we haven't previously received a good reply
 						badResponse = true
+					}
+					if !ok && numTries > 5 {
+						badResponse = true
+						// If we are declaring it dead,
+						// Send it an ack of Fetch until success
+						// In case it wakes up
+						waitChan := make(chan int)
+						go func(srv string) {
+							ackSuccess := false
+							ackArgs := &FetchArgs{}
+							ackArgs.Sender = fmt.Sprintf("%v-%v", kv.gid, kv.me)
+							var ackReply FetchReply
+							waitChan <- 1
+							for srv == server {
+								time.Sleep(10 * time.Millisecond)
+							}
+							for !kv.dead && !ackSuccess && (srv != server) {
+								DPrintf("\n%v.%v: Sending fetch complete to %s", kv.gid, kv.me, server)
+								ackOK := call(srv, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
+								ackSuccess = ackOK && ackReply.Complete
+								if !ackSuccess {
+									time.Sleep(10 * time.Millisecond)
+								}
+							}
+							DPrintf("\n%v.%v: Done sending fetch complete to %s", kv.gid, kv.me, server)
+						}(server)
+						<-waitChan
+					}
+					if !ok {
+						numTries++
+						time.Sleep(5 * time.Millisecond)
 					}
 				}
 			}
@@ -1411,7 +1547,7 @@ func (kv *ShardKV) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
 		reply.Err = false
 	} else {
 		reply.Err = false
-		fetchArgs := FetchArgs{args.Config, args.Shard, args.Exclude}
+		fetchArgs := FetchArgs{args.Config, args.Shard, args.Exclude, args.Sender}
 		var fetchReply FetchReply
 		err := kv.fetchHandler(&fetchArgs, &fetchReply)
 		reply.Err = (err != nil || fetchReply.Err != OK)

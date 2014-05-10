@@ -45,6 +45,7 @@ type FetchArgs struct {
 	Config  int
 	Shard   int
 	Exclude map[string]bool
+	Sender  string
 }
 
 type FetchReply struct {
@@ -59,6 +60,7 @@ type RecoverArgs struct {
 	Config  int
 	Shard   int
 	Exclude map[string]bool
+	Sender  string
 }
 
 type RecoverReply struct {

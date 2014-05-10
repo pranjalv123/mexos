@@ -794,7 +794,6 @@ func (sm *ShardMaster) startup(servers []string) {
 					sm.dbWriteProcessedSeq(sm.processedSeq)
 				}
 				haveState = true
-				break
 			}
 		}
 	}
