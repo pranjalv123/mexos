@@ -12,7 +12,7 @@ import "sync"
 import "math/rand"
 import "log"
 
-const numGroups = 4
+const numGroups = 3
 const numReplicas = 2
 const numMasters = 2
 
