@@ -72,7 +72,7 @@ func main() {
 		//group 100: 10.0.0.104, 10.0.0.105, 10.0.0.106
 		//group 101: 10.0.0.107, 10.0.0.108, 10.0.0.109
 		//group 102: 10.0.0.110, 10.0.0.111, 10.0.0.112
-		metapeers, masters, groups := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
+		metapeers, masters, _ := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
 		
 		me := whoami(masters)
 		if me != -1 {
@@ -91,7 +91,7 @@ func main() {
 		for i, v := range metapeers {
 			peers = v
 			me = whoami(v)
-			gid = i
+			gid = int64(i)
 			if me != -1 {
 				break
 			}
