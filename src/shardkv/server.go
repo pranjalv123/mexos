@@ -26,7 +26,7 @@ import "os/exec"
 const Debug = 0
 const DebugPersist = 0
 const printRPCerrors = false
-const Log = 1
+const Log = 0
 
 var logfile *os.File
 
@@ -660,7 +660,7 @@ func (kv *ShardKV) tick() {
 						}
 						if !ok {
 							numTries++
-							time.Sleep(5 * time.Millisecond)
+							time.Sleep(50 * time.Millisecond)
 						}
 					}
 				}
@@ -1384,11 +1384,11 @@ func (kv *ShardKV) dbInit() {
 func (kv *ShardKV) startup(servers []string) {
 	defer func() {
 		kv.recovering = false
-		log.Printf("\n%v-%v Marked recovery false", kv.gid, kv.me)
+		DPrintfPersist("\n%v-%v Marked recovery false", kv.gid, kv.me)
 	}()
 	// Initialize database, check if state is stored
 	kv.recovering = true
-	log.Printf("\n%v-%v Marked recovery true", kv.gid, kv.me)
+	DPrintfPersist("\n%v-%v Marked recovery true", kv.gid, kv.me)
 	kv.dbInit()
 	if !recovery {
 		return
@@ -1518,7 +1518,7 @@ func (kv *ShardKV) startup(servers []string) {
 					}
 					if !ok {
 						numTries++
-						time.Sleep(5 * time.Millisecond)
+						time.Sleep(50 * time.Millisecond)
 					}
 				}
 			}

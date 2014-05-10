@@ -306,7 +306,7 @@ func TestFileLimp(t *testing.T) {
 	// are keys still there after leaves?
 	for g := 0; g < len(gids)-1; g++ {
 		smClerk.Leave(gids[g])
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 		for i := 0; i < len(kvServers[g]); i++ {
 			kvServers[g][i].Kill()
 		}
