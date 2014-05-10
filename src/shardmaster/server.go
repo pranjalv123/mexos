@@ -875,7 +875,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 		}
 		enableLog()
 	}
-
+	DPrintf("Shardamaster %s server started with peers",servers[me],servers)
 	sm := new(ShardMaster)
 	// Read memory options
 	sm.persistent = persistent
