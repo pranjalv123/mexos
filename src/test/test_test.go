@@ -12,9 +12,9 @@ import "sync"
 import "math/rand"
 import "log"
 
-const numGroups = 4
-const numReplicas = 2
-const numMasters = 2
+const numGroups = 3
+const numReplicas = 3
+const numMasters = 3
 
 // Use for checking PutHash                                                                 
 func NextValue(hprev string, val string) string {
