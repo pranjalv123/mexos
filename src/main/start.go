@@ -16,7 +16,7 @@ const network = true
 func main() {
 	var npaxos = flag.Int("npaxos", 3, "number of paxos instances")
 	var ngroups = flag.Int("ngroups", 3, "number of shard groups")
-	var nmasters = flag.Int("nmasters", 1, "number of shardmasters per shard group")
+	var nmasters = flag.Int("nmasters", 3, "number of shardmasters per shard group")
 	var nreplicas = flag.Int("nreplicas", 3, "number of kvshard replicas per group")
 	var clean =  flag.Bool("clean", false, "clean the db")
 	
@@ -72,7 +72,10 @@ func main() {
 		//group 100: 10.0.0.104, 10.0.0.105, 10.0.0.106
 		//group 101: 10.0.0.107, 10.0.0.108, 10.0.0.109
 		//group 102: 10.0.0.110, 10.0.0.111, 10.0.0.112
-		metapeers, masters, groups := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
+		metapeers, masters, _ := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
+		fmt.Printf("peers: %v\n", metapeers)
+
+		
 		me := whoami(masters)
 		if me != -1 {
 			fmt.Println("Starting shardmaster instead.")
@@ -90,7 +93,7 @@ func main() {
 		for i, v := range metapeers {
 			peers = v
 			me = whoami(v)
-			gid = groups[i]
+			gid = int64(100+i)
 			if me != -1 {
 				break
 			}

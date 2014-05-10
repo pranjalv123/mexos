@@ -23,6 +23,7 @@
 \documentclass[letterpaper,10pt]{article}
 \usepackage{epsfig,graphicx,usenix,fullpage,float,hyperref}
 \usepackage{mathtools,amssymb,setspace, pbox}
+\usepackage[table,xcdraw]{xcolor}
 \usepackage[center, labelfont=bf]{caption}
 
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
@@ -63,11 +64,25 @@ dvorak42@mit.edu
 %\thispagestyle{empty}
 
 \section{Introduction}
-This document is the writeup of our 6.824 final project.
-
-The goals of the project are:
+This document is the writeup of our 6.824 final project. We did the
+default project, and built a persistent, fault-tolerant
+high-performance key/value store. For persistence, we used the go
+wrapper for the high-performance C++ leveldb key/value libray, and
+extended our code to recover from data loss upon server restart. In
+order to improve the performance of our system, we implemented two
+paxos optimizations. We used a multi-paxos like design to avoid the
+dueling leaders problem, and also reduce the number of RPCs for paxos
+agreeement by having the leader send out prepare messages ahead of
+time. To measure performance, we extended our existing tests, and
+added new ones. We also modified the RPC system to work on a real
+network and deployed our project on an AWS cluster to get realistic
+throughput and latency measures, as well as information about the
+speed of disk recovery.
 
 \section{Design} \label{sec:design}
+Our starting point was lab 4. Before begining, we ran battery tests to
+figure out which combination of our prior labs created the fastest and
+most reliable starting point. 
 
 \subsection{Paxos Optimizations}
 
@@ -75,26 +90,113 @@ The goals of the project are:
 
 \subsubsection{Recovery from failures}
 
+\subsection{Testing}
+We added about 25 new tests, and extended existing ones to work with
+persistent storage and run on TCP sockets instead of unix file
+sockets. We use a few flags and configurations to run different modes
+(e.g. with and without persistence, RPC using unix file sockets or
+localhost TCP).
+
+Below we describe the different tests. All tests are located at
+'mexos/src/<name>/test_test.go' unless otherwise noted.
+
+\emph{paxos:} Paxos specific tests
+
+\emph{shardmaster:} Shardmaster specific tests
+
+\emph{shardkv:} Shardkv specific tests
+
+\emph{test:} Tests and benchmarks modified to run on our AWS
+cluster. These tests are the most complicated, and require the user to
+ssh into our cluster leader and start the servers on other cluster
+machines using 'start-on-all.sh' to run
+'mexos/src/main/start.go'. These tests required a surprising amount of
+debugging and glue code. Additionally, to check for correct operation
+under server failure, we had to make a backdoor RPC that told the
+remote server to act deaf or dead.
+
+We present the results of our benchmarks in a later section.
+
 \section{Performance}
 
-We created an extensive system to try and accurately measure performance. In addition to writing many benchmarks, we also modified the original RPC system so that we could run the servers in an AWS cluster and observe the performance on a real network. 
+We created an extensive system to try and accurately measure
+performance. In addition to writing many benchmarks, we also modified
+the original RPC system so that we could run the servers in an AWS
+cluster and observe the performance on a real network.
 
 \subsection{Throughput and Latency}
-Avg client latency w/ out paxos optimizations:
-one shard, 3 groups w/ 3 replicas = 15.4ms/op
-many shards, 3 groups w/ 3 replicas = 21.8ms/op
 
-Avg client throughput w/ out paxos optimizations:
-one shard, 3 groups w/ 3 replicas = 65 requests/second
-many shards, 3 groups w/ 3 replicas = 46 requets/second
+We compared performance between vanilla paxos and multipaxos under a
+variety of conditions. The tests were run on an actual network in an
+AWS cluster. 
 
-Client requests per second:
-3 groups w/ 3 replicas:
-~179 requests per second (saturates at around 50 users)
+\textit{Client latency}: Average time it takes for one client to see a
+request processed. 
 
+\textit{Throughput}: Number of requests, on average, the
+client will see processed in a second.
+
+\textit{System throughput}: Number of requests per second the entire
+system can handle. This is different than the client throughput
+because clients always wait to see the response of the current request
+before dispatching another.
+
+System throughput requires a saturation of multiple clients sending
+continuous requests over a ten second period. The system saturated
+from 10 to 50 clients, sepending on the number of
+groups/replicas. After the saturation point, adding more clients
+causes a decrease in throughput occurs because of network traffic
+saturation.
+
+We also ran some tests repeatedly on one key, and others on a random
+set of keys. This allows us to look at how the performance changes
+when requests all go to the same replica group and when they are
+evenly spread across all replica groups (assuming the staff-provided
+key2shard isn't biased).
+
+These charts need to be re-done, numbers were off because of a code bug.
+\begin{table}[h]
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Vanilla Paxos}}}                              \\ \hline
+                              & \textbf{Avg. Client Latency} & \textbf{Avg. Client Thruput} & \textbf{System Thruput} \\ \hline
+\multicolumn{4}{|c|}{\textit{PutHash to one key}}                                                                     \\ \hline
+\textbf{1 group, 3 replicas}  & 21.6ms/op                    & 46 requests/s                & 85 requests/s           \\ \hline
+\textbf{1 group, 10 replicas} & 52.7ms/op                    & 19 requests/s                & 19 requests/s           \\ \hline
+\textbf{3 groups, 3 replicas} & 15.4ms/op                    & 65 requests/s                & 70 requests/s           \\ \hline
+\multicolumn{4}{|c|}{\textit{PutHash to many keys}}                                                                 \\ \hline
+\textbf{1 group, 3 replicas}  & 20.5ms/op                    & 49 requests/s                & 78 requests/s           \\ \hline
+\textbf{1 group, 10 replicas} & 74ms/op                      & 14 requests/s                & 19 requests/s           \\ \hline
+\textbf{3 groups, 3 replicas} & 21.8ms/op                    & 46 requests/s                & 179 requests/s          \\ \hline
+\end{tabular}
+\end{table}
+
+%----------------------------------------------------------------------
+
+\begin{table}[h]
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Multipaxos}}}                              \\ \hline
+                              & \textbf{Avg. Client Latency} & \textbf{Avg. Client Thruput} & \textbf{System Thruput} \\ \hline
+\multicolumn{4}{|c|}{\textit{PutHash to one key}}                                                                     \\ \hline
+\textbf{1 group, 3 replicas}  & 14.2ms/op                    & 70.4 requests/s              & 88.8 requests/s         \\ \hline
+\textbf{1 group, 10 replicas} & 36.9ms/op                    & 27 requests/s                & 31 requests/s           \\ \hline
+\textbf{3 groups, 3 replicas} & 14.1ms/op                    & 70.9 requests/s              & 86 requests/s           \\ \hline
+\multicolumn{4}{|c|}{\textit{PutHash to many keys}}                                                                   \\ \hline
+\textbf{1 group, 3 replicas}  & 13.3ms/op                    & 75.2 requests/s              & 87.4 requests/s         \\ \hline
+\textbf{1 group, 10 replicas} & 37.7ms/op                    & 26.5 requests/s              & 31 requests/s           \\ \hline
+\textbf{3 groups, 3 replicas} & 15.8ms/op                    & 63.3 requests/s              & 200 requests/s          \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Paxos RPC Counts}
+
+\subsubsection{Disk Recovery}
+For disk recovery, the bottleneck was...
 
 \subsection{Bottlenecks}
-Although we made significant improvements performance-wise, we identified a number of bottlenecks.
+Although we made significant improvements performance-wise, we
+identified a number of bottlenecks.
 
 One notable bottleneck is disk writes. The database library we used,
 levedb, uses a cache and is quite fast. However, in the process of
@@ -103,9 +205,42 @@ slowed down the operations by nearly a factor of ten. This was a good
 demonstration of how care must be taken in even the most mundane
 aspects, such as logging.
 
-\subsubsection{Paxos}
+Another bottleneck is network capacity and/or number of messages. As
+shown in the latency and thoughput section, the increasing the number
+of replicas has an adverse effect on performance since each operation
+requires communication with a majority of replicas. Using multipaxos
+improves the performance since it decreases the number of RPCs needed
+to commit an operation. 
 
-\subsubsection{Disk Recovery}
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{
+\includegraphics[scale=.66]{replicas.png}}
+\caption{Performance of a one-group configuration rapidly dteriorates as the number of replicas increases}
+\label{fig:replicas}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{
+\includegraphics[scale=.66]{groups.png}}
+\caption{Performance increases linearly as the number of groups increases. There is probably a saturation point, but we didn't have enough cluster machines to reach it.}
+\label{fig:groups}
+\end{figure}
+
+
+Increasing the number of replica groups increases the performance of
+the system for normal operation, especially under heavy load with
+evenly distributed key requests. This is especially noticable in the
+system throughput metric.  The number of groups roughly corresponds to
+how parallelizable the operations are. 
+
+Another benefit of the paxos optimizations is that with
+fewer messages, less disk space is used since less paxos state data
+needs to be saved. We also suspect that using UDP would also improve
+throughput, as servers that do not recieve a response already
+re-transmit their request, making the TCP ack system redundant.
 
 \section{Conclusion}
 We did a project.

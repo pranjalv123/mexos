@@ -12,9 +12,9 @@ import "sync"
 import "math/rand"
 import "log"
 
-const numGroups = 1
-const numReplicas = 10
-const numMasters = 1
+const numGroups = 3
+const numReplicas = 3
+const numMasters = 3
 
 // Use for checking PutHash                                                                 
 func NextValue(hprev string, val string) string {
@@ -37,7 +37,7 @@ func TestBasic(t *testing.T) {
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
-	fmt.Printf("\nTest: Basic Join/Leave...")
+	fmt.Printf("\nTest: Basic Join/Leave...\n")
 
 	smClerk := shardmaster.MakeClerk(smPorts, true)
 	smClerk.Join(gids[0], kvPorts[0])
@@ -51,7 +51,7 @@ func TestBasic(t *testing.T) {
 	if kvClerk.Get("a") != ov {
 		t.Fatalf("Get got wrong value")
 	}
-	log.Printf("got here6")
+	log.Printf("got here6\n")
 	keys := make([]string, 10)
 	vals := make([]string, len(keys))
 	for i := 0; i < len(keys); i++ {
@@ -59,10 +59,11 @@ func TestBasic(t *testing.T) {
 		vals[i] = strconv.Itoa(rand.Int())
 		kvClerk.Put(keys[i], vals[i])
 	}
-
+	log.Printf("got here7\n")
 	// are keys still there after joins?
 	for g := 1; g < len(gids); g++ {
 		smClerk.Join(gids[g], kvPorts[g])
+		fmt.Printf("gid 10%d joined\n",g)
 		time.Sleep(1 * time.Second)
 		for i := 0; i < len(keys); i++ {
 			v := kvClerk.Get(keys[i])
@@ -74,19 +75,25 @@ func TestBasic(t *testing.T) {
 			kvClerk.Put(keys[i], vals[i])
 		}
 	}
-
+	log.Printf("got here8\n")
 	// are keys still there after leaves?
 	for g := 0; g < len(gids)-1; g++ {
+		fmt.Printf("gid 10%d wants to leave\n",g)
 		smClerk.Leave(gids[g])
+		fmt.Printf("gid 10%d left\n",g)
 		time.Sleep(1 * time.Second)
 		for i := 0; i < len(keys); i++ {
+			fmt.Printf("getting %v\n",keys[i])
 			v := kvClerk.Get(keys[i])
+			fmt.Printf("got %v\n",keys[i])
 			if v != vals[i] {
 				t.Fatalf("leaving; wrong value; g=%v k=%v wanted=%v got=%v",
 					g, keys[i], vals[i], v)
 			}
 			vals[i] = strconv.Itoa(rand.Int())
+			fmt.Printf("putting %v\n",keys[i])
 			kvClerk.Put(keys[i], vals[i])
+			fmt.Printf("put success %v\n",keys[i])
 		}
 	}
 
@@ -301,7 +308,7 @@ func BenchmarkClientLatencyOneShard(benchmark *testing.B) {
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
-	fmt.Printf("\nBenchmark: client latency, one shard...")
+	fmt.Printf("\nBenchmark: client latency, one shard...\n")
 
 	smClerk := shardmaster.MakeClerk(smPorts, true)
 	smClerk.Join(gids[0], kvPorts[0])
@@ -318,7 +325,7 @@ func BenchmarkClientLatencyManyShard(benchmark *testing.B) {
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 
-	fmt.Printf("\nBenchmark: client latency, many shards...")
+	fmt.Printf("\nBenchmark: client latency, many shards...\n")
 
 	smClerk := shardmaster.MakeClerk(smPorts, true)
 	for i := 0; i < len(gids); i++ {
@@ -335,7 +342,7 @@ func BenchmarkClientLatencyManyShard(benchmark *testing.B) {
 
 
 func TestManyClientOneShard(t *testing.T) {
-	nclients := 10
+	nclients := 35
 	nseconds := 10
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()

@@ -26,11 +26,10 @@ var logfile *os.File
 
 const persistent = true
 const recovery = true
-const writeToMemory = true     // Whether responses/store should be written to memory (as well as disk / disk cache)
-const dbUseCompression = true  // Whether database should compress entries
-const dbUseCache = true        // Whether database should use a built-in cache
-const dbCacheSize = 1000000000 // Size of database cache (ignored if dbUseCache is false)
-const memoryLimit = 2000000000 // Memory limit in bytes
+const writeToMemory = false   // Whether responses/store should be written to memory (as well as disk / disk cache)
+const dbUseCompression = true // Whether database should compress entries
+const dbUseCache = true       // Whether database should use a built-in cache
+const dbCacheSize = 100       // Size of database cache in MB (ignored if dbUseCache is false)
 
 // Will use these to check that dbCacheSize doesn't overflow an int
 // (int size is either 32 or 64 bits depending on implementation)
@@ -95,7 +94,6 @@ type ShardMaster struct {
 	dbUseCache       bool
 	dbCacheSize      int
 	writeToMemory    bool
-	memoryLimit      int64
 }
 
 type Op struct {
@@ -293,11 +291,11 @@ func (sm *ShardMaster) processLog(maxSeq int) {
 
 // Accept a Join request
 func (sm *ShardMaster) Join(args *JoinArgs, reply *JoinReply) error {
+	DPrintf("%d) Join: %d -> %s\n", sm.me, args.GID, args.Servers)
 	for sm.recovering && !sm.dead {
 		time.Sleep(10 * time.Millisecond)
 	}
 	sm.mu.Lock()
-	DPrintf("%d) Join: %d -> %s\n", sm.me, args.GID, args.Servers)
 
 	newOp := Op{2, args.GID, args.Servers, 0}
 
@@ -689,11 +687,11 @@ func (sm *ShardMaster) dbInit() {
 	// Open database (create it if it doesn't exist)
 	sm.dbOpts = levigo.NewOptions()
 	if sm.dbUseCache {
-		if sm.dbCacheSize > MaxInt {
-			fmt.Printf("\nDesired cache size %v is too large... using %v instead\n", sm.dbCacheSize, MaxInt)
+		if sm.dbCacheSize*1000000 > MaxInt {
+			fmt.Printf("\nDesired cache size %v is too large... using %v instead\n", sm.dbCacheSize*1000000, MaxInt)
 			sm.dbOpts.SetCache(levigo.NewLRUCache(MaxInt))
 		} else {
-			sm.dbOpts.SetCache(levigo.NewLRUCache(sm.dbCacheSize))
+			sm.dbOpts.SetCache(levigo.NewLRUCache(sm.dbCacheSize * 1000000))
 		}
 	}
 	if sm.dbUseCompression {
@@ -818,7 +816,7 @@ func (sm *ShardMaster) startup(servers []string) {
 				if ok && !reply.Err {
 					replyConfig := reply.RequestedConfig
 					sm.putConfig(config, replyConfig)
-					DPrintfPersist("\n\t\t%v: Got %v for config %v", sm.me, *sm.configs[config], config)
+					DPrintfPersist("\n\t\t%v: Got %v for config %v", sm.me, replyConfig, config)
 					haveConfig = true
 					sm.maxConfig = config
 					break
@@ -876,7 +874,7 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 		}
 		enableLog()
 	}
-
+	DPrintf("Shardamaster %s server started with peers", servers[me], servers)
 	sm := new(ShardMaster)
 	// Read memory options
 	sm.persistent = persistent
@@ -885,7 +883,6 @@ func StartServer(servers []string, me int, network bool) *ShardMaster {
 	sm.dbUseCache = dbUseCache
 	sm.dbCacheSize = dbCacheSize
 	sm.writeToMemory = writeToMemory
-	sm.memoryLimit = memoryLimit
 
 	// Network stuff
 	sm.me = me

@@ -101,12 +101,12 @@ func TestFileBasic(t *testing.T) {
 	if !runOldTests {
 		return
 	}
-	numGroups := 3
-	numReplicas := 3
+	numGroups := 4
+	numReplicas := 2
 	smPorts, gids, kvPorts, kvServers, clean := setup("basic", false, numGroups, numReplicas)
 	defer clean()
 
-	fmt.Printf("\nTest: Basic Join/Leave...")
+	fmt.Printf("\nTest: Basic Join/Leave...\n")
 
 	smClerk := shardmaster.MakeClerk(smPorts, false)
 	smClerk.Join(gids[0], kvPorts[0])
@@ -153,15 +153,20 @@ func TestFileBasic(t *testing.T) {
 	// are keys still there after leaves?
 	for g := 0; g < len(gids)-1; g++ {
 		smClerk.Leave(gids[g])
+		fmt.Printf("group 10%d left\n",g)
 		time.Sleep(1 * time.Second)
 		for i := 0; i < len(keys); i++ {
+			fmt.Printf("getting %v\n",keys[i])
 			v := kvClerk.Get(keys[i])
+			fmt.Printf("got %v",keys[i])
 			if v != vals[i] {
 				t.Fatalf("leaving; wrong value; g=%v k=%v wanted=%v got=%v",
 					g, keys[i], vals[i], v)
 			}
 			vals[i] = strconv.Itoa(rand.Int())
+			fmt.Printf("putting %v\n",keys[i])
 			kvClerk.Put(keys[i], vals[i])
+			fmt.Printf("put success %v\n",keys[i])
 		}
 	}
 
@@ -559,4 +564,79 @@ func TestFilePersistenceOriginals(t *testing.T) {
 
 	done = true
 	fmt.Printf("\n\n\tPassed!!\n")
+}
+
+func TestFileMemory(t *testing.T) {
+	smPorts, gids, kvPorts, kvServers, clean := setup("persistBasic", false, 3, 3)
+	defer clean()
+	smClerk := shardmaster.MakeClerk(smPorts, false)
+	kvClerk := MakeClerk(smPorts, false)
+
+	targetSize := 100 // Target size in MB
+	valueSize := 2000 // Size of each value in KB
+
+	// Periodically check that too much memory isn't being used
+	done := false
+	go func() {
+		for !done {
+			runtime.GC()
+			time.Sleep(50 * time.Millisecond) // Not sure if this is needed
+			usage := getMemoryUsage() / 1000
+			if usage > memoryLimit {
+				t.Fatalf("Too much memory is being used! Using %v MB, limit is %v MB", usage, memoryLimit)
+			}
+			time.Sleep(2000 * time.Millisecond)
+		}
+	}()
+
+	// Make a big value
+	big := make([]byte, valueSize*1000)
+	for j := 0; j < len(big); j++ {
+		big[j] = byte('a' + rand.Int()%26)
+	}
+
+	// Join all groups
+	for i := 0; i < len(gids); i++ {
+		smClerk.Join(gids[i], kvPorts[i])
+	}
+
+	time.Sleep(3 * time.Second)
+
+	fmt.Printf("\nPutting %v MB worth of stuff ...\t", targetSize)
+	// Many keys with large values
+	for i := targetSize * 1000 / valueSize; i >= 0; i-- {
+		if (i == 99) && (targetSize*1000/valueSize > 99) {
+			fmt.Printf(" ")
+		}
+		fmt.Printf("%v", i)
+
+		kvClerk.Put(strconv.FormatInt(nrand(), 10), string(big))
+
+		fmt.Printf("\b")
+		if i > 9 {
+			fmt.Printf("\b")
+		}
+		if i > 99 {
+			fmt.Printf("\b")
+		}
+	}
+	fmt.Printf("\nDone!")
+
+	// Kill a server (destroy disk)
+	kvServers[0][0].Kill()
+
+	time.Sleep(3 * time.Second)
+
+	// Reboot server to cause recovery
+	kvServers[0][0] = StartServer(gids[0], smPorts, kvPorts[0], 0, false)
+	time.Sleep(10 * time.Second)
+
+	fmt.Printf("\n\tMemory usage           (MB): %v", getMemoryUsage()/1000)
+	fmt.Printf("\n\tPaxos Disk usage       (MB): %v", getPaxosDiskUsage()/1000)
+	fmt.Printf("\n\tShardmaster Disk usage (KB): %v", getShardMasterDiskUsage())
+	fmt.Printf("\n\tShardKV Disk usage     (MB): %v", getShardKVDiskUsage()/1000)
+	fmt.Printf("\n\tTotal Disk usage       (MB): %v", getDiskUsage()/1000)
+	fmt.Printf("\n\tPassed\n")
+	done = true
+	time.Sleep(5 * time.Second)
 }

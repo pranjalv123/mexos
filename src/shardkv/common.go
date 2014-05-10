@@ -42,8 +42,9 @@ type KVReply struct {
 }
 
 type FetchArgs struct {
-	Config int
-	Shard  int
+	Config  int
+	Shard   int
+	Exclude map[string]bool
 }
 
 type FetchReply struct {
@@ -51,11 +52,13 @@ type FetchReply struct {
 	Store    map[string]string
 	Response map[int64]string
 	Seen     map[int64]bool
+	Complete bool
 }
 
 type RecoverArgs struct {
-	Config int
-	Shard  int
+	Config  int
+	Shard   int
+	Exclude map[string]bool
 }
 
 type RecoverReply struct {
@@ -65,6 +68,7 @@ type RecoverReply struct {
 	Response      map[int64]string
 	Seen          map[int64]bool
 	Err           bool
+	Complete      bool
 }
 
 func hash(s string) uint32 {
