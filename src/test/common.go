@@ -77,7 +77,7 @@ func GetShardkvs(nreplicas int, nmasters int, ngroups int) ([][]string, []string
 		for j := 0; j < nreplicas; j++ {
 			//fmt.Println(100+(grp*ngroups)+j+offset)
 			kvhosts[grp][j] = "10.0.0." + 
-				strconv.Itoa(100+(grp*ngroups)+j+offset) +
+				strconv.Itoa(100+(grp*nreplicas)+j+offset) +
 				":" + strconv.Itoa(kvport)
 		}
 	}

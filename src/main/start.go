@@ -73,6 +73,8 @@ func main() {
 		//group 101: 10.0.0.107, 10.0.0.108, 10.0.0.109
 		//group 102: 10.0.0.110, 10.0.0.111, 10.0.0.112
 		metapeers, masters, _ := test.GetShardkvs(*nreplicas, *nmasters, *ngroups)
+		fmt.Printf("peers: %v\n", metapeers)
+
 		
 		me := whoami(masters)
 		if me != -1 {
