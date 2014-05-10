@@ -78,17 +78,22 @@ func TestBasic(t *testing.T) {
 	log.Printf("got here8\n")
 	// are keys still there after leaves?
 	for g := 0; g < len(gids)-1; g++ {
+		fmt.Printf("gid 10%d wants to leave\n",g)
 		smClerk.Leave(gids[g])
 		fmt.Printf("gid 10%d left\n",g)
 		time.Sleep(1 * time.Second)
 		for i := 0; i < len(keys); i++ {
+			fmt.Printf("getting %v\n",keys[i])
 			v := kvClerk.Get(keys[i])
+			fmt.Printf("got %v\n",keys[i])
 			if v != vals[i] {
 				t.Fatalf("leaving; wrong value; g=%v k=%v wanted=%v got=%v",
 					g, keys[i], vals[i], v)
 			}
 			vals[i] = strconv.Itoa(rand.Int())
+			fmt.Printf("putting %v\n",keys[i])
 			kvClerk.Put(keys[i], vals[i])
+			fmt.Printf("put success %v\n",keys[i])
 		}
 	}
 
