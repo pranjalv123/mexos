@@ -403,7 +403,8 @@ func TestManyClientOneShard(t *testing.T) {
 
 
 func TestDiskRecovery(t *testing.T) {
-	numBytes := 536870912 //0.5GB
+	nclients := 2
+	numBytes := 20971520 //20MB
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 	
@@ -411,14 +412,32 @@ func TestDiskRecovery(t *testing.T) {
 
 	smClerk := shardmaster.MakeClerk(smPorts, true)
 	smClerk.Join(gids[0], kvPorts[0])
-	ck := shardkv.MakeClerk(smPorts, true)
 
-	for i := 0; i < numBytes; i+=16 {
-		ck.Put(strconv.Itoa(rand.Int()), strconv.Itoa(rand.Int()))
-		if i%1024 == 0 {
-			fmt.Printf("%v/%v\n", i, numBytes)
+	counts := make([]int, nclients)
+	fmt.Printf("\nBenchmark: many clients, many shards...\n")
+	for i := 0; i < nclients; i++ {
+		go func(c int) {
+			ck := shardkv.MakeClerk(smPorts, true)
+			for i := 0; i < numBytes/5; i+=16 {
+				ck.Put(strconv.Itoa(rand.Int()), 
+					strconv.Itoa(rand.Int()))
+				counts[c]+=16
+			}
+		}(i)
+	}
+	fmt.Println("I am here")
+	sum := 0
+	toWait := 22*time.Millisecond
+	for sum < numBytes {
+		time.Sleep(toWait)
+		for _,i := range counts {
+			sum = 0
+			sum += i
+		}
+		if sum%1024 == 0 {
+			fmt.Printf("%v/%v\n", sum, numBytes)
 		}
 	}
-	
+
 	fmt.Printf("\n1GB of data written to database...\n")
 }
