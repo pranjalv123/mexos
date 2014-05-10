@@ -65,7 +65,7 @@ func shardkvCleanup(kvServers [][]*ShardKV) {
 func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]string, []int64, [][]string, [][]*ShardKV, func()) {
 	runtime.GOMAXPROCS(4)
 
-	const numMasters = 3
+	const numMasters = 2
 	var smServers []*shardmaster.ShardMaster = make([]*shardmaster.ShardMaster, numMasters)
 	var smPorts []string = make([]string, numMasters)
 	// Start shardmaster servers
@@ -101,12 +101,12 @@ func TestFileBasic(t *testing.T) {
 	if !runOldTests {
 		return
 	}
-	numGroups := 3
-	numReplicas := 3
+	numGroups := 4
+	numReplicas := 2
 	smPorts, gids, kvPorts, kvServers, clean := setup("basic", false, numGroups, numReplicas)
 	defer clean()
 
-	fmt.Printf("\nTest: Basic Join/Leave...")
+	fmt.Printf("\nTest: Basic Join/Leave...\n")
 
 	smClerk := shardmaster.MakeClerk(smPorts, false)
 	smClerk.Join(gids[0], kvPorts[0])
@@ -153,15 +153,20 @@ func TestFileBasic(t *testing.T) {
 	// are keys still there after leaves?
 	for g := 0; g < len(gids)-1; g++ {
 		smClerk.Leave(gids[g])
+		fmt.Printf("group 10%d left\n",g)
 		time.Sleep(1 * time.Second)
 		for i := 0; i < len(keys); i++ {
+			fmt.Printf("getting %v\n",keys[i])
 			v := kvClerk.Get(keys[i])
+			fmt.Printf("got %v",keys[i])
 			if v != vals[i] {
 				t.Fatalf("leaving; wrong value; g=%v k=%v wanted=%v got=%v",
 					g, keys[i], vals[i], v)
 			}
 			vals[i] = strconv.Itoa(rand.Int())
+			fmt.Printf("putting %v\n",keys[i])
 			kvClerk.Put(keys[i], vals[i])
+			fmt.Printf("put success %v\n",keys[i])
 		}
 	}
 
