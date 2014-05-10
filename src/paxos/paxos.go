@@ -45,11 +45,10 @@ const enableLeader = 1
 
 const persistent = true
 const recovery = true
-const writeToMemory = true     // Whether responses/store should be written to memory (as well as disk / disk cache)
-const dbUseCompression = true  // Whether database should compress entries
-const dbUseCache = true        // Whether database should use a built-in cache
-const dbCacheSize = 1000000000 // Size of database cache (ignored if dbUseCache is false)
-const memoryLimit = 2000000000 // Memory limit in bytes
+const writeToMemory = false   // Whether responses/store should be written to memory (as well as disk / disk cache)
+const dbUseCompression = true // Whether database should compress entries
+const dbUseCache = true       // Whether database should use a built-in cache
+const dbCacheSize = 100       // Size of database cache in MB (ignored if dbUseCache is false)
 
 // Will use these to check that dbCacheSize doesn't overflow an int
 // (int size is either 32 or 64 bits depending on implementation)
@@ -124,7 +123,6 @@ type Paxos struct {
 	dbUseCache       bool
 	dbCacheSize      int
 	writeToMemory    bool
-	memoryLimit      int64
 }
 
 type RecoverArgs struct {
@@ -1035,11 +1033,11 @@ func (px *Paxos) dbInit(tag string) {
 	// Open database (create it if it doesn't exist)
 	px.dbOpts = levigo.NewOptions()
 	if px.dbUseCache {
-		if px.dbCacheSize > MaxInt {
-			fmt.Printf("\nDesired cache size %v is too large... using %v instead\n", px.dbCacheSize, MaxInt)
+		if px.dbCacheSize*1000000 > MaxInt {
+			fmt.Printf("\nDesired cache size %v is too large... using %v instead\n", px.dbCacheSize*1000000, MaxInt)
 			px.dbOpts.SetCache(levigo.NewLRUCache(MaxInt))
 		} else {
-			px.dbOpts.SetCache(levigo.NewLRUCache(px.dbCacheSize))
+			px.dbOpts.SetCache(levigo.NewLRUCache(px.dbCacheSize * 1000000))
 		}
 	}
 	if px.dbUseCompression {
@@ -1231,7 +1229,6 @@ func Make(peers []string, me int, rpcs *rpc.Server, network bool, tag string) *P
 	px.dbUseCache = dbUseCache
 	px.dbCacheSize = dbCacheSize
 	px.writeToMemory = writeToMemory
-	px.memoryLimit = memoryLimit
 
 	// Network stuff
 	px.peers = peers
