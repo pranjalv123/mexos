@@ -65,7 +65,7 @@ func shardkvCleanup(kvServers [][]*ShardKV) {
 func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]string, []int64, [][]string, [][]*ShardKV, func()) {
 	runtime.GOMAXPROCS(4)
 
-	const numMasters = 2
+	const numMasters = 3
 	var smServers []*shardmaster.ShardMaster = make([]*shardmaster.ShardMaster, numMasters)
 	var smPorts []string = make([]string, numMasters)
 	// Start shardmaster servers
