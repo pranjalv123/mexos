@@ -91,7 +91,7 @@ func main() {
 		for i, v := range metapeers {
 			peers = v
 			me = whoami(v)
-			gid = int64(i)
+			gid = int64(100+i)
 			if me != -1 {
 				break
 			}
