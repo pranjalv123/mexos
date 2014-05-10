@@ -12,7 +12,7 @@ import "sync"
 import "math/rand"
 import "log"
 
-const numGroups = 3
+const numGroups = 1
 const numReplicas = 3
 const numMasters = 3
 
@@ -403,7 +403,7 @@ func TestManyClientOneShard(t *testing.T) {
 
 
 func TestDiskRecovery(t *testing.T) {
-	numBytes := 1073741824 //1GB
+	numBytes := 536870912 //0.5GB
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 	
@@ -415,6 +415,9 @@ func TestDiskRecovery(t *testing.T) {
 
 	for i := 0; i < numBytes; i+=16 {
 		ck.Put(strconv.Itoa(rand.Int()), strconv.Itoa(rand.Int()))
+		if i%1024 == 0 {
+			fmt.Printf("%v/%v\n", i, numBytes)
+		}
 	}
 	
 	fmt.Printf("\n1GB of data written to database...\n")

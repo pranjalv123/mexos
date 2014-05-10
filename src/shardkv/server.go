@@ -24,7 +24,7 @@ import "runtime"
 import "os/exec"
 
 const Debug = 0
-const DebugPersist = 1
+const DebugPersist = 0
 const printRPCerrors = false
 const Log = 1
 
