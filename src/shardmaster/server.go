@@ -20,7 +20,7 @@ import "bytes"
 const Debug = 1
 const DebugPersist = 1
 const printRPCerrors = false
-const Log = 0
+const Log = 1
 
 var logfile *os.File
 
