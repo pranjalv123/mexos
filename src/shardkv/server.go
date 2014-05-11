@@ -454,32 +454,36 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 	kv.sending = true
 	kv.sendingTo = args.Sender
 
-	// Assume all responses can fit in memory (only one per client)
 	responses := make(map[int64]string)
-	idsInMemory := make(map[int64]bool)
-	// Copy responses from memory
-	for id, value := range kv.response {
-		responses[id] = value
-		idsInMemory[id] = true
-	}
-	// Copy responses from disk if not in memory
-	for id, value := range kv.dbGetResponses(idsInMemory) {
-		DPrintfPersist("\n\t%v-%v: got response data (%v, %v)", kv.gid, kv.me, id, value)
-		responses[id] = value
-	}
-
-	// Assume all of seenIDs can fit in memory (IDs should be small)
 	seenIDs := make(map[int64]bool)
-	idsInMemory = make(map[int64]bool)
-	// Copy seen IDs from memory
-	for id, _ := range kv.seen {
-		seenIDs[id] = true
-		idsInMemory[id] = true
-	}
-	// Copy seen IDs from disk if not in memory
-	for id, _ := range kv.dbGetSeenIDs(idsInMemory) {
-		DPrintfPersist("\n\t%v-%v: got seen data %v", kv.gid, kv.me, id)
-		seenIDs[id] = true
+
+	// If this is the first message, include responses and seenIDs
+	if len(args.Exclude) == 0 {
+		// Assume all responses can fit in memory (only one per client)
+		idsInMemory := make(map[int64]bool)
+		// Copy responses from memory
+		for id, value := range kv.response {
+			responses[id] = value
+			idsInMemory[id] = true
+		}
+		// Copy responses from disk if not in memory
+		for id, value := range kv.dbGetResponses(idsInMemory) {
+			DPrintfPersist("\n\t%v-%v: got response data (%v, %v)", kv.gid, kv.me, id, value)
+			responses[id] = value
+		}
+
+		// Assume all of seenIDs can fit in memory (IDs should be small)
+		idsInMemory = make(map[int64]bool)
+		// Copy seen IDs from memory
+		for id, _ := range kv.seen {
+			seenIDs[id] = true
+			idsInMemory[id] = true
+		}
+		// Copy seen IDs from disk if not in memory
+		for id, _ := range kv.dbGetSeenIDs(idsInMemory) {
+			DPrintfPersist("\n\t%v-%v: got seen data %v", kv.gid, kv.me, id)
+			seenIDs[id] = true
+		}
 	}
 
 	shardStore := make(map[string]string)
