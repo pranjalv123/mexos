@@ -1406,7 +1406,18 @@ func (kv *ShardKV) dbInit() {
 	}
 }
 
+func trace(s string) (string, time.Time) {
+    fmt.Println("START:", s)
+    return s, time.Now()
+}
+
+func un(s string, startTime time.Time) {
+    endTime := time.Now()
+    fmt.Println("  END:", s, "ElapsedTime in seconds:", endTime.Sub(startTime))
+}
+
 func (kv *ShardKV) startup(servers []string) {
+	defer un(trace("recovery time "))
 	defer func() {
 		kv.recovering = false
 		log.Printf("\n%v-%v Marked recovery false", kv.gid, kv.me)
