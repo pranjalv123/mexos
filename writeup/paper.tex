@@ -165,44 +165,27 @@ to disk before any operation commits, data is not lost.
 %% persistence model.
 
 \subsection{Testing}
-We added about 25 new tests, and extended existing ones to work with
-persistent storage and run on TCP sockets instead of unix file
-sockets. We use a few flags and configurations to run different modes
-(e.g. with and without persistence, RPC using unix file sockets or
-localhost TCP).
+About 25 new tests were created, and existing ones were extended, in order to evaluate persistent storage and run on TCP sockets instead of unix file sockets.  A few flags and configuration variables can select different modes (e.g. with and without persistence, RPC using unix file sockets or localhost TCP).
 
-Below we describe the different tests. All tests are located at
-'mexos/src/$<$name$>$/test\_test.go' unless otherwise noted.
+Below are summaries of different located at 'mexos/src/\emph{$<$name$>$}/test\_test.go' unless otherwise noted.
 
-\emph{paxos:} Paxos specific tests
+\emph{paxos:} Paxos specific tests which include restarting servers deterministically or randomly.  These include cases where servers lose their disks, where all servers restart, where partitioning changes, where communication is unreliable, and many combinations of the above.  There are also benchmarks for measuring performance.
 
-\emph{shardmaster:} Shardmaster specific tests
+\emph{shardmaster:} Shardmaster specific tests which include restarting servers with or without disk to ensure that persistence and recovery work as expected.  There are also benchmarks for measuring performance.
 
-\emph{shardkv:} Shardkv specific tests
+\emph{shardkv:} Shardkv specific tests which include deterministically restarting servers to ensure that persistence and recovery operate correctly.  There is also a test which performs the previously written tests but with random reboots of random servers or entire groups.  There are also benchmarks for measuring shard transfer speed.
 
-\emph{test:} Tests and benchmarks modified to run on our AWS
-cluster. These tests are the most complicated, and require the user to
-ssh into our cluster leader and start the servers on other cluster
-machines using 'start-on-all.sh' to run
-'mexos/src/main/start.go'. These tests required a surprising amount of
-debugging and glue code. Additionally, to check for correct operation
-under server failure, we had to make a backdoor RPC that told the
-remote server to act deaf or dead.
+\emph{test:} Tests and benchmarks modified to run on our AWS cluster.  Running these tests are the most complicated, and require the user to SSH into the AWS cluster leader and start the servers on other cluster machines using 'start-on-all.sh' to run 'mexos/src/main/start.go'. These tests required a surprising amount of debugging and glue code.  Additionally, to check for correct operation under server failure, backdoor RPCs were required to tell a remote server to act deaf or dead.
 
-We present the results of our benchmarks in a later section.
+The results of these benchmarks are presented below.
 
 \section{Performance}
 
-We created an extensive system to try and accurately measure
-performance. In addition to writing many benchmarks, we also modified
-the original RPC system so that we could run the servers in an AWS
-cluster and observe the performance on a real network.
+An extensive testing system was created to try and accurately measure performance.  This comprises many new benchmarks, as well as a modified RPC system to run the servers in an AWS cluster and observe the performance on a real network.
 
 \subsection{Throughput and Latency}
 
-We compared performance between vanilla paxos and multipaxos under a
-variety of conditions. The tests were run on an actual network in an
-AWS cluster. 
+We compared performance between vanilla paxos and multipaxos under a variety of conditions. The tests were run on an actual network in an AWS cluster. 
 
 \textit{Client latency}: Average time it takes for one client to see a
 request processed. 
