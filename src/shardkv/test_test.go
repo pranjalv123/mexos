@@ -38,31 +38,33 @@ func NextValue(hprev string, val string) string {
 }
 
 // Kill shardmaster servers
-func smCleanup(smServers []*shardmaster.ShardMaster) {
-	//fmt.Printf("\nsmCleanup")
+func smCleanup(smServers []*shardmaster.ShardMaster, saveDisk bool) {
 	for i := 0; i < len(smServers); i++ {
 		if smServers[i] != nil {
-			//fmt.Printf("\n\tKilling %v", i)
-			smServers[i].Kill()
-		} else {
-			//fmt.Printf("\n\t%v is nil", i)
+			if saveDisk {
+				smServers[i].KillSaveDisk()
+			} else {
+				smServers[i].Kill()
+			}
 		}
 	}
 }
 
 // Kill shardkv servers
-func shardkvCleanup(kvServers [][]*ShardKV) {
-	//fmt.Printf("\nshardkvCleanup")
+func shardkvCleanup(kvServers [][]*ShardKV, saveDisk bool) {
 	for i := 0; i < len(kvServers); i++ {
 		for j := 0; j < len(kvServers[i]); j++ {
-			//fmt.Printf("\n\tKilling %v-%v", i, j)
-			kvServers[i][j].Kill()
+			if saveDisk {
+				kvServers[i][j].KillSaveDisk()
+			} else {
+				kvServers[i][j].Kill()
+			}
 		}
 	}
 }
 
 // Set up and start servers for shardkv groups and shardmaster
-func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]string, []int64, [][]string, [][]*ShardKV, func()) {
+func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]string, []int64, [][]string, [][]*ShardKV, func(), func()) {
 	runtime.GOMAXPROCS(4)
 
 	const numMasters = 3
@@ -93,8 +95,9 @@ func setup(tag string, unreliable bool, numGroups int, numReplicas int) ([]strin
 		}
 	}
 
-	clean := func() { shardkvCleanup(kvServers); smCleanup(smServers) }
-	return smPorts, gids, kvPorts, kvServers, clean
+	clean := func() { shardkvCleanup(kvServers, false); smCleanup(smServers, false) }
+	cleanSaveDisk := func() { shardkvCleanup(kvServers, true); smCleanup(smServers, true) }
+	return smPorts, gids, kvPorts, kvServers, clean, cleanSaveDisk
 }
 
 func TestFileBasic(t *testing.T) {
@@ -103,7 +106,7 @@ func TestFileBasic(t *testing.T) {
 	}
 	numGroups := 3
 	numReplicas := 2
-	smPorts, gids, kvPorts, kvServers, clean := setup("basic", false, numGroups, numReplicas)
+	smPorts, gids, kvPorts, kvServers, clean, _ := setup("basic", false, numGroups, numReplicas)
 	defer clean()
 
 	fmt.Printf("\nTest: Basic Join/Leave...\n")
@@ -186,7 +189,7 @@ func TestFileMove(t *testing.T) {
 	}
 	numGroups := 3
 	numReplicas := 3
-	smPorts, gids, kvPorts, kvServers, clean := setup("move", false, numGroups, numReplicas)
+	smPorts, gids, kvPorts, kvServers, clean, _ := setup("move", false, numGroups, numReplicas)
 	defer clean()
 
 	fmt.Printf("\nTest: Shards really move...")
@@ -255,7 +258,7 @@ func TestFileLimp(t *testing.T) {
 	}
 	numGroups := 3
 	numReplicas := 3
-	smPorts, gids, kvPorts, kvServers, clean := setup("limp", false, numGroups, numReplicas)
+	smPorts, gids, kvPorts, kvServers, clean, _ := setup("limp", false, numGroups, numReplicas)
 	defer clean()
 
 	fmt.Printf("\nTest: Reconfiguration with some dead replicas...")
@@ -329,7 +332,7 @@ func TestFileLimp(t *testing.T) {
 func doConcurrent(t *testing.T, unreliable bool) {
 	numGroups := 3
 	numReplicas := 3
-	smPorts, gids, kvPorts, kvServers, clean := setup("conc"+strconv.FormatBool(unreliable), unreliable, numGroups, numReplicas)
+	smPorts, gids, kvPorts, kvServers, clean, _ := setup("conc"+strconv.FormatBool(unreliable), unreliable, numGroups, numReplicas)
 	defer clean()
 
 	// Start listening on reboot channel in case we're testing persistence
@@ -410,7 +413,7 @@ func TestFilePersistenceBasic(t *testing.T) {
 
 	fmt.Printf("\nTest: One replica per group, all reboot ...")
 	// Only use one replicas per group
-	smPorts, gids, kvPorts, kvServers, clean := setup("persistBasic", false, 3, 1)
+	smPorts, gids, kvPorts, kvServers, clean, _ := setup("persistBasic", false, 3, 1)
 
 	smClerk := shardmaster.MakeClerk(smPorts, false)
 	kvClerk := MakeClerk(smPorts, false)
@@ -445,7 +448,7 @@ func TestFilePersistenceBasic(t *testing.T) {
 
 	fmt.Printf("\nTest: Multiple replicas per group, all reboot ...")
 	// Only use one replicas per group
-	smPorts, gids, kvPorts, kvServers, clean = setup("persistBasic", false, 3, 3)
+	smPorts, gids, kvPorts, kvServers, clean, _ = setup("persistBasic", false, 3, 3)
 	defer clean()
 
 	smClerk = shardmaster.MakeClerk(smPorts, false)
@@ -569,7 +572,7 @@ func TestFilePersistenceOriginals(t *testing.T) {
 }
 
 func TestFileMemory(t *testing.T) {
-	smPorts, gids, kvPorts, kvServers, clean := setup("persistBasic", false, 3, 3)
+	smPorts, gids, kvPorts, kvServers, clean, _ := setup("persistBasic", false, 3, 3)
 	defer clean()
 	smClerk := shardmaster.MakeClerk(smPorts, false)
 	kvClerk := MakeClerk(smPorts, false)
@@ -645,3 +648,146 @@ func TestFileMemory(t *testing.T) {
 	done = true
 	time.Sleep(5 * time.Second)
 }
+
+func paddedRandIntString(size int) string {
+	big := make([]byte, size)
+	for j := 0; j < len(big); j++ {
+		big[j] = byte('a' + rand.Int()%26)
+	}
+	return string(big)
+}
+
+//func TestMakeDisk(t *testing.T) {
+//	nclients := 3
+//	keySize := 32       // Size in bytes
+//	valSize := 4096     // Size in bytes
+//	dbTargetSize := 100 // Desired size in MB
+//	nItems := int64(dbTargetSize) * int64(1024) * int64(1024) / int64(keySize+valSize)
+//	dbSize := float64(nItems) * float64(keySize+valSize) / float64(1024) / float64(1024) // Size accounting for rounding errors
+//	smPorts, gids, kvPorts, _, _, cleanSaveDisk := setup("recovery", false, 2, 1)
+//	defer cleanSaveDisk()
+//	smClerk := shardmaster.MakeClerk(smPorts, false)
+//	//kvClerk := MakeClerk(smPorts, false)
+
+//	fmt.Printf("\nShard transfer benchmark...")
+//	smClerk.Join(gids[0], kvPorts[0])
+//	smClerk.Join(gids[1], kvPorts[1])
+
+//	// Make sure shard 0 is on group 0
+//	smClerk.Move(0, gids[0])
+
+//	// Put a lot of keys all starting with 'd'
+//	// so all keys will be placed in shard 0
+//	fmt.Printf("\n\tFilling database with %v MB of data...\n", dbSize)
+//	numPut := int64(0)
+//	waitChan := make(chan int)
+//	for i := 0; i < nclients; i++ {
+//		go func() {
+//			ck := MakeClerk(smPorts, false)
+//			waitChan <- 1
+//			for numPut < nItems {
+//				key := "d" + paddedRandIntString(keySize-1)
+//				value := paddedRandIntString(valSize)
+//				ck.Put(key, value)
+//				numPut++
+//			}
+//		}()
+//		<-waitChan
+//	}
+//	// Wait for database to be completed
+//	for numPut < nItems {
+//		if numPut%1000 == 0 {
+//			fmt.Printf("\n\tPut %v/%v values", numPut, nItems)
+//			for numPut%1000 == 0 {
+//				runtime.Gosched()
+//			}
+//		}
+//		runtime.Gosched()
+//	}
+//	fmt.Printf("\n\tComplete, disk usage = %v MB", getDiskUsage()/1024)
+
+//	// Make sure goroutines for putting data have ended
+//	time.Sleep(10 * time.Second)
+//}
+
+func TestDiskRecovery(t *testing.T) {
+	nclients := 3
+	keySize := 32         // Size in bytes
+	valSize := 500 * 1024 // Size in bytes
+	dbTargetSize := 100   // Desired size in MB
+	nItems := int64(dbTargetSize) * int64(1024) * int64(1024) / int64(keySize+valSize)
+	dbSize := float64(nItems) * float64(keySize+valSize) / float64(1024) / float64(1024) // Size accounting for rounding errors
+	smPorts, gids, kvPorts, _, clean, _ := setup("recovery", false, 2, 1)
+	defer clean()
+	smClerk := shardmaster.MakeClerk(smPorts, false)
+	kvClerk := MakeClerk(smPorts, false)
+
+	fmt.Printf("\nShard transfer benchmark...")
+	smClerk.Join(gids[0], kvPorts[0])
+	smClerk.Join(gids[1], kvPorts[1])
+
+	// Make sure shard 0 is on group 0
+	smClerk.Move(0, gids[0])
+
+	// Put a lot of keys all starting with 'd'
+	// so all keys will be placed in shard 0
+	fmt.Printf("\n\tFilling database with %v MB of data...\n", dbSize)
+	numPut := int64(0)
+	waitChan := make(chan int)
+	for i := 0; i < nclients; i++ {
+		go func() {
+			ck := MakeClerk(smPorts, false)
+			waitChan <- 1
+			for numPut < nItems {
+				key := "d" + paddedRandIntString(keySize-1)
+				value := paddedRandIntString(valSize)
+				ck.Put(key, value)
+				numPut++
+			}
+		}()
+		<-waitChan
+	}
+	// Wait for database to be completed
+	for numPut < nItems {
+		if numPut%100 == 0 {
+			fmt.Printf("\n\tPut %v/%v values", numPut, nItems)
+			for numPut%100 == 0 {
+				runtime.Gosched()
+			}
+		}
+		runtime.Gosched()
+	}
+	fmt.Printf("\n\tComplete, disk usage = %v MB", getDiskUsage()/1024)
+
+	// Make sure goroutines for putting data have ended
+	time.Sleep(10 * time.Second)
+
+	// Move shard from group 0 to group 1
+	fmt.Printf("\nMoving database between groups")
+	smClerk.Move(0, gids[1])
+
+	// Time how long transfer takes
+	startTime := time.Now()
+	kvClerk.Get("d")
+	duration := time.Since(startTime)
+
+	fmt.Printf("\n\tTransfer took %v seconds (%v MB/s)", duration.Seconds(), float64(dbSize)/duration.Seconds())
+}
+
+//func TestDiskRecoveryUseDisk(t *testing.T) {
+//	smPorts, gids, _, _, clean, _ := setup("recovery", false, 2, 1)
+//	defer clean()
+//	smClerk := shardmaster.MakeClerk(smPorts, false)
+//	kvClerk := MakeClerk(smPorts, false)
+
+//	// Move shard from group 0 to group 1
+//	fmt.Printf("\nMoving database between groups")
+//	smClerk.Move(0, gids[1])
+
+//	// Time how long transfer takes
+//	startTime := time.Now()
+//	kvClerk.Get("d")
+//	duration := time.Since(startTime)
+
+//	fmt.Printf("\n\tTransfer took %v seconds", duration.Seconds())
+//}

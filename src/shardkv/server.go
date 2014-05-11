@@ -38,9 +38,9 @@ const recovery = true
 const writeToMemory = false                    // Whether responses/store should be written to memory (as well as disk / disk cache)
 const dbUseCompression = true                  // Whether database should compress entries
 const dbUseCache = true                        // Whether database should use a built-in cache
-const dbCacheSize = 250                        // Size of database cache in MB (ignored if dbUseCache is false)
-const memoryLimit = 1000                       // Memory limit in MB
-const memoryThreshold = memoryLimit * 80 / 100 // When to stop filling memory (when to abort a Fetch RPC and use multiple messages)
+const dbCacheSize = 20                         // Size of database cache in MB (ignored if dbUseCache is false)
+const memoryLimit = 100                        // Memory limit in MB
+const memoryThreshold = memoryLimit * 75 / 100 // When to stop filling memory (when to abort a Fetch RPC and use multiple messages)
 const recoveryRetryDelay = 500                 // Time in ms to wait before resending acknowledgments
 
 // Will use these to check that dbCacheSize doesn't overflow an int
@@ -107,6 +107,7 @@ type ShardKV struct {
 	recovering     bool
 	sending        bool
 	sendingTo      string
+	shardIterator  *levigo.Iterator
 }
 
 // Write the desired key/value to memory and/or disk
@@ -451,6 +452,8 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 	// Mark sending as true so no client requests will
 	// be processed until the transfer is complete
 	DPrintf("\n%v.%v: Marking sending started", kv.gid, kv.me)
+	//fmt.Printf("\n%v.%v: Marking sending started", kv.gid, kv.me)
+	startTime := time.Now()
 	kv.sending = true
 	kv.sendingTo = args.Sender
 
@@ -485,6 +488,7 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 			seenIDs[id] = true
 		}
 	}
+	copyResponseSeenDuration := time.Since(startTime)
 
 	shardStore := make(map[string]string)
 	keysCopied := make(map[string]bool)
@@ -512,18 +516,20 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 	}
 	// Copy key/value pairs for desired shard from disk if not in memory
 	// Exclude any already seen
-	shardFromDisk, finished := kv.dbGetShard(args.Shard, keysCopied)
-	for k, v := range shardFromDisk {
-		DPrintfPersist("\n\t%v-%v: got shard %v data (%v, %v)", kv.gid, kv.me, args.Shard, k, v)
-		shardStore[k] = v
-	}
+	finished, iterator := kv.dbGetShard(args.Shard, keysCopied, shardStore, kv.shardIterator)
+	kv.shardIterator = iterator
 	DPrintfPersist("\n\tCopied from disk, memory usage = %v MB", getMemoryUsage()/1000)
+
+	totalTime := time.Since(startTime)
+	fmt.Printf("\n%v.%v: Time to copy responses: %v", kv.gid, kv.me, copyResponseSeenDuration.Seconds())
+	fmt.Printf("\n%v.%v: Time to copy database : %v", kv.gid, kv.me, totalTime.Seconds()-copyResponseSeenDuration.Seconds())
+	fmt.Printf("\n%v.%v: Number of keys: %v", kv.gid, kv.me, len(shardStore))
 
 	reply.Err = OK
 	reply.Store = shardStore
 	reply.Response = responses
 	reply.Seen = seenIDs
-	reply.Complete = (complete && (finished || len(shardFromDisk) == 0))
+	reply.Complete = complete && finished
 	DPrintf("%d.%d.%d) Fetch Returns: %s, complete: %v\n", kv.gid, kv.me, kv.config.Num, reply.Store, reply.Complete)
 	if reply.Err != OK {
 		kv.sending = false
@@ -571,9 +577,6 @@ func (kv *ShardKV) tick() {
 	}
 
 	// Get store data and response data for new shards
-	newStore := make(map[string]string)
-	newResponse := make(map[int64]string)
-	newSeen := make(map[int64]bool)
 	if len(remoteGained) != 0 && !kv.dead {
 		DPrintf("%d.%d.%d) New Config needs %d\n", kv.gid, kv.me, kv.config.Num, remoteGained)
 		for _, shard := range remoteGained {
@@ -589,26 +592,29 @@ func (kv *ShardKV) tick() {
 					// Keep getting data until entire shard is transferred
 					for !kv.dead && !haveShard && !badResponse {
 						if len(keysReceived) > 0 {
-							fmt.Printf("\nAsking for more!")
+							//fmt.Printf("\nAsking for more!")
 						}
 						DPrintf("%d.%d.%d) Attempting to get Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
+						fmt.Printf("\n%d.%d.%d) Attempting to get Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
 						args := &FetchArgs{newConfig.Num, shard, keysReceived, fmt.Sprintf("%v-%v", kv.gid, kv.me)}
 						var reply FetchReply
 						ok := call(srv, "ShardKV.Fetch", args, &reply, kv.network)
 						if ok && (reply.Err == OK) {
 							DPrintf("%d.%d.%d) Got Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
+							//fmt.Printf("\n%d.%d.%d) Got Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
 							for k, v := range reply.Store {
-								newStore[k] = v
+								kv.putValue(k, v)
 								keysReceived[k] = true
 							}
-							for id, value := range reply.Response {
-								newResponse[id] = value
+							for clientID, value := range reply.Response {
+								kv.putResponse(-1, clientID, value)
 							}
-							for id, _ := range reply.Seen {
-								newSeen[id] = true
+							for opID, _ := range reply.Seen {
+								kv.putSeen(opID, true)
 							}
 							if reply.Complete {
 								DPrintf("%d.%d.%d) Got Complete Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
+								fmt.Printf("\n%d.%d.%d) Got Complete Shard %d from %d.%d\n", kv.gid, kv.me, kv.config.Num, shard, otherGID, sid)
 								haveShard = true
 								// Keep sending ack of Fetch until success
 								waitChan := make(chan int)
@@ -627,6 +633,7 @@ func (kv *ShardKV) tick() {
 										}
 									}
 									DPrintf("\n%v.%v: Done sending fetch complete to %s", kv.gid, kv.me, server)
+									//fmt.Printf("\n%v.%v: Done sending fetch complete to %s", kv.gid, kv.me, server)
 								}(srv)
 								<-waitChan
 							}
@@ -648,9 +655,13 @@ func (kv *ShardKV) tick() {
 								ackArgs.Sender = fmt.Sprintf("%v-%v", kv.gid, kv.me)
 								var ackReply FetchReply
 								waitChan <- 1
+								// Wait until outer loop moves on from this server
+								// (should be very quick)
 								for srv == server {
-									time.Sleep(500 * time.Millisecond)
+									time.Sleep(10 * time.Millisecond)
 								}
+								// Keep sending ack until success or until outer loop
+								// decides to try this peer again
 								for !kv.dead && !ackSuccess && (srv != server) {
 									DPrintf("\n%v.%v: Sending fetch complete to %s", kv.gid, kv.me, server)
 									ackOK := call(server, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
@@ -669,13 +680,15 @@ func (kv *ShardKV) tick() {
 						}
 					}
 				}
-				time.Sleep(10 * time.Millisecond)
+				time.Sleep(250 * time.Millisecond)
 			}
 		}
 	}
-	// Log the reconfiguration
-	kv.addReconfigure(newConfig.Num, newStore, newResponse, newSeen)
-	DPrintf("%d.%d.%d) New Config adding config %v, store %v\n", kv.gid, kv.me, kv.config.Num, newConfig.Num, newStore)
+
+	// Record the new config in memory and disk
+	kv.config = newConfig
+	kv.dbWriteConfigNum(kv.config.Num)
+	DPrintf("%d.%d.%d) New Config adding config %v\n", kv.gid, kv.me, kv.config.Num, newConfig.Num)
 }
 
 // please don't change this function.
@@ -757,7 +770,7 @@ func (kv *ShardKV) dbGetSeenIDs(exclude map[int64]bool) map[int64]bool {
 	// Get database iterator
 	iterator := kv.db.NewIterator(kv.dbReadOptions)
 	defer iterator.Close()
-	iterator.SeekToFirst()
+	iterator.Seek([]byte("seen_"))
 	DPrintfPersist("\n%v-%v: dbGetSeenIDs starting iteration", kv.gid, kv.me)
 	for iterator.Valid() {
 		keyBytes := iterator.Key()
@@ -824,7 +837,7 @@ func (kv *ShardKV) dbGetResponses(exclude map[int64]bool) map[int64]string {
 	// Get database iterator
 	iterator := kv.db.NewIterator(kv.dbReadOptions)
 	defer iterator.Close()
-	iterator.SeekToFirst()
+	iterator.Seek([]byte("response_"))
 	DPrintfPersist("\n%v-%v: dbGetResponses starting iteration", kv.gid, kv.me)
 	for iterator.Valid() {
 		keyBytes := iterator.Key()
@@ -863,10 +876,9 @@ func (kv *ShardKV) dbGetResponses(exclude map[int64]bool) map[int64]string {
 
 // Get key/values pairs for given shard from database
 // Excludes any of the given keys
-func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool) (map[string]string, bool) {
-	shardStore := make(map[string]string)
+func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool, shardStore map[string]string, iterator *levigo.Iterator) (bool, *levigo.Iterator) {
 	if !persistent {
-		return shardStore, false
+		return true, iterator
 	}
 	DPrintfPersist("\n%v-%v: dbGetShard Waiting for dbLock", kv.gid, kv.me)
 	kv.dbLock.Lock()
@@ -876,7 +888,7 @@ func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool) (map[string]st
 		DPrintfPersist("\n%v-%v: dbGetShard Released dbLock", kv.gid, kv.me)
 	}()
 	if kv.dead {
-		return shardStore, false
+		return true, iterator
 	}
 
 	toPrint := ""
@@ -885,12 +897,15 @@ func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool) (map[string]st
 	kv.dbReadOptions.SetFillCache(false)
 	defer kv.dbReadOptions.SetFillCache(dbUseCache)
 	// Get database iterator
-	iterator := kv.db.NewIterator(kv.dbReadOptions)
-	defer iterator.Close()
-	iterator.SeekToFirst()
+	if len(exclude) == 0 || !iterator.Valid() {
+		iterator = kv.db.NewIterator(kv.dbReadOptions)
+		iterator.Seek([]byte("KVkey_"))
+	}
 	DPrintfPersist("\n%v-%v: dbGetShard starting iteration", kv.gid, kv.me)
 	finished := true
+	//startTime := time.Now()
 	for iterator.Valid() {
+		//fmt.Printf("\n\tTime: %v", time.Since(startTime).Seconds())
 		DPrintfPersist("\n\t\tCopying from disk, memory usage = %v MB", getMemoryUsage()/1000)
 		if getMemoryUsage()/1000 > memoryThreshold {
 			finished = false
@@ -901,12 +916,14 @@ func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool) (map[string]st
 		if strings.Index(key, "KVkey_") < 0 {
 			iterator.Next()
 			toPrint += "\n\tSkipping key " + key
-			continue
+			//fmt.Printf("\tSkipping key " + key)
+			break
 		}
 		key = key[len("KVkey_"):]
 		if key2shard(key) != shard || exclude[key] {
 			iterator.Next()
 			toPrint += "\n\tSkipping key " + key
+			//fmt.Printf("\tSkipping key " + key)
 			continue
 		}
 
@@ -925,8 +942,11 @@ func (kv *ShardKV) dbGetShard(shard int, exclude map[string]bool) (map[string]st
 		iterator.Next()
 	}
 
+	if finished {
+		iterator.Close()
+	}
 	DPrintfPersist(toPrint)
-	return shardStore, finished
+	return finished, iterator
 }
 
 // Tries to get the value from the database
@@ -1527,6 +1547,7 @@ func (kv *ShardKV) startup(servers []string) {
 					}
 				}
 			}
+			time.Sleep(250 * time.Millisecond)
 		}
 	}
 }
@@ -1699,7 +1720,7 @@ func getMemoryUsage() int {
 	runtime.GC()
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
-	return int(memStats.Alloc / 1000)
+	return int(memStats.Alloc / 1024)
 }
 
 // Gets disk space used by only my shardKV databases
@@ -1774,10 +1795,10 @@ func getSingleDiskUsage(dir string) int {
 		if sizeInK {
 		}
 		if sizeInM {
-			usage *= 1000
+			usage *= 1024
 		}
 		if sizeInG {
-			usage *= 1000000
+			usage *= 1024 * 1024
 		}
 
 		return int(usage)
