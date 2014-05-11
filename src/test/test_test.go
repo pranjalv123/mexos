@@ -415,7 +415,7 @@ func TestDiskRecovery(t *testing.T) {
 //	numBytes := 20971520 //20MB
 	nItems := 100000
 	keySize := 32
-	valSize := 512
+	valSize := 4096
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 	
@@ -449,5 +449,5 @@ func TestDiskRecovery(t *testing.T) {
 		}
 	}
 
-	fmt.Printf("\n1GB of data written to database...\n")
+	fmt.Printf("\n", nItems * (keySize + valSize)/1000000, " MB of data written to database...\n")
 }
