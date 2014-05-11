@@ -87,8 +87,55 @@ most reliable starting point.
 \subsection{Paxos Optimizations}
 
 \subsection{Persistent Storage}
+We use leveldb. To guarantee persistence, we enforce writing to disk
+all operations before returning. This slows performance down, but
+prevents loss of data that the client wants committed. Speed could be
+gained using a Harp-like set of pointers, but this would be
+complicated and the client would have to understand the modified
+persistence model.
 
 \subsubsection{Recovery from failures}
+
+When one server contacts another via the FetchRecovery RPC, both
+servers enter a recovering state. This state means that neither are
+allowed to modify their databases \emph{except} through the recovery
+process. Depending on how many replicas there are, this may render a
+replica group unable to process requests while recovery is underway.
+If there are enough replicas so that paxos majority can still be
+reached, then the recovering servers will catch up once they come back
+online, using the functionality already built in to sync lagging paxos
+servers.
+
+All recovery processes send over both the relevant portions of the k/v
+store, as well as paxos state and any state needed to detect
+duplicates.
+
+\textbf{Single server crashing and restarting, disk in-tact}: The
+recovery process contacts a random replica in the same replica group.
+The recovering server tells the up-to-date server its current state,
+and the up-to-date server responds with any state the recoverer is
+missing. This works because the server only discards old decisions if
+all participants have marked that sequence number as 'done'.
+
+\textbf{Single server crashing and disk lost}: The recovery process
+contacts a random replica in the same replica group, and tells the
+up-to-date server that it has no state. The two servers open an
+auxillary TCP connection to send over the relevant portions of the
+database. This avoids RPC overhead, since the database might be large.
+The database has an in-order iterator, in case the TCP connection
+fails, the recoverer can re-establish the connection and ask the
+sender to pick up where it left off. If the sending server fails, then
+the recovering server asks a new replica. This allows for a failure
+mode where the original server remians locked permanently. We have
+decided that this is preferable to sacrificing consistency, and the
+system administartor can resolve the problem by rebooting the hing
+server.
+
+\textbf{Complete crash of all servers}: If all servers lose their disk
+state, then all will restart and begin like a brand new deployment. If
+the disks are not lost, then the recovery process will read the paxos
+state written to disk and pick up where it left off. Because we write
+to disk before any operation commits, data is not lost.
 
 \subsection{Testing}
 We added about 25 new tests, and extended existing ones to work with
@@ -286,7 +333,10 @@ that do not recieve a response already re-transmit their request,
 making the TCP ack system redundant.
 
 \section{Conclusion}
-We did a project.
+This project implements, tests, and benchmarks a persistent and
+performant sharded key/value store. While it is not the next Spanner,
+the end result is reasonable considering the time and manpower
+limitations.
 
 %{\footnotesize \bibliographystyle{acm}
 %\bibliography{paper}}
