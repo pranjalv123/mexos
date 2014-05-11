@@ -401,10 +401,21 @@ func TestManyClientOneShard(t *testing.T) {
 	fmt.Printf("%f operations per second\n", float64(tot)/float64(nseconds))
 }
 
+func paddedRandIntString(size uint64) string {
+	data := make([]byte, size)
+	s := strconv.Itoa(rand.Int())
+	for i := range i {
+		data[i] = s[i % len(s)]
+	}
+	return string(data[:])
+}
 
 func TestDiskRecovery(t *testing.T) {
 	nclients := 2
-	numBytes := 20971520 //20MB
+//	numBytes := 20971520 //20MB
+	nItems = 100000
+	keySize := 32
+	valSize := 512
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 	
@@ -418,9 +429,10 @@ func TestDiskRecovery(t *testing.T) {
 	for i := 0; i < nclients; i++ {
 		go func(c int) {
 			ck := shardkv.MakeClerk(smPorts, true)
-			for i := 0; i < numBytes/5; i+=16 {
-				ck.Put(strconv.Itoa(rand.Int()), 
-					strconv.Itoa(rand.Int()))
+			for i := 0; i < nItems; i++ {
+				ck.Put(paddedRandIntString(keySize), 
+					paddedRandIntString(valSize)
+				)
 				counts[c]+=16
 			}
 		}(i)
