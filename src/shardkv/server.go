@@ -1409,11 +1409,11 @@ func (kv *ShardKV) dbInit() {
 func (kv *ShardKV) startup(servers []string) {
 	defer func() {
 		kv.recovering = false
-		DPrintfPersist("\n%v-%v Marked recovery false", kv.gid, kv.me)
+		log.Printf("\n%v-%v Marked recovery false", kv.gid, kv.me)
 	}()
 	// Initialize database, check if state is stored
 	kv.recovering = true
-	DPrintfPersist("\n%v-%v Marked recovery true", kv.gid, kv.me)
+	log.Printf("\n%v-%v Marked recovery true", kv.gid, kv.me)
 	kv.dbInit()
 	if !recovery {
 		return
