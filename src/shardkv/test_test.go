@@ -710,7 +710,7 @@ func paddedRandIntString(size int) string {
 //	time.Sleep(10 * time.Second)
 //}
 
-func TestDiskRecovery(t *testing.T) {
+func TestDiskTransfer(t *testing.T) {
 	nclients := 3
 	keySize := 32         // Size in bytes
 	valSize := 500 * 1024 // Size in bytes
