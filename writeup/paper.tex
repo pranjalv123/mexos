@@ -97,37 +97,6 @@ In order to tolerate servers restarting with or without their disk contents, the
 \end{itemize}
 These protocols allow any number of servers restarting with their disk contents to catch themselves up from any updated peer.  They also allow any number of servers restarting without their disk contents to recover the needed data from any peer that has the data.
 
-\subsubsection{Memory and Performance Considerations}
-There are a number of design choices which were made in order to address both memory management and overall performance.  
-
-Firstly, the service must be able to handle database content which is too large to fit in volatile memory.  Towards this end, values are written to disk immediately as described above so it does not need to be kept in memory.  More importantly, however, servers that need to transfer shards (either because the shard master decided a shard needs to move or because a server is recovering) must be able to do so in multiple RPCs since memory is too small to create a reply with the entire database.  Therefore, a shard transfer occurrs with the following protocol:
-\begin{itemize}
-\item The requester sends a request to a peer, including a request number, and the current configuration number.  If doing a shard transfer, the shard number is also included.
-\item If the receiver is currently at the appropriate configuration, it accepts the request.  It will then begin populating a reply with client response data, a list of seen operations, and the desired key/value data.  While doing this, it will periodically check memory usage; if it exceeds a configurable threshold, it will reply with whatever it currently has and mark the reply as incomplete.
-\item The requester copies the data from the reply to its disk.  If the reply was marked as incomplete, it sends another request to the same peer with an incremented request number.
-\item This continues until the reply is marked as complete, at which point the requester launches a goroutine to make sure the sender receives an acknowledgement of the receipt of the final data message.
-\item If at any point the requester decides that the contacted peer is dead, it launches an acknowledgement goroutine as previously described for that peer (to terminate the transfer in case the peer wakes up or is not dead) and moves on to try a different peer, resetting the request number to 0.
-\end{itemize}
-Both the requester and the sender ignore client requests until the transfer is complete - this ensures that the requester will receive a consistent snapshot of the data (and is the reason the requester launches acknowledgement goroutines since otherwise a peer erroneously declared dead would be halted forever).
-
-One aspect which addresses performance is that progress can still be made while recovery is taking place as long as a majority of servers are not recovering.  For example, if a replica group has three servers and a shard transfer is ocurring between two of them (perhaps because one just restarted), a client can still have its requests processed if it contacts the third peer.  This is because the Paxos service runs independently of the shard key/value service; although the latter will ignore client requests on the transferring servers, their Paxos processes can still respond and make progress.  Since the Paxos instances are stored persistently on disk, the two occupied servers can catch themselves up from the log when they complete the transfer.
-
-In addition, effort was made to utilize memory in addition to the disk in order to increase performance.  The LevelDB database has the option to use a least-recently-used (LRU) cache to store recently used entries in memory.  In addition, a configuration variable was added to the service to allow values to be written to memory as well as disk until the memory is full.  These two options, combined with the native cache of the operating system, allow many needed values to be read quickly from memory rather than always consulting the disk.
-
-When one server contacts another via the FetchRecovery RPC, both
-servers enter a recovering state. This state means that neither are
-allowed to modify their databases \emph{except} through the recovery
-process. Depending on how many replicas there are, this may render a
-replica group unable to process requests while recovery is underway.
-If there are enough replicas so that paxos majority can still be
-reached, then the recovering servers will catch up once they come back
-online, using the functionality already built in to sync lagging paxos
-servers.
-
-All recovery processes send over both the relevant portions of the k/v
-store, as well as paxos state and any state needed to detect
-duplicates.
-
 \textbf{Single server crashing and restarting, disk in-tact}: The
 recovery process contacts a random replica in the same replica group.
 The recovering server tells the up-to-date server its current state,
@@ -155,12 +124,45 @@ the disks are not lost, then the recovery process will read the paxos
 state written to disk and pick up where it left off. Because we write
 to disk before any operation commits, data is not lost.
 
-We use leveldb. To guarantee persistence, we enforce writing to disk
-all operations before returning. This slows performance down, but
-prevents loss of data that the client wants committed. Speed could be
-gained using a Harp-like set of pointers, but this would be
-complicated and the client would have to understand the modified
-persistence model.
+
+%% \subsubsection{Memory and Performance Considerations}
+%% There are a number of design choices which were made in order to address both memory management and overall performance.  
+
+%% Firstly, the service must be able to handle database content which is too large to fit in volatile memory.  Towards this end, values are written to disk immediately as described above so it does not need to be kept in memory.  More importantly, however, servers that need to transfer shards (either because the shard master decided a shard needs to move or because a server is recovering) must be able to do so in multiple RPCs since memory is too small to create a reply with the entire database.  Therefore, a shard transfer occurrs with the following protocol:
+%% \begin{itemize}
+%% \item The requester sends a request to a peer, including a request number, and the current configuration number.  If doing a shard transfer, the shard number is also included.
+%% \item If the receiver is currently at the appropriate configuration, it accepts the request.  It will then begin populating a reply with client response data, a list of seen operations, and the desired key/value data.  While doing this, it will periodically check memory usage; if it exceeds a configurable threshold, it will reply with whatever it currently has and mark the reply as incomplete.
+%% \item The requester copies the data from the reply to its disk.  If the reply was marked as incomplete, it sends another request to the same peer with an incremented request number.
+%% \item This continues until the reply is marked as complete, at which point the requester launches a goroutine to make sure the sender receives an acknowledgement of the receipt of the final data message.
+%% \item If at any point the requester decides that the contacted peer is dead, it launches an acknowledgement goroutine as previously described for that peer (to terminate the transfer in case the peer wakes up or is not dead) and moves on to try a different peer, resetting the request number to 0.
+%% \end{itemize}
+%% Both the requester and the sender ignore client requests until the transfer is complete - this ensures that the requester will receive a consistent snapshot of the data (and is the reason the requester launches acknowledgement goroutines since otherwise a peer erroneously declared dead would be halted forever).
+
+%% One aspect which addresses performance is that progress can still be made while recovery is taking place as long as a majority of servers are not recovering.  For example, if a replica group has three servers and a shard transfer is ocurring between two of them (perhaps because one just restarted), a client can still have its requests processed if it contacts the third peer.  This is because the Paxos service runs independently of the shard key/value service; although the latter will ignore client requests on the transferring servers, their Paxos processes can still respond and make progress.  Since the Paxos instances are stored persistently on disk, the two occupied servers can catch themselves up from the log when they complete the transfer.
+
+%% In addition, effort was made to utilize memory in addition to the disk in order to increase performance.  The LevelDB database has the option to use a least-recently-used (LRU) cache to store recently used entries in memory.  In addition, a configuration variable was added to the service to allow values to be written to memory as well as disk until the memory is full.  These two options, combined with the native cache of the operating system, allow many needed values to be read quickly from memory rather than always consulting the disk.
+
+%% When one server contacts another via the FetchRecovery RPC, both
+%% servers enter a recovering state. This state means that neither are
+%% allowed to modify their databases \emph{except} through the recovery
+%% process. Depending on how many replicas there are, this may render a
+%% replica group unable to process requests while recovery is underway.
+%% If there are enough replicas so that paxos majority can still be
+%% reached, then the recovering servers will catch up once they come back
+%% online, using the functionality already built in to sync lagging paxos
+%% servers.
+
+%% All recovery processes send over both the relevant portions of the k/v
+%% store, as well as paxos state and any state needed to detect
+%% duplicates.
+
+
+%% We use leveldb. To guarantee persistence, we enforce writing to disk
+%% all operations before returning. This slows performance down, but
+%% prevents loss of data that the client wants committed. Speed could be
+%% gained using a Harp-like set of pointers, but this would be
+%% complicated and the client would have to understand the modified
+%% persistence model.
 
 \subsection{Testing}
 We added about 25 new tests, and extended existing ones to work with
