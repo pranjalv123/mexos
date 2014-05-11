@@ -405,7 +405,11 @@ func paddedRandIntString(size int) string {
 	data := make([]byte, size)
 	s := strconv.Itoa(rand.Int())
 	for i := range data {
-		data[i] = s[i % len(s)]
+		if i < len(s) {
+			data[i] = s[i]
+		} else {
+			data[i] = byte(rand.Int31() & 0xff)
+		}
 	}
 	return string(data[:])
 }
@@ -413,7 +417,7 @@ func paddedRandIntString(size int) string {
 func TestDiskRecovery(t *testing.T) {
 	nclients := 2
 //	numBytes := 20971520 //20MB
-	nItems := 100000
+	nItems := 10000
 	keySize := 32
 	valSize := 4096
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
