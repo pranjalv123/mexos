@@ -449,5 +449,5 @@ func TestDiskRecovery(t *testing.T) {
 		}
 	}
 
-	fmt.Printf("\n", nItems * (keySize + valSize)/1000000, " MB of data written to database...\n")
+	fmt.Println("\n", nItems * (keySize + valSize) * nclients/1000000, " MB of data written to database...\n")
 }
