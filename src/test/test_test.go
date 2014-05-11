@@ -417,9 +417,9 @@ func paddedRandIntString(size int) string {
 func TestDiskRecovery(t *testing.T) {
 	nclients := 1
 //	numBytes := 20971520 //20MB
-	nItems := 68
+	nItems := 20352
 	keySize := 32
-	valSize := 1500 * 1024
+	valSize := 5 * 1024
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
 	//defer clean()
 	
