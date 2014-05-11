@@ -649,7 +649,7 @@ func (kv *ShardKV) tick() {
 								var ackReply FetchReply
 								waitChan <- 1
 								for srv == server {
-									time.Sleep(10 * time.Millisecond)
+									time.Sleep(500 * time.Millisecond)
 								}
 								for !kv.dead && !ackSuccess && (srv != server) {
 									DPrintf("\n%v.%v: Sending fetch complete to %s", kv.gid, kv.me, server)
