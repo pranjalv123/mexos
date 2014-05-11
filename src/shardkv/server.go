@@ -41,6 +41,7 @@ const dbUseCache = true                        // Whether database should use a 
 const dbCacheSize = 250                        // Size of database cache in MB (ignored if dbUseCache is false)
 const memoryLimit = 1000                       // Memory limit in MB
 const memoryThreshold = memoryLimit * 80 / 100 // When to stop filling memory (when to abort a Fetch RPC and use multiple messages)
+const recoveryRetryDelay = 500                 // Time in ms to wait before resending acknowledgments
 
 // Will use these to check that dbCacheSize doesn't overflow an int
 // (int size is either 32 or 64 bits depending on implementation)
@@ -453,32 +454,36 @@ func (kv *ShardKV) fetchHandler(args *FetchArgs, reply *FetchReply) error {
 	kv.sending = true
 	kv.sendingTo = args.Sender
 
-	// Assume all responses can fit in memory (only one per client)
 	responses := make(map[int64]string)
-	idsInMemory := make(map[int64]bool)
-	// Copy responses from memory
-	for id, value := range kv.response {
-		responses[id] = value
-		idsInMemory[id] = true
-	}
-	// Copy responses from disk if not in memory
-	for id, value := range kv.dbGetResponses(idsInMemory) {
-		DPrintfPersist("\n\t%v-%v: got response data (%v, %v)", kv.gid, kv.me, id, value)
-		responses[id] = value
-	}
-
-	// Assume all of seenIDs can fit in memory (IDs should be small)
 	seenIDs := make(map[int64]bool)
-	idsInMemory = make(map[int64]bool)
-	// Copy seen IDs from memory
-	for id, _ := range kv.seen {
-		seenIDs[id] = true
-		idsInMemory[id] = true
-	}
-	// Copy seen IDs from disk if not in memory
-	for id, _ := range kv.dbGetSeenIDs(idsInMemory) {
-		DPrintfPersist("\n\t%v-%v: got seen data %v", kv.gid, kv.me, id)
-		seenIDs[id] = true
+
+	// If this is the first message, include responses and seenIDs
+	if len(args.Exclude) == 0 {
+		// Assume all responses can fit in memory (only one per client)
+		idsInMemory := make(map[int64]bool)
+		// Copy responses from memory
+		for id, value := range kv.response {
+			responses[id] = value
+			idsInMemory[id] = true
+		}
+		// Copy responses from disk if not in memory
+		for id, value := range kv.dbGetResponses(idsInMemory) {
+			DPrintfPersist("\n\t%v-%v: got response data (%v, %v)", kv.gid, kv.me, id, value)
+			responses[id] = value
+		}
+
+		// Assume all of seenIDs can fit in memory (IDs should be small)
+		idsInMemory = make(map[int64]bool)
+		// Copy seen IDs from memory
+		for id, _ := range kv.seen {
+			seenIDs[id] = true
+			idsInMemory[id] = true
+		}
+		// Copy seen IDs from disk if not in memory
+		for id, _ := range kv.dbGetSeenIDs(idsInMemory) {
+			DPrintfPersist("\n\t%v-%v: got seen data %v", kv.gid, kv.me, id)
+			seenIDs[id] = true
+		}
 	}
 
 	shardStore := make(map[string]string)
@@ -618,7 +623,7 @@ func (kv *ShardKV) tick() {
 										ackOK := call(server, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
 										ackSuccess = ackOK && ackReply.Complete
 										if !ackSuccess {
-											time.Sleep(10 * time.Millisecond)
+											time.Sleep(recoveryRetryDelay * time.Millisecond)
 										}
 									}
 									DPrintf("\n%v.%v: Done sending fetch complete to %s", kv.gid, kv.me, server)
@@ -651,7 +656,7 @@ func (kv *ShardKV) tick() {
 									ackOK := call(server, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
 									ackSuccess = ackOK && ackReply.Complete
 									if !ackSuccess {
-										time.Sleep(10 * time.Millisecond)
+										time.Sleep(recoveryRetryDelay * time.Millisecond)
 									}
 								}
 								DPrintf("\n%v.%v: Done sending fetch complete to %s", kv.gid, kv.me, server)
@@ -660,7 +665,7 @@ func (kv *ShardKV) tick() {
 						}
 						if !ok {
 							numTries++
-							time.Sleep(50 * time.Millisecond)
+							time.Sleep(100 * time.Millisecond)
 						}
 					}
 				}
@@ -1476,7 +1481,7 @@ func (kv *ShardKV) startup(servers []string) {
 									ackOK := call(srv, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
 									ackSuccess = ackOK && ackReply.Complete
 									if !ackSuccess {
-										time.Sleep(10 * time.Millisecond)
+										time.Sleep(recoveryRetryDelay * time.Millisecond)
 									}
 								}
 							}(server)
@@ -1509,7 +1514,7 @@ func (kv *ShardKV) startup(servers []string) {
 								ackOK := call(srv, "ShardKV.FetchComplete", ackArgs, &ackReply, kv.network)
 								ackSuccess = ackOK && ackReply.Complete
 								if !ackSuccess {
-									time.Sleep(10 * time.Millisecond)
+									time.Sleep(recoveryRetryDelay * time.Millisecond)
 								}
 							}
 							DPrintf("\n%v.%v: Done sending fetch complete to %s", kv.gid, kv.me, server)
@@ -1518,7 +1523,7 @@ func (kv *ShardKV) startup(servers []string) {
 					}
 					if !ok {
 						numTries++
-						time.Sleep(50 * time.Millisecond)
+						time.Sleep(100 * time.Millisecond)
 					}
 				}
 			}
