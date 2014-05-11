@@ -401,10 +401,10 @@ func TestManyClientOneShard(t *testing.T) {
 	fmt.Printf("%f operations per second\n", float64(tot)/float64(nseconds))
 }
 
-func paddedRandIntString(size uint64) string {
+func paddedRandIntString(size int) string {
 	data := make([]byte, size)
 	s := strconv.Itoa(rand.Int())
-	for i := range i {
+	for i := range data {
 		data[i] = s[i % len(s)]
 	}
 	return string(data[:])
@@ -413,7 +413,7 @@ func paddedRandIntString(size uint64) string {
 func TestDiskRecovery(t *testing.T) {
 	nclients := 2
 //	numBytes := 20971520 //20MB
-	nItems = 100000
+	nItems := 100000
 	keySize := 32
 	valSize := 512
 	smPorts, gids, kvPorts := setup("basic", false, numGroups, numReplicas)
@@ -430,9 +430,7 @@ func TestDiskRecovery(t *testing.T) {
 		go func(c int) {
 			ck := shardkv.MakeClerk(smPorts, true)
 			for i := 0; i < nItems; i++ {
-				ck.Put(paddedRandIntString(keySize), 
-					paddedRandIntString(valSize)
-				)
+				ck.Put(paddedRandIntString(keySize), paddedRandIntString(valSize))
 				counts[c]+=16
 			}
 		}(i)
@@ -440,14 +438,14 @@ func TestDiskRecovery(t *testing.T) {
 	fmt.Println("I am here")
 	sum := 0
 	toWait := 22*time.Millisecond
-	for sum < numBytes {
+	for sum < nItems {
 		time.Sleep(toWait)
+		sum = 0
 		for _,i := range counts {
-			sum = 0
 			sum += i
 		}
 		if sum%1024 == 0 {
-			fmt.Printf("%v/%v\n", sum, numBytes)
+			fmt.Printf("%v/%v\n", sum, nItems)
 		}
 	}
 
