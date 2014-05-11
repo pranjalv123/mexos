@@ -57,20 +57,24 @@ type FetchReply struct {
 }
 
 type RecoverArgs struct {
-	Config  int
-	Shard   int
-	Exclude map[string]bool
-	Sender  string
+	Address  string
+	ShardNum int
+	Resume   bool
+	LastKey  string
 }
 
 type RecoverReply struct {
 	MinSeq        int
 	CurrentConfig shardmaster.Config
-	Store         map[string]string
+
 	Response      map[int64]string
 	Seen          map[int64]bool
 	Err           bool
-	Complete      bool
+}
+
+type RecoverDoneArgs struct {
+}
+type RecoverDoneReply struct {
 }
 
 func hash(s string) uint32 {
