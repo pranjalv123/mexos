@@ -420,7 +420,6 @@ func TestDiskRecovery(t *testing.T) {
 	//defer clean()
 	
 	fmt.Printf("\nDisk recovery benchmark...\n")
-
 	smClerk := shardmaster.MakeClerk(smPorts, true)
 	smClerk.Join(gids[0], kvPorts[0])
 
@@ -431,7 +430,7 @@ func TestDiskRecovery(t *testing.T) {
 			ck := shardkv.MakeClerk(smPorts, true)
 			for i := 0; i < nItems; i++ {
 				ck.Put(paddedRandIntString(keySize), paddedRandIntString(valSize))
-				counts[c]+=16
+				counts[c]++
 			}
 		}(i)
 	}
