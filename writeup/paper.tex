@@ -74,6 +74,7 @@ The design is based upon the code developed throughout the semester for lab 4.  
 Battery tests were run to determine which combination of our prior labs created the fastest and most reliable starting point.  Once a working codebase was compiled, modifications were made to address three  major areas: Paxos optimizations, persistence (with disk recovery), and testing over a real network on AWS.
 
 \subsection{Paxos Optimizations}
+In order to improve the performance of Paxos, we implemented the Multi-Paxos leader selection optimization. This optimization solved the dueling leaders problem, preventing us from hanging forever in a loop between conflicting leaders, and also allowed us to reduce the number of RPC calls that were necessary to come to agreement, by allowing us to skip the Prepare phase of the Paxos protocol for a leader that was constant between instances. The main issue with the Multi-Paxos leader selection is ensuring that leadership information is propogated through the system and ensuring that we never agree as part of two separate partitions when the Prepare phase is skipped. Unfortunately, we discovered a number of implementation bugs with our default Paxos implementation, which we ended up fixing to end up with a fairly reliable Multi-Paxos optimized system that had a selected leader and skipped unnecessary prepare phases. The results were that the number of required RPCs was reduced by about 33\%, and that there were reduced bandwidth requirements due to the singular leadership. There was an issue that a single machine became the primary proposer, potentially limiting it based on disk and processor speeds, however this doesn't appear to be an issue at the anticipated use cases.
 
 \subsection{Persistent Storage}
 In order to tolerate servers restarting and to handle databases that cannot fit in memory, all three components of the system store state and data persistently on disk.  To interface with the disk, a Go wrapper for the high-performance C++ key/value libray LevelDB was utilized.  An outline of what each system component stores on disk is presented below.
@@ -282,16 +283,45 @@ Utilizing optimizations similar to Multipaxos decreases the number of RPCs neede
 \end{table}
 
 \subsubsection{Disk Recovery}
-Raw time to write 1GB to database, HDD:  21.470750409s
+Various tests were performed to evaluate the recovery time for servers restarting.  The AWS servers can either have hard disk drives or solid state drives, and both were evaluated for raw disk speed by writing 1GB of data to the database.  A HDD averaged about 47.7 MB/s while the SSD averaged about 166.6 MB/s.  The recovery was then tested by creating a one-group service, placing 100 MB worth of data in the database, and finally restarting a replica without its disk contents.  Various tests were run with differently sized values (and therefore differing numbers of entries).  In all tests, the memory limit was set to under 75 MB, so that data transfer was forced to take place using multiple messages.
 
-Raw time to write 1GB to database, SSD:  6.1470524260s
+\begin{table}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Recovery Performance for 100MB Database}}}                           
+\\ \hline \textbf{Value Size (KB)} &  \textbf{Number of Entries} & \textbf{Time Reading Database (s)} & \textbf{Recovery Time (s)} 
+\\ \hline 5  & 20352 & 464.7 & ?
+\\ \hline 50  & 2046 & 30.8 & 37.2
+\\ \hline 100  & 1023 & 15.9 & 21.1
+\\ \hline 150  & 682 & 10.2 & 15.8
+\\ \hline 250  & 409 & 6.3 & 12.4
+\\ \hline 500  & 204 & 3.5 & 10.6
+\\ \hline 1024  & 99 & 1.88 & 8.3
+\\ \hline 1500  & 68 & 1.4 & ?
+\\ \hline
+\end{tabular}
+\end{table}
 
-Recovery time of a 1GB database using our system: TBD
+\begin{figure}[h]
+\centering
+\makebox[\textwidth][c]{
+\includegraphics[scale=.4]{recovery.png}}
+\caption{Performance increases dramatically as the number of keys is reduced (and the size of entries is increased).}
+\label{fig:recovery}
+\end{figure}
+
+In these experiments, an average of about 5 messages was sent in order to complete the shard transfers.  In the above table, the database read time is the total time that the sender spent scanning its database to collect the data needed to be sent.  The remaining time is spent transferring the data over the network and by the receiver writing a copy to disk.  It can be seen that this time accounts for the vast majority of total transfer time when there are many keys, and decreases dramatically as the number of entries is reduced.  This indicates that the main bottleneck is iteration over the database at the sender.  The current implementation uses the built-in LevelDB iterator - future research can be done into how this operates (and into whether the database is fragmented on the drive) to try and improve performance since the aforementioned measured disk speeds indicate that it should be able to read the data much faster.  Meanwhile, the networking time remains approximately constant regardless of the number of entries, indicating that the network bandwidth itself is the limiting factor for RPC time.  The fact that the number of messages remained approximately constant indicates that the recovery protocol does not have significant overhead which depends on the number of keys but rather is simply limited by memory capacity as desired.  As the number of keys decreases, the network therefore becomes the limiting factor.
+
+%Raw time to write 1GB to database, HDD:  21.470750409s
+
+%Raw time to write 1GB to database, SSD:  6.1470524260s
+
+%Recovery time of a 1GB database using our system: TBD
 
 \subsection{Bottlenecks}
 Although the above enhancements significantly improved performance, various were identified which could be addressed in the future.
 
-One notable bottleneck is disk reading and writing.  The database library wrapper, LeveDB, offers a cache as well as compression and is quite fast.  However, benchmark tests revealed that scanning the database to compile data for shard transfers accounted for a significant portion of total transfer time.  Additionally, in the process of debugging networked RPCs, simple logging was implemented which slowed down operations by nearly a factor of ten; this was a good demonstration of disk latency and how care must be taken in even mundane aspects of the system.  In the future, the system topology could be somewhat altered to allow for more parallelizable recovery and transfer procedures to help minimize the effect of disk latency (for example, a topology inspired by FDS).
+One notable bottleneck is disk reading and writing.  The database library wrapper, LeveDB, offers a cache as well as compression and is quite fast.  However, as discussed previously, benchmark tests revealed that scanning the database to compile data for shard transfers accounted for a significant portion of total transfer time.  Additionally, in the process of debugging networked RPCs, simple logging was implemented which slowed down operations by nearly a factor of ten; this was a good demonstration of disk latency and how care must be taken in even mundane aspects of the system.  In the future, the system topology could be somewhat altered to allow for more parallelizable recovery and transfer procedures to help minimize the effect of disk latency (for example, a topology inspired by FDS).
 
 Another bottleneck is network capacity and/or number of messages.  As shown in the latency and thoughput section, increasing the number of replicas has an adverse effect on performance since each operation requires communication with a majority of replicas.  The paxos optimizations therefore helped to improve performance, and further optimizations could be made to the data transfer protocols to reduce the required number of messages.
 
