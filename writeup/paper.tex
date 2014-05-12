@@ -185,7 +185,7 @@ An extensive testing system was created to try and accurately measure performanc
 
 \subsection{Throughput and Latency}
 
-We compared performance between vanilla paxos and multipaxos under a variety of conditions. The tests were run on an actual network in an AWS cluster. 
+Performance tests were run using both vanilla paxos and multipaxos under a variety of conditions. The tests were run on an actual network in an AWS cluster. 
 
 \textit{Client latency}: Average time it takes for one client to see a
 request processed. 
@@ -193,32 +193,21 @@ request processed.
 \textit{Throughput}: Number of requests, on average, the
 client will see processed in a second.
 
-\textit{System throughput}: Number of requests per second the entire
-system can handle. This is different than the client throughput
-because clients always wait to see the response of the current request
-before dispatching another.
+\textit{System throughput}: Number of requests per second the entire system can handle. This is different than the client throughput because clients always wait to see the response of the current request before dispatching another.
 
-System throughput requires a saturation of multiple clients sending
-continuous requests over a ten second period. The system saturated
-from 10 to 50 clients, sepending on the number of
-groups/replicas. After the saturation point, adding more clients
-causes a decrease in throughput occurs because of network traffic
-saturation.
+System throughput requires a saturation of multiple clients sending continuous requests for a certain amount of time (here, ten seconds). The system saturated from 10 to 50 clients, depending on the number of groups/replicas. After the saturation point, adding more clients
+causes a decrease in throughput because of network traffic saturation.
 
-We also ran some tests repeatedly on one key, and others on a random
-set of keys. This allows us to look at how the performance changes
-when requests all go to the same replica group and when they are
-evenly spread across all replica groups (assuming the staff-provided
-key2shard isn't biased).
+Some tests were repeatedly run on one key, and others on a random set of keys. This helps indicate how the performance changes when requests all go to the same replica group versus when they are evenly spread across all replica groups.
 
 % Please add the following required packages to your document preamble:
 % \usepackage[table,xcdraw]{xcolor}
 % If you use beamer only pass ``xcolor=table'' option, i.e. \documentclass[xcolor=table]{beamer}
-\begin{table}[h]
+\begin{table}
 \begin{tabular}{|l|l|l|l|}
 \hline
 \multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Vanilla Paxos}}}                           \\ \hline
-                              & \textbf{Avg. Client Latency} & \textbf{Avg. Client Thruput} & \textbf{System Thruput} \\ \hline
+                              & \textbf{Avg. Client Latency} & \textbf{Avg. Client Throughput} & \textbf{System Throughput} \\ \hline
 \multicolumn{4}{|c|}{\textit{PutHash to one key}}                                                                     \\ \hline
 \textbf{1 group, 3 replicas}  & 40.3 ms/op                   & 24.8 requests/s              & 27 requests/s           \\ \hline
 \textbf{1 group, 10 replicas} & 5370 ms/op                   & 0.18 requests/s              & 2 requests/s            \\ \hline
@@ -233,11 +222,11 @@ key2shard isn't biased).
 % Please add the following required packages to your document preamble:
 % \usepackage[table,xcdraw]{xcolor}
 % If you use beamer only pass ``xcolor=table'' option, i.e. \documentclass[xcolor=table]{beamer}
-\begin{table}[h]
+\begin{table}
 \begin{tabular}{|l|l|l|l|}
 \hline
 \multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Multipaxos}}}                              \\ \hline
-                              & \textbf{Avg. Client Latency} & \textbf{Avg. Client Thruput} & \textbf{System Thruput} \\ \hline
+                              & \textbf{Avg. Client Latency} & \textbf{Avg. Client Throughput} & \textbf{System Throughput} \\ \hline
 \multicolumn{4}{|c|}{\textit{PutHash to one key}}                                                                     \\ \hline
 \textbf{1 group, 3 replicas}  & 27 ms/op                     & 37 requests/s                & 47 requests/s           \\ \hline
 \textbf{1 group, 10 replicas} & 2360 ms/op                   & 0.42 requests/s              & 3.4 requests/s          \\ \hline
@@ -249,55 +238,42 @@ key2shard isn't biased).
 \end{tabular}
 \end{table}
 
-For a single group case, the difference between three replicas and ten is
-striking. The more replicas, the more traffic is needed for a paxos
-agreement. Figure 1 demonstrates how throughput suffers as the number
-of replicas increases. One other interesting effect is that as the
-number of replicas increases, the larger the gap there is between the
-single key and multi-key cases. Because there is one group, all puts
-touch the same servers. We are unsure what causes this.
+It can be seen that, in all cases, the Paxos optimizations had a significant positive impact on both latency and client and system throughput.  For example, system throughput increased by an average of over 71\%.
 
-Adding more groups increases throughput, however. For evenly
-distributed traffic, going from one group to 3 nearly triples the
-throughput. Figure 2 shows that this trend continues, so adding groups
-linearly improves the throughput of the system. The table shows that
-average throughput for a single client may suffer, but this is
-probably because the system throughput benchmark creates many clients,
-while the client throughput test creates a single client. Having
-multiple clients increases the liklihood that a client must wait to
-see its request served, since the replicas may be busy serving another
-client's request.
+For a single group case, the difference between three replicas and ten is striking.  With more replicas, more traffic is needed for a paxos agreement and thus latency increases.  Figure 1 demonstrates how throughput suffers as the number of replicas increases.  Another interesting effect is that as the number of replicas increases, the gap between the single key and multi-key cases increases dramatically even when there is a single group (and therefore all puts touch the same servers).
 
-\begin{figure}[H]
+\begin{figure}[h]
 \centering
 \makebox[\textwidth][c]{
-\includegraphics[scale=.50]{replicas.png}}
+\includegraphics[scale=.40]{replicas.png}}
 \caption{Performance of a one-group configuration rapidly deteriorates as the number of replicas increases}
 \label{fig:replicas}
 \end{figure}
 
-\begin{figure}[H]
+Adding more groups, however, increases throughput.  For evenly distributed traffic, going from one group to 3 nearly triples the throughput when using multiple keys (thereby leveraging the additional groups).  Figure 2 shows that this trend continues, such that adding groups linearly improves the throughput of the system. The table shows that average throughput for a single client may suffer, probably because the system throughput benchmark creates many clients, while the client throughput test creates a single client; having multiple clients increases the liklihood that a client must wait to see its request served since the replicas may be busy serving another client's request.
+
+\begin{figure}[h]
 \centering
 \makebox[\textwidth][c]{
-\includegraphics[scale=.5]{groups.png}}
+\includegraphics[scale=.4]{groups.png}}
 \caption{Performance increases linearly as the number of groups increases. There is probably a saturation point, but we didn't have enough cluster machines to reach it.}
 \label{fig:groups}
 \end{figure}
 
 \subsubsection{Paxos RPC Counts}
 
-Multipaxos decreases the number of RPCs needed to reach agreement.
+Utilizing optimizations similar to Multipaxos decreases the number of RPCs needed to reach agreement.
 
 % Please add the following required packages to your document preamble:
 % \usepackage[table,xcdraw]{xcolor}
 % If you use beamer only pass ``xcolor=table'' option, i.e. \documentclass[xcolor=table]{beamer}
-\begin{table}[H]
+\begin{table}[h]
 \centering
 \makebox[\textwidth][c]{
 \begin{tabular}{|l|l|l|}
 \hline
 \multicolumn{3}{|c|}{\cellcolor[HTML]{C0C0C0}\textbf{Paxos RPC Counts}}                  \\ \hline
-                                 & \textbf{Single Proposer} & \textbf{Multiple Proposer} \\ \hline
+                                 & \textbf{Single Proposer} & \textbf{Multiple Proposers} \\ \hline
 \textbf{Normal Paxos}            & 30                       & 89            \\ \hline
 \textbf{Paxos with Leaders}      & 20                       & 27                         \\ \hline
 \textbf{Leaders and Pre-prepare} & 17                       & 20                         \\ \hline
@@ -313,40 +289,20 @@ Raw time to write 1GB to database, SSD:  6.1470524260s
 Recovery time of a 1GB database using our system: TBD
 
 \subsection{Bottlenecks}
-Although we made significant improvements performance-wise, we
-identified a number of bottlenecks.
+Although the above enhancements significantly improved performance, various were identified which could be addressed in the future.
 
-One notable bottleneck is disk writes. The database library we used,
-levedb, uses a cache and is quite fast. However, in the process of
-debugging networked RPCs, we implemented simple logging. This logging
-slowed down the operations by nearly a factor of ten. This was a good
-demonstration of how care must be taken in even the most mundane
-aspects, such as logging.
+One notable bottleneck is disk reading and writing.  The database library wrapper, LeveDB, offers a cache as well as compression and is quite fast.  However, benchmark tests revealed that scanning the database to compile data for shard transfers accounted for a significant portion of total transfer time.  Additionally, in the process of debugging networked RPCs, simple logging was implemented which slowed down operations by nearly a factor of ten; this was a good demonstration of disk latency and how care must be taken in even mundane aspects of the system.  In the future, the system topology could be somewhat altered to allow for more parallelizable recovery and transfer procedures to help minimize the effect of disk latency (for example, a topology inspired by FDS).
 
-Another bottleneck is network capacity and/or number of messages. As
-shown in the latency and thoughput section, the increasing the number
-of replicas has an adverse effect on performance since each operation
-requires communication with a majority of replicas. 
+Another bottleneck is network capacity and/or number of messages.  As shown in the latency and thoughput section, increasing the number of replicas has an adverse effect on performance since each operation requires communication with a majority of replicas.  The paxos optimizations therefore helped to improve performance, and further optimizations could be made to the data transfer protocols to reduce the required number of messages.
 
-Increasing the number of replica groups increases the performance of
-the system for normal operation, especially under heavy load with
-evenly distributed key requests. This is especially noticable in the
-system throughput metric.  The number of groups roughly corresponds to
-how parallelizable the operations are.
+Increasing the number of replica groups increases the performance of the system for normal operation, especially under heavy load with evenly distributed key requests. This is especially noticable in the system throughput metric.  This arises since number of groups roughly corresponds to how parallelizable the operations are.
 
-Using multipaxos reduces the amount of network communication required,
-which improves the throughput and latency by about a factor of
-two. Multipaxos also reduces the amount of paxos state information,
-since prepares are pre-determined. This saves some disk space.  We
-also suspect that using UDP would also improve throughput, as servers
-that do not recieve a response already re-transmit their request,
-making the TCP ack system redundant.
+Using multipaxos reduces the amount of network communication required, which improves the throughput and latency by about a factor of two. Multipaxos also saves some disk space by reducing the amount of stored paxos state information since prepares are pre-determined.  
+
+It is also suspected that using UDP would improve throughput, as servers that do not recieve a response already re-transmit their request, making the TCP acknowledgement system redundant.
 
 \section{Conclusion}
-This project implements, tests, and benchmarks a persistent and
-performant sharded key/value store. While it is not the next Spanner,
-the end result is reasonable considering the time and manpower
-limitations.
+This project implements, tests, and benchmarks a persistent and performant sharded key/value store.  While there are various improvements and further testing that were not yet implemented, the current system comprises a working model which demonstrates the effectiveness of its various protocols and optimizations while revealing the bottlenecks that can be addressed in the future.
 
 %{\footnotesize \bibliographystyle{acm}
 %\bibliography{paper}}
