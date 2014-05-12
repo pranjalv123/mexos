@@ -66,9 +66,6 @@ type RecoverArgs struct {
 type RecoverReply struct {
 	MinSeq        int
 	CurrentConfig shardmaster.Config
-
-	Response      map[int64]string
-	Seen          map[int64]bool
 	Err           bool
 }
 

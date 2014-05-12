@@ -429,8 +429,16 @@ func TestDiskRecovery(t *testing.T) {
 		go func(c int) {
 			ck := shardkv.MakeClerk(smPorts, true)
 			for i := 0; i < nItems; i++ {
-				ck.Put(paddedRandIntString(keySize), paddedRandIntString(valSize))
-				counts[c]++
+				k := paddedRandIntString(keySize)
+				v := paddedRandIntString(valSize)
+				var buffer bytes.Buffer
+				enc := gob.NewEncoder(&buffer)
+				err := enc.Encode(value)
+
+				err := kv.db.Put(kv.dbWriteOptions, []byte(key), buffer.Bytes())
+				if err != nil {
+					fmt.Printf("error writing to database\n")
+				}
 			}
 		}(i)
 	}

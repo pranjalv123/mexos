@@ -38,7 +38,6 @@ var logfile *os.File
 // for accurate testing!
 const persistent = true
 const recovery = true
-const writeToMemory = false                    // Whether responses/store should be written to memory (as well as disk / disk cache)
 const dbUseCompression = true                  // Whether database should compress entries
 const dbUseCache = true                        // Whether database should use a built-in cache
 const dbCacheSize = 20                         // Size of database cache in MB (ignored if dbUseCache is false)
@@ -97,9 +96,9 @@ type ShardKV struct {
 	px       *paxos.Paxos
 	gid      int64 // my replica group ID
 	config   shardmaster.Config
-	store    map[string]string // key/value store
-	response map[int64]string  // client responses, indexed by client ID
-	seen     map[int64]bool    // which ops have been seen, indexed by op ID
+//	store    map[string]string // key/value store
+//	response map[int64]string  // client responses, indexed by client ID
+//	seen     map[int64]bool    // which ops have been seen, indexed by op ID
 	minSeq   int
 
 	// Persistence stuff
@@ -116,63 +115,41 @@ type ShardKV struct {
 
 // Write the desired key/value to memory and/or disk
 func (kv *ShardKV) putValue(key string, value string) {
-	// Write to memory if using memory
-	if writeToMemory {
-		kv.store[key] = value
-	}
 	// Write to disk if persistent is enabled
 	kv.dbPut(key, value)
 }
 
 // Get the desired value, either from memory or disk
 func (kv *ShardKV) getValue(key string) (string, bool) {
-	value, exists := kv.store[key]
-	if !exists {
-		value, exists = kv.dbGet(key)
-	}
+	value, exists := kv.dbGet(key)
 	return value, exists
 }
 
 // Write the seen opID to memory and/or disk
 func (kv *ShardKV) putSeen(opID int64, seen bool) {
 	// Write to memory if using memory
-	if writeToMemory {
-		kv.seen[opID] = seen
-	}
+	// if writeToMemory {
+	// 	kv.seen[opID] = seen
+	// }
 	// Write to disk if persistent is enabled
 	kv.dbWriteSeen(opID, seen)
 }
 
 // Get whether the op is seen, either from memory or disk
 func (kv *ShardKV) getSeen(opID int64) bool {
-	seen := kv.seen[opID]
-	if !seen {
-		seen = kv.dbGetSeen(opID)
-	}
+	seen := kv.dbGetSeen(opID)
 	return seen
 }
 
 // Write the desired response to memory and/or disk
 func (kv *ShardKV) putResponse(opID int64, clientID int64, value string) {
-	// Write to memory if using memory
-	if writeToMemory {
-		kv.response[clientID] = value
-		kv.seen[opID] = true
-	}
 	// Write to disk if persistent is enabled
 	kv.dbWriteResponse(opID, clientID, value)
 }
 
 // Get the desired response, either from memory or disk
 func (kv *ShardKV) getResponse(opID int64, clientID int64) (string, bool) {
-	response := ""
-	exists := false
-	if kv.seen[opID] {
-		response, exists = kv.response[clientID]
-	}
-	if !exists {
-		response, exists = kv.dbGetResponse(opID, clientID)
-	}
+	response, exists := kv.dbGetResponse(opID, clientID)
 	return response, exists
 }
 
@@ -1253,16 +1230,6 @@ func (kv *ShardKV) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
 
 	reply.MinSeq = kv.minSeq
 
-	reply.Response = make(map[int64]string)
-	for id, value := range kv.response {
-		reply.Response[id] = value
-	}
-
-	reply.Seen = make(map[int64]bool)
-	for id, value := range kv.seen {
-		reply.Seen[id] = value
-	}
-
 	reply.Err = false
 
 	go func () {
@@ -1282,6 +1249,11 @@ func (kv *ShardKV) FetchRecovery(args *RecoverArgs, reply *RecoverReply) error {
 		} else {
 			iterator.SeekToFirst()
 		}
+
+		DPrintfPersist("\n%v-%v: Waiting for dbLock for recovery", kv.gid, kv.me)
+		kv.dbLock.Lock()
+		defer kv.dbLock.Unlock()
+		DPrintfPersist("\n%v-%v: Got dbLock for recovery", kv.gid, kv.me)
 
 		intbuf := make([]byte, 16)
 
@@ -1369,9 +1341,6 @@ func StartServer(gid int64, shardmasters []string,
 	kv.sm = shardmaster.MakeClerk(shardmasters, kv.network)
 	kv.config = kv.sm.Query(0) //hangs here, since shardmaster doesn't work
 	DPrintf("got new config\n")
-	kv.store = make(map[string]string)
-	kv.response = make(map[int64]string)
-	kv.seen = make(map[int64]bool)
 	kv.minSeq = -1
 
 	// Peristence stuff
