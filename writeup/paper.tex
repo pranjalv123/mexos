@@ -67,14 +67,14 @@ dvorak42@mit.edu
 The presented project implements a persistent, fault-tolerant,
 high-performance key/value store. In order to achieve these goals, the
 system implements at-most-once semantics, relies upon Paxos for
-reaching consenus, shards the database across multiple replica groups,
+reaching consensus, shards the database across multiple replica groups,
 persistently stores values to disk, and implements protocols for
 automatically recovering and updating disk contents upon server
 reboot.  In order to improve performance, the system features two
 paxos optimizations: a protocol similar to multi-paxos to avoid the
 dueling leaders problem, and the ability for leaders to send out
 prepare messages in advance to reduce the required number of RPCs for
-paxos agreeement.
+paxos agreement.
 
 Extensive testing was done to evaluate the system's persistence,
 recovery, and performance by extending existing tests and creating new
@@ -88,7 +88,7 @@ Source code for this project is accessible at \url{https://github.com/pranjalv12
 \section{Design} \label{sec:design} The design is based upon the code
 developed throughout the semester for lab 4.  There are therefore
 three basic components running on each server: Paxos processes to
-reach consenus for instances, a shard master to determine which groups
+reach consensus for instances, a shard master to determine which groups
 are responsible for various shards of the database, and a shard
 key/value storage process to execute client Put/Get requests.  The
 Paxos instances are used to create a consistent log of operations for
@@ -109,7 +109,7 @@ number of RPC calls that were necessary to come to agreement, by
 allowing us to skip the Prepare phase of the Paxos protocol for a
 leader that was constant between instances. The main issue with the
 Multi-Paxos leader selection is ensuring that leadership information
-is propogated through the system and ensuring that we never agree as
+is propagated through the system and ensuring that we never agree as
 part of two separate partitions when the Prepare phase is
 skipped. Unfortunately, we discovered a number of implementation bugs
 with our default Paxos implementation, which we ended up fixing to end
@@ -126,7 +126,7 @@ use cases.
 In order to tolerate servers restarting and to handle databases that
 cannot fit in memory, all three components of the system store state
 and data persistently on disk.  To interface with the disk, a Go
-wrapper for the high-performance C++ key/value libray LevelDB was
+wrapper for the high-performance C++ key/value library LevelDB was
 utilized.  An outline of what each system component stores on disk is
 presented below.
 \begin{itemize}
@@ -340,14 +340,14 @@ Various tests were performed to evaluate the recovery time for servers restartin
 \hline
 \multicolumn{4}{|c|}{\cellcolor[HTML]{C0C0C0}{\color[HTML]{000000} \textbf{Recovery Performance for 100MB Database}}}                           
 \\ \hline \textbf{Value Size (KB)} &  \textbf{Number of Entries} & \textbf{Time Reading Database (s)} & \textbf{Recovery Time (s)} 
-\\ \hline 5  & 20352 & 464.7 & ?
+\\ \hline 5  & 20352 & 464.7 & ~473
 \\ \hline 50  & 2046 & 30.8 & 37.2
 \\ \hline 100  & 1023 & 15.9 & 21.1
 \\ \hline 150  & 682 & 10.2 & 15.8
 \\ \hline 250  & 409 & 6.3 & 12.4
 \\ \hline 500  & 204 & 3.5 & 10.6
 \\ \hline 1024  & 99 & 1.88 & 8.3
-\\ \hline 1500  & 68 & 1.4 & ?
+\\ \hline 1500  & 68 & 1.4 & 
 \\ \hline
 \end{tabular}
 \end{table}
