@@ -64,105 +64,231 @@ dvorak42@mit.edu
 %\thispagestyle{empty}
 
 \section{Introduction}
-The presented project implements a persistent, fault-tolerant, high-performance key/value store. In order to achieve these goals, the system implements at-most-once semantics, relies upon Paxos for reaching consenus, shards the database across multiple replica groups, persistently stores values to disk, and implements protocols for automatically recovering and updating disk contents upon server reboot.  In order to improve performance, the system features two paxos optimizations: a protocol similar to multi-paxos to avoid the dueling leaders problem, and the ability for leaders to send out prepare messages in advance to reduce the required number of RPCs for paxos agreeement.  
+The presented project implements a persistent, fault-tolerant,
+high-performance key/value store. In order to achieve these goals, the
+system implements at-most-once semantics, relies upon Paxos for
+reaching consenus, shards the database across multiple replica groups,
+persistently stores values to disk, and implements protocols for
+automatically recovering and updating disk contents upon server
+reboot.  In order to improve performance, the system features two
+paxos optimizations: a protocol similar to multi-paxos to avoid the
+dueling leaders problem, and the ability for leaders to send out
+prepare messages in advance to reduce the required number of RPCs for
+paxos agreeement.
 
-Extensive testing was done to evaluate the system's persistence, recovery, and performance by extending existing tests and creating new ones.  After modifying the local RPC system to work on a real network, the system was deployed on an Amazon Web Services (AWS) cluster to obtain realistic measurements of throughput, latency, and disk recovery speed.
+Extensive testing was done to evaluate the system's persistence,
+recovery, and performance by extending existing tests and creating new
+ones.  After modifying the local RPC system to work on a real network,
+the system was deployed on an Amazon Web Services (AWS) cluster to
+obtain realistic measurements of throughput, latency, and disk
+recovery speed.
 
-\section{Design} \label{sec:design}
-The design is based upon the code developed throughout the semester for lab 4.  There are therefore three basic components running on each server: Paxos processes to reach consenus for instances, a shard master to determine which groups are responsible for various shards of the database, and a shard key/value storage process to execute client Put/Get requests.  The Paxos instances are used to create a consistent log of operations for both shard reconfiguration and client operations.  
+\section{Design} \label{sec:design} The design is based upon the code
+developed throughout the semester for lab 4.  There are therefore
+three basic components running on each server: Paxos processes to
+reach consenus for instances, a shard master to determine which groups
+are responsible for various shards of the database, and a shard
+key/value storage process to execute client Put/Get requests.  The
+Paxos instances are used to create a consistent log of operations for
+both shard reconfiguration and client operations.
 
-Battery tests were run to determine which combination of our prior labs created the fastest and most reliable starting point.  Once a working codebase was compiled, modifications were made to address three  major areas: Paxos optimizations, persistence (with disk recovery), and testing over a real network on AWS.
+Battery tests were run to determine which combination of our prior
+labs created the fastest and most reliable starting point.  Once a
+working codebase was compiled, modifications were made to address
+three major areas: Paxos optimizations, persistence (with disk
+recovery), and testing over a real network on AWS.
 
 \subsection{Paxos Optimizations}
-In order to improve the performance of Paxos, we implemented the Multi-Paxos leader selection optimization. This optimization solved the dueling leaders problem, preventing us from hanging forever in a loop between conflicting leaders, and also allowed us to reduce the number of RPC calls that were necessary to come to agreement, by allowing us to skip the Prepare phase of the Paxos protocol for a leader that was constant between instances. The main issue with the Multi-Paxos leader selection is ensuring that leadership information is propogated through the system and ensuring that we never agree as part of two separate partitions when the Prepare phase is skipped. Unfortunately, we discovered a number of implementation bugs with our default Paxos implementation, which we ended up fixing to end up with a fairly reliable Multi-Paxos optimized system that had a selected leader and skipped unnecessary prepare phases. The results were that the number of required RPCs was reduced by about 33\%, and that there were reduced bandwidth requirements due to the singular leadership. There was an issue that a single machine became the primary proposer, potentially limiting it based on disk and processor speeds, however this doesn't appear to be an issue at the anticipated use cases.
+In order to improve the performance of Paxos, we implemented the
+Multi-Paxos leader selection optimization. This optimization solved
+the dueling leaders problem, preventing us from hanging forever in a
+loop between conflicting leaders, and also allowed us to reduce the
+number of RPC calls that were necessary to come to agreement, by
+allowing us to skip the Prepare phase of the Paxos protocol for a
+leader that was constant between instances. The main issue with the
+Multi-Paxos leader selection is ensuring that leadership information
+is propogated through the system and ensuring that we never agree as
+part of two separate partitions when the Prepare phase is
+skipped. Unfortunately, we discovered a number of implementation bugs
+with our default Paxos implementation, which we ended up fixing to end
+up with a fairly reliable Multi-Paxos optimized system that had a
+selected leader and skipped unnecessary prepare phases. The results
+were that the number of required RPCs was reduced by about 33\%, and
+that there were reduced bandwidth requirements due to the singular
+leadership. There was an issue that a single machine became the
+primary proposer, potentially limiting it based on disk and processor
+speeds, however this doesn't appear to be an issue at the anticipated
+use cases.
 
 \subsection{Persistent Storage}
-In order to tolerate servers restarting and to handle databases that cannot fit in memory, all three components of the system store state and data persistently on disk.  To interface with the disk, a Go wrapper for the high-performance C++ key/value libray LevelDB was utilized.  An outline of what each system component stores on disk is presented below.
+In order to tolerate servers restarting and to handle databases that
+cannot fit in memory, all three components of the system store state
+and data persistently on disk.  To interface with the disk, a Go
+wrapper for the high-performance C++ key/value libray LevelDB was
+utilized.  An outline of what each system component stores on disk is
+presented below.
 \begin{itemize}
-\item The Paxos processes write the highest accepted value, the highest accepted proposal number, and the highest acknowledged prepare request to disk for each instance.  This ensures that the protocol will operate correctly even if a server restarts (for example, a decided value can never be changed).  In addition to this state, the Paxos processes persistently store the done responses received from peers and the number of the maximum known instance (see the recovery section below).
+\item The Paxos processes write the highest accepted value, the
+  highest accepted proposal number, and the highest acknowledged
+  prepare request to disk for each instance.  This ensures that the
+  protocol will operate correctly even if a server restarts (for
+  example, a decided value can never be changed).  In addition to this
+  state, the Paxos processes persistently store the done responses
+  received from peers and the number of the maximum known instance
+  (see the recovery section below).
 
-\item The shard master writes every configuration to disk, ensuring that will be able to respond to historical queries even after restarting.  In addition, it stores the highest executed Paxos log entry and the number of its highest known configuration. 
+\item The shard master writes every configuration to disk, ensuring
+  that will be able to respond to historical queries even after
+  restarting.  In addition, it stores the highest executed Paxos log
+  entry and the number of its highest known configuration.
 
-\item The shard key/value service writes its database to disk by writing each value as each Put request is executed.  In addition, it must preserve at-most-once semantics and consistency across reboots, so it persistently stores which operations have been seen as well as the most recent response sent to each client.  It also writes the highest executed Paxos log entry and the current configuration number.
+\item The shard key/value service writes its database to disk by
+  writing each value as each Put request is executed.  In addition, it
+  must preserve at-most-once semantics and consistency across reboots,
+  so it persistently stores which operations have been seen as well as
+  the most recent response sent to each client.  It also writes the
+  highest executed Paxos log entry and the current configuration
+  number.
 \end{itemize}
 
-In all cases, the specified data is written to disk before returning to the caller, so any response that a caller receives from a peer will not be forgotten by the responder even if it restarts.  It may be the case that the responder crashes before sending the response, but this is acceptable since the system offers at-most-once semantics (so the caller must be prepared to retry and the responder is prepared to filter duplicates).
+In all cases, the specified data is written to disk before returning
+to the caller, so any response that a caller receives from a peer will
+not be forgotten by the responder even if it restarts.  It may be the
+case that the responder crashes before sending the response, but this
+is acceptable since the system offers at-most-once semantics (so the
+caller must be prepared to retry and the responder is prepared to
+filter duplicates).
 
 \subsubsection{Recovery from Failures}
-In order to tolerate servers restarting with or without their disk contents, the system includes protocols for recovering and catching up on startup.  These can be summarized by considering what happens when a server starts:
+In order to tolerate servers restarting with or without their disk
+contents, the system includes protocols for recovering and catching up
+on startup.  These can be summarized by considering what happens when
+a server starts:
 
 \begin{itemize}
-\item The Paxos process will load any saved done responses and maximum instance number from its disk.   It will then contact peers to request their done responses and maximum instance number, determining which peer is the most updated out of any peers that respond.  From these values, both the ones read from disk and the ones received, it can determine which instances it should know about but does not; it then requests these instances from its peers.
-\item The shard master process will load the highest known configuration and highest executed Paxos log instance from disk if it exists.  It will then request the same information from its peers, determining who among the responders is the most updated.  From this information it can determine if there are any missed configurations, and if so request them from a peer.  
-\item The shard key/value service will load its last known configuration and the highest executed Paxos log instance from disk if it exists.  It will then request the same information from peers, determining the most updated state that it should have.  Finally, it can request the actual database key/value entries from a peer (see below for details of how this transfer is performed) along with any client responses and lists of seen operations.
+\item The Paxos process will load any saved done responses and maximum
+  instance number from its disk.  It will then contact peers to
+  request their done responses and maximum instance number,
+  determining which peer is the most updated out of any peers that
+  respond.  From these values, both the ones read from disk and the
+  ones received, it can determine which instances it should know about
+  but does not; it then requests these instances from its peers.
+\item The shard master process will load the highest known
+  configuration and highest executed Paxos log instance from disk if
+  it exists.  It will then request the same information from its
+  peers, determining who among the responders is the most updated.
+  From this information it can determine if there are any missed
+  configurations, and if so request them from a peer.
+\item The shard key/value service will load its last known
+  configuration and the highest executed Paxos log instance from disk
+  if it exists.  It will then request the same information from peers,
+  determining the most updated state that it should have.  Finally, it
+  can request the actual database key/value entries from a peer (see
+  below for details of how this transfer is performed) along with any
+  client responses and lists of seen operations.
 \end{itemize}
-These protocols allow any number of servers restarting with their disk contents to catch themselves up from any updated peer.  They also allow any number of servers restarting without their disk contents to recover the needed data from any peer that has the data.
+These protocols allow any number of servers restarting with their disk
+contents to catch themselves up from any updated peer.  They also
+allow any number of servers restarting without their disk contents to
+recover the needed data from any peer that has the data.
 
-\textbf{Single server crashing and restarting, disk in-tact}: The
-recovery process contacts a random replica in the same replica group.
-The recovering server tells the up-to-date server its current state,
-and the up-to-date server responds with any state the recoverer is
-missing. This works because the server only discards old decisions if
-all participants have marked that sequence number as 'done'.
+\textbf{Single server crashing and restarting, disk in-tact or lost}:
+The server will contact its peers to figure out the state it is
+missing, and it will then send RPCs to collect the missing state. The
+server it is doing state transfer with cannot change disk state until
+the entire process is done. If the disk is lost, the request indicates
+that it has no state, which causes the entire database to be sent.
 
-\textbf{Single server crashing and disk lost}: The recovery process
-contacts a random replica in the same replica group, and tells the
-up-to-date server that it has no state. The two servers open an
-auxillary TCP connection to send over the relevant portions of the
-database. This avoids RPC overhead, since the database might be large.
-The database has an in-order iterator, in case the TCP connection
-fails, the recoverer can re-establish the connection and ask the
-sender to pick up where it left off. If the sending server fails, then
-the recovering server asks a new replica. This allows for a failure
-mode where the original server remians locked permanently. We have
-decided that this is preferable to sacrificing consistency, and the
-system administartor can resolve the problem by rebooting the hing
-server.
-
-\textbf{Complete crash of all servers}: If all servers lose their disk
-state, then all will restart and begin like a brand new deployment. If
-the disks are not lost, then the recovery process will read the paxos
-state written to disk and pick up where it left off. Because we write
-to disk before any operation commits, data is not lost.
+\textbf{Complete crash of all servers}: Servers read their state from
+disk, and then contact peers to figure out if they are out of date. 
 
 
 %% \subsubsection{Memory and Performance Considerations}
-%% There are a number of design choices which were made in order to address both memory management and overall performance.  
+%% There are a number of design choices which were made in order to
+%% address both memory management and overall performance.
 
-%% Firstly, the service must be able to handle database content which is too large to fit in volatile memory.  Towards this end, values are written to disk immediately as described above so it does not need to be kept in memory.  More importantly, however, servers that need to transfer shards (either because the shard master decided a shard needs to move or because a server is recovering) must be able to do so in multiple RPCs since memory is too small to create a reply with the entire database.  Therefore, a shard transfer occurrs with the following protocol:
+%% Firstly, the service must be able to handle database content which
+%% is too large to fit in volatile memory.  Towards this end, values
+%% are written to disk immediately as described above so it does not
+%% need to be kept in memory.  More importantly, however, servers that
+%% need to transfer shards (either because the shard master decided a
+%% shard needs to move or because a server is recovering) must be able
+%% to do so in multiple RPCs since memory is too small to create a
+%% reply with the entire database.  Therefore, a shard transfer
+%% occurrs with the following protocol:
 %% \begin{itemize}
-%% \item The requester sends a request to a peer, including a request number, and the current configuration number.  If doing a shard transfer, the shard number is also included.
-%% \item If the receiver is currently at the appropriate configuration, it accepts the request.  It will then begin populating a reply with client response data, a list of seen operations, and the desired key/value data.  While doing this, it will periodically check memory usage; if it exceeds a configurable threshold, it will reply with whatever it currently has and mark the reply as incomplete.
-%% \item The requester copies the data from the reply to its disk.  If the reply was marked as incomplete, it sends another request to the same peer with an incremented request number.
-%% \item This continues until the reply is marked as complete, at which point the requester launches a goroutine to make sure the sender receives an acknowledgement of the receipt of the final data message.
-%% \item If at any point the requester decides that the contacted peer is dead, it launches an acknowledgement goroutine as previously described for that peer (to terminate the transfer in case the peer wakes up or is not dead) and moves on to try a different peer, resetting the request number to 0.
+%% \item The requester sends a request to a peer, including a request
+%%   number, and the current configuration number.  If doing a shard
+%%   transfer, the shard number is also included.
+%% \item If the receiver is currently at the appropriate
+%%   configuration, it accepts the request.  It will then begin
+%%   populating a reply with client response data, a list of seen
+%%   operations, and the desired key/value data.  While doing this, it
+%%   will periodically check memory usage; if it exceeds a
+%%   configurable threshold, it will reply with whatever it currently
+%%   has and mark the reply as incomplete.
+%% \item The requester copies the data from the reply to its disk.  If
+%%   the reply was marked as incomplete, it sends another request to
+%%   the same peer with an incremented request number.
+%% \item This continues until the reply is marked as complete, at
+%%   which point the requester launches a goroutine to make sure the
+%%   sender receives an acknowledgement of the receipt of the final
+%%   data message.
+%% \item If at any point the requester decides that the contacted peer
+%%   is dead, it launches an acknowledgement goroutine as previously
+%%   described for that peer (to terminate the transfer in case the
+%%   peer wakes up or is not dead) and moves on to try a different
+%%   peer, resetting the request number to 0.
 %% \end{itemize}
-%% Both the requester and the sender ignore client requests until the transfer is complete - this ensures that the requester will receive a consistent snapshot of the data (and is the reason the requester launches acknowledgement goroutines since otherwise a peer erroneously declared dead would be halted forever).
+%% Both the requester and the sender ignore client requests until the
+%% transfer is complete - this ensures that the requester will receive
+%% a consistent snapshot of the data (and is the reason the requester
+%% launches acknowledgement goroutines since otherwise a peer
+%% erroneously declared dead would be halted forever).
 
-%% One aspect which addresses performance is that progress can still be made while recovery is taking place as long as a majority of servers are not recovering.  For example, if a replica group has three servers and a shard transfer is ocurring between two of them (perhaps because one just restarted), a client can still have its requests processed if it contacts the third peer.  This is because the Paxos service runs independently of the shard key/value service; although the latter will ignore client requests on the transferring servers, their Paxos processes can still respond and make progress.  Since the Paxos instances are stored persistently on disk, the two occupied servers can catch themselves up from the log when they complete the transfer.
+One aspect which addresses performance is that progress can still
+be made while recovery is taking place as long as a majority of
+servers are not recovering.  For example, if a replica group has
+three servers and a shard transfer is ocurring between two of them
+(perhaps because one just restarted), a client can still have its
+requests processed if it contacts the third peer.  This is because
+the Paxos service runs independently of the shard key/value
+service; although the latter will ignore client requests on the
+transferring servers, their Paxos processes can still respond and
+make progress.  Since the Paxos instances are stored persistently
+on disk, the two occupied servers can catch themselves up from the
+log when they complete the transfer.
 
-%% In addition, effort was made to utilize memory in addition to the disk in order to increase performance.  The LevelDB database has the option to use a least-recently-used (LRU) cache to store recently used entries in memory.  In addition, a configuration variable was added to the service to allow values to be written to memory as well as disk until the memory is full.  These two options, combined with the native cache of the operating system, allow many needed values to be read quickly from memory rather than always consulting the disk.
+In addition, effort was made to utilize memory in addition to the
+disk in order to increase performance.  The LevelDB database has
+the option to use a least-recently-used (LRU) cache to store
+recently used entries in memory.  In addition, a configuration
+variable was added to the service to allow values to be written to
+memory as well as disk until the memory is full.  These two
+options, combined with the native cache of the operating system,
+allow many needed values to be read quickly from memory rather than
+always consulting the disk.
 
-%% When one server contacts another via the FetchRecovery RPC, both
-%% servers enter a recovering state. This state means that neither are
-%% allowed to modify their databases \emph{except} through the recovery
-%% process. Depending on how many replicas there are, this may render a
-%% replica group unable to process requests while recovery is underway.
-%% If there are enough replicas so that paxos majority can still be
-%% reached, then the recovering servers will catch up once they come back
-%% online, using the functionality already built in to sync lagging paxos
-%% servers.
+When one server contacts another via the FetchRecovery RPC, both
+servers enter a recovering state. This state means that neither are
+allowed to modify their databases \emph{except} through the
+recovery process. Depending on how many replicas there are, this
+may render a replica group unable to process requests while
+recovery is underway.  If there are enough replicas so that paxos
+majority can still be reached, then the recovering servers will
+catch up once they come back online, using the functionality
+already built in to sync lagging paxos servers.
 
-%% All recovery processes send over both the relevant portions of the k/v
-%% store, as well as paxos state and any state needed to detect
-%% duplicates.
+All recovery processes send over both the relevant portions of the
+k/v store, as well as paxos state and any state needed to detect
+duplicates.
 
 
-%% We use leveldb. To guarantee persistence, we enforce writing to disk
-%% all operations before returning. This slows performance down, but
-%% prevents loss of data that the client wants committed. Speed could be
-%% gained using a Harp-like set of pointers, but this would be
-%% complicated and the client would have to understand the modified
+%% We use leveldb. To guarantee persistence, we enforce writing to
+%% disk all operations before returning. This slows performance down,
+%% but prevents loss of data that the client wants committed. Speed
+%% could be gained using a Harp-like set of pointers, but this would
+%% be complicated and the client would have to understand the modified
 %% persistence model.
 
 \subsection{Testing}
@@ -305,12 +431,34 @@ Various tests were performed to evaluate the recovery time for servers restartin
 \begin{figure}[h]
 \centering
 \makebox[\textwidth][c]{
-\includegraphics[scale=.4]{recovery.png}}
+\includegraphics[scale=.7]{recovery.png}}
 \caption{Performance increases dramatically as the number of keys is reduced (and the size of entries is increased).}
 \label{fig:recovery}
 \end{figure}
 
-In these experiments, an average of about 5 messages was sent in order to complete the shard transfers.  In the above table, the database read time is the total time that the sender spent scanning its database to collect the data needed to be sent.  The remaining time is spent transferring the data over the network and by the receiver writing a copy to disk.  It can be seen that this time accounts for the vast majority of total transfer time when there are many keys, and decreases dramatically as the number of entries is reduced.  This indicates that the main bottleneck is iteration over the database at the sender.  The current implementation uses the built-in LevelDB iterator - future research can be done into how this operates (and into whether the database is fragmented on the drive) to try and improve performance since the aforementioned measured disk speeds indicate that it should be able to read the data much faster.  Meanwhile, the networking time remains approximately constant regardless of the number of entries, indicating that the network bandwidth itself is the limiting factor for RPC time.  The fact that the number of messages remained approximately constant indicates that the recovery protocol does not have significant overhead which depends on the number of keys but rather is simply limited by memory capacity as desired.  As the number of keys decreases, the network therefore becomes the limiting factor.
+In these experiments, an average of about 5 messages was sent in order
+to complete the shard transfers.  In the above table, the database
+read time is the total time that the sender spent scanning its
+database to collect the data needed to be sent.  The remaining time is
+spent transferring the data over the network and by the receiver
+writing a copy to disk.  It can be seen that this time accounts for
+the vast majority of total transfer time when there are many keys, and
+decreases dramatically as the number of entries is reduced.  This
+indicates that the main bottleneck is iteration over the database at
+the sender.  The current implementation uses the built-in LevelDB
+iterator - future research can be done into how this operates (and
+into whether the database is fragmented on the drive) to try and
+improve performance since the aforementioned measured disk speeds
+indicate that it should be able to read the data much faster.
+Meanwhile, the networking time remains approximately constant
+regardless of the number of entries, indicating that the network
+bandwidth itself is the limiting factor for RPC time.  The fact that
+the number of messages remained approximately constant indicates that
+the recovery protocol does not have significant overhead which depends
+on the number of keys but rather is simply limited by memory capacity
+as desired.  As the number of keys decreases, the network therefore
+becomes the limiting factor.
+
 
 %Raw time to write 1GB to database, HDD:  21.470750409s
 
@@ -319,20 +467,60 @@ In these experiments, an average of about 5 messages was sent in order to comple
 %Recovery time of a 1GB database using our system: TBD
 
 \subsection{Bottlenecks}
-Although the above enhancements significantly improved performance, various were identified which could be addressed in the future.
+Although the above enhancements significantly improved performance,
+various were identified which could be addressed in the future.
 
-One notable bottleneck is disk reading and writing.  The database library wrapper, LeveDB, offers a cache as well as compression and is quite fast.  However, as discussed previously, benchmark tests revealed that scanning the database to compile data for shard transfers accounted for a significant portion of total transfer time.  Additionally, in the process of debugging networked RPCs, simple logging was implemented which slowed down operations by nearly a factor of ten; this was a good demonstration of disk latency and how care must be taken in even mundane aspects of the system.  In the future, the system topology could be somewhat altered to allow for more parallelizable recovery and transfer procedures to help minimize the effect of disk latency (for example, a topology inspired by FDS).
+One notable bottleneck is disk reading and writing.  The database
+library wrapper, LeveDB, offers a cache as well as compression and is
+quite fast.  However, as discussed previously, benchmark tests
+revealed that scanning the database to compile data for shard
+transfers accounted for a significant portion of total transfer time.
+Additionally, in the process of debugging networked RPCs, simple
+logging was implemented which slowed down operations by nearly a
+factor of ten (it was disabled for benchmarks); this was a good
+demonstration of disk latency and how care must be taken in even
+mundane aspects of the system.  In the future, the system topology
+could be somewhat altered to allow for more parallelizable recovery
+and transfer procedures to help minimize the effect of disk latency
+(for example, a topology inspired by FDS).
 
-Another bottleneck is network capacity and/or number of messages.  As shown in the latency and thoughput section, increasing the number of replicas has an adverse effect on performance since each operation requires communication with a majority of replicas.  The paxos optimizations therefore helped to improve performance, and further optimizations could be made to the data transfer protocols to reduce the required number of messages.
+For disk recovery, we also examined the possibility of using a raw TCP
+stream to send the data, instead of using RPCs, in order to reduce
+overhead. The transfer rate for a 1GB database was about 4.5
+Mbps. This was approximately equivalent to the data rate at which the
+database itself was created locally. Thus, the overhead necessary to
+read and write values to the database is a key bottleneck. 
 
-Increasing the number of replica groups increases the performance of the system for normal operation, especially under heavy load with evenly distributed key requests. This is especially noticable in the system throughput metric.  This arises since number of groups roughly corresponds to how parallelizable the operations are.
+Another bottleneck is network capacity and/or number of messages.  As
+shown in the latency and thoughput section, increasing the number of
+replicas has an adverse effect on performance since each operation
+requires communication with a majority of replicas.  The paxos
+optimizations therefore helped to improve performance, and further
+optimizations could be made to the data transfer protocols to reduce
+the required number of messages.
 
-Using multipaxos reduces the amount of network communication required, which improves the throughput and latency by about a factor of two. Multipaxos also saves some disk space by reducing the amount of stored paxos state information since prepares are pre-determined.  
+Increasing the number of replica groups increases the performance of
+the system for normal operation, especially under heavy load with
+evenly distributed key requests. This is especially noticable in the
+system throughput metric.  This arises since number of groups roughly
+corresponds to how parallelizable the operations are.
 
-It is also suspected that using UDP would improve throughput, as servers that do not recieve a response already re-transmit their request, making the TCP acknowledgement system redundant.
+Using multipaxos reduces the amount of network communication required,
+which improves the throughput and latency by about a factor of
+two. Multipaxos also saves some disk space by reducing the amount of
+stored paxos state information since prepares are pre-determined.
+
+It is also suspected that using UDP would improve throughput, as
+servers that do not recieve a response already re-transmit their
+request, making the TCP acknowledgement system redundant.
 
 \section{Conclusion}
-This project implements, tests, and benchmarks a persistent and performant sharded key/value store.  While there are various improvements and further testing that were not yet implemented, the current system comprises a working model which demonstrates the effectiveness of its various protocols and optimizations while revealing the bottlenecks that can be addressed in the future.
+This project implements, tests, and benchmarks a persistent and
+performant sharded key/value store.  While there are various
+improvements and further testing that were not yet implemented, the
+current system comprises a working model which demonstrates the
+effectiveness of its various protocols and optimizations while
+revealing the bottlenecks that can be addressed in the future.
 
 %{\footnotesize \bibliographystyle{acm}
 %\bibliography{paper}}

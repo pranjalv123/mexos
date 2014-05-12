@@ -1,0 +1,14 @@
+This test is a toy RPC system that creates a 1.15GB database and
+transfers it to a remote recipient via TCP stream. This test was
+created to see how the RPC overhead effects throughput, and it turns
+out that the database/disk is actually the real bottleneck.
+
+To run, change the configuration host IPs in the source. 
+
+Set 'fill=false', and then run 'go run server.go'.  Comment out the
+code near the bottom if you need to generate a new db.
+
+Then, on the other machine, 'fill = true'  and 'go run server.go'.
+
+The fill flag indicates which server is sending (filling the buffer) and which is receiving.
+
