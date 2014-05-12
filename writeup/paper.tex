@@ -133,7 +133,7 @@ presented below.
 \item The Paxos processes write the highest accepted value, the
   highest accepted proposal number, and the highest acknowledged
   prepare request to disk for each instance.  This ensures that the
-  protocol will operate correctly even if a server restarts (for
+  protocol will operate correctly even if a server restarts \cite{paxos} (for
   example, a decided value can never be changed).  In addition to this
   state, the Paxos processes persistently store the done responses
   received from peers and the number of the maximum known instance
@@ -189,77 +189,18 @@ a server starts:
   below for details of how this transfer is performed) along with any
   client responses and lists of seen operations.
 \end{itemize}
-These protocols allow any number of servers restarting with their disk
-contents to catch themselves up from any updated peer.  They also
-allow any number of servers restarting without their disk contents to
-recover the needed data from any peer that has the data.
 
-\textbf{Single server crashing and restarting, disk in-tact or lost}:
-The server will contact its peers to figure out the state it is
-missing, and it will then send RPCs to collect the missing state. The
-server it is doing state transfer with cannot change disk state until
-the entire process is done. If the disk is lost, the request indicates
-that it has no state, which causes the entire database to be sent.
+These protocols allow any number of servers restarting with their disk contents to catch themselves up from any updated peer.  They also allow any number of servers restarting without their disk contents to recover the needed data from any peer that has the data.
 
-\textbf{Complete crash of all servers}: Servers read their state from
-disk, and then contact peers to figure out if they are out of date. 
+\textbf{Single server crashing and restarting, disk intact or lost}: As described above, each
+recovery process contacts a random replica in the same replica group.  The recovering server can then get any missing data by comparing states with the updated server (e.g. shard data, shard master configurations, and Paxos instances - note that Paxos only discards old decisions if all participants have marked that sequence number as 'done').  This will therefore work regardless of whether the disk was lost or simply out of date.  Note that when data is transferred, multiple messages may be used for a single shard if it is too large to fit in memory - the sender will periodically check memory usage while constructing the reply and mark replies as incomplete if needed.
 
+% Is the below actually implemented?
+%The recovery process contacts a random replica in the same replica group, and tells the up-to-date server that it has no state. The two servers open an auxiliary TCP connection to send over the relevant portions of the database. This avoids RPC overhead, since the database might be large. The database has an in-order iterator, in case the TCP connection fails, the recoverer can re-establish the connection and ask the sender to pick up where it left off. If the sending server fails, then the recovering server asks a new replica. This allows for a failure mode where the original server remains locked permanently. We have decided that this is preferable to sacrificing consistency, and the system administrator can resolve the problem by rebooting the hung server.
 
-%% \subsubsection{Memory and Performance Considerations}
-%% There are a number of design choices which were made in order to
-%% address both memory management and overall performance.
+\textbf{Complete crash of all servers}: If all servers lose their disk state, then all will restart and begin like a brand new deployment (the above protocols will simply not find any updated data to transfer). If the disks are not lost, then the recovery process will read the various states written to disk and pick up where it left off.  Because disk writes take place before any operation commits, data is not lost.
 
-%% Firstly, the service must be able to handle database content which
-%% is too large to fit in volatile memory.  Towards this end, values
-%% are written to disk immediately as described above so it does not
-%% need to be kept in memory.  More importantly, however, servers that
-%% need to transfer shards (either because the shard master decided a
-%% shard needs to move or because a server is recovering) must be able
-%% to do so in multiple RPCs since memory is too small to create a
-%% reply with the entire database.  Therefore, a shard transfer
-%% occurrs with the following protocol:
-%% \begin{itemize}
-%% \item The requester sends a request to a peer, including a request
-%%   number, and the current configuration number.  If doing a shard
-%%   transfer, the shard number is also included.
-%% \item If the receiver is currently at the appropriate
-%%   configuration, it accepts the request.  It will then begin
-%%   populating a reply with client response data, a list of seen
-%%   operations, and the desired key/value data.  While doing this, it
-%%   will periodically check memory usage; if it exceeds a
-%%   configurable threshold, it will reply with whatever it currently
-%%   has and mark the reply as incomplete.
-%% \item The requester copies the data from the reply to its disk.  If
-%%   the reply was marked as incomplete, it sends another request to
-%%   the same peer with an incremented request number.
-%% \item This continues until the reply is marked as complete, at
-%%   which point the requester launches a goroutine to make sure the
-%%   sender receives an acknowledgement of the receipt of the final
-%%   data message.
-%% \item If at any point the requester decides that the contacted peer
-%%   is dead, it launches an acknowledgement goroutine as previously
-%%   described for that peer (to terminate the transfer in case the
-%%   peer wakes up or is not dead) and moves on to try a different
-%%   peer, resetting the request number to 0.
-%% \end{itemize}
-%% Both the requester and the sender ignore client requests until the
-%% transfer is complete - this ensures that the requester will receive
-%% a consistent snapshot of the data (and is the reason the requester
-%% launches acknowledgement goroutines since otherwise a peer
-%% erroneously declared dead would be halted forever).
-
-One aspect which addresses performance is that progress can still
-be made while recovery is taking place as long as a majority of
-servers are not recovering.  For example, if a replica group has
-three servers and a shard transfer is ocurring between two of them
-(perhaps because one just restarted), a client can still have its
-requests processed if it contacts the third peer.  This is because
-the Paxos service runs independently of the shard key/value
-service; although the latter will ignore client requests on the
-transferring servers, their Paxos processes can still respond and
-make progress.  Since the Paxos instances are stored persistently
-on disk, the two occupied servers can catch themselves up from the
-log when they complete the transfer.
+It should be noted that during a shard transfer (including recovery), the shard key/value service on both the sender and recoverer ignore client requests in order to ensure that consistent data is sent (their databases cannot be modified except through the recovery process itself).  Since their Paxos processes continue running independently, however, progress can still be made even if a majority of servers is involved in a data transfer (the decided operations will be persistently logged and the halted servers can catch up when transfer is complete).  This therefore improves performance during recoveries or transfers.
 
 In addition, effort was made to utilize memory in addition to the
 disk in order to increase performance.  The LevelDB database has
@@ -271,28 +212,6 @@ options, combined with the native cache of the operating system,
 allow many needed values to be read quickly from memory rather than
 always consulting the disk.
 
-When one server contacts another via the FetchRecovery RPC, both
-servers enter a recovering state. This state means that neither are
-allowed to modify their databases \emph{except} through the
-recovery process. Depending on how many replicas there are, this
-may render a replica group unable to process requests while
-recovery is underway.  If there are enough replicas so that paxos
-majority can still be reached, then the recovering servers will
-catch up once they come back online, using the functionality
-already built in to sync lagging paxos servers.
-
-All recovery processes send over both the relevant portions of the
-k/v store, as well as paxos state and any state needed to detect
-duplicates.
-
-
-%% We use leveldb. To guarantee persistence, we enforce writing to
-%% disk all operations before returning. This slows performance down,
-%% but prevents loss of data that the client wants committed. Speed
-%% could be gained using a Harp-like set of pointers, but this would
-%% be complicated and the client would have to understand the modified
-%% persistence model.
-
 \subsection{Testing}
 About 25 new tests were created, and existing ones were extended, in order to evaluate persistent storage and run on TCP sockets instead of unix file sockets.  A few flags and configuration variables can select different modes (e.g. with and without persistence, RPC using unix file sockets or localhost TCP).
 
@@ -302,7 +221,7 @@ Below are summaries of different located at 'mexos/src/\emph{$<$name$>$}/test\_t
 
 \emph{shardmaster:} Shardmaster specific tests which include restarting servers with or without disk to ensure that persistence and recovery work as expected.  There are also benchmarks for measuring performance.
 
-\emph{shardkv:} Shardkv specific tests which include deterministically restarting servers to ensure that persistence and recovery operate correctly.  There is also a test which performs the previously written tests but with random reboots of random servers or entire groups.  There are also benchmarks for measuring shard transfer speed.
+\emph{shardkv:} Shardkv specific tests which include deterministically restarting servers to ensure that persistence and recovery operate correctly.  There is also a test which performs the previously written tests but with random reboots of random servers or entire groups.  There are also benchmarks for measuring shard transfer speed and to ensure that the simulated memory limit is never exceeded.
 
 \emph{test:} Tests and benchmarks modified to run on our AWS cluster.  Running these tests are the most complicated, and require the user to SSH into the AWS cluster leader and start the servers on other cluster machines using 'start-on-all.sh' to run 'mexos/src/main/start.go'. These tests required a surprising amount of debugging and glue code.  Additionally, to check for correct operation under server failure, backdoor RPCs were required to tell a remote server to act deaf or dead.
 
@@ -313,7 +232,6 @@ The results of these benchmarks are presented below.
 An extensive testing system was created to try and accurately measure performance.  This comprises many new benchmarks, as well as a modified RPC system to run the servers in an AWS cluster and observe the performance on a real network.
 
 \subsection{Server Configuration}
-
 Two Amazon AWS clusters were provisioned to test real-life performance of the system. The faster of the clusters used Amazon's m3.large instance type, where each server has 7.5 gigabytes of RAM, 2 Intel Xeon i5 Sandy Bridge CPU cores, and 1 32 gigabyte solid state drive. Real-world network performance, measured using iperf, was approximately 700 Mb/s. The slower of the clusters used Amazon's m1.small instance type, where each server has 1.7 gigabytes of RAM, 1 Intel Xeon Westmere core, and 1 160 gigabyte hard disk drive. Real-world network performance was approximately 150 Mb/s. Each cluster had one control node and twelve slave nodes. Instances were allocated on multi-tenant hardware, and nodes within a cluster were within the same region and availability zone.
 
 \subsection{Throughput and Latency}
@@ -383,7 +301,7 @@ For a single group case, the difference between three replicas and ten is striki
 \label{fig:replicas}
 \end{figure}
 
-Adding more groups, however, increases throughput.  For evenly distributed traffic, going from one group to 3 nearly triples the throughput when using multiple keys (thereby leveraging the additional groups).  Figure 2 shows that this trend continues, such that adding groups linearly improves the throughput of the system. The table shows that average throughput for a single client may suffer, probably because the system throughput benchmark creates many clients, while the client throughput test creates a single client; having multiple clients increases the liklihood that a client must wait to see its request served since the replicas may be busy serving another client's request.
+Adding more groups, however, increases throughput.  For evenly distributed traffic, going from one group to 3 nearly triples the throughput when using multiple keys (thereby leveraging the additional groups).  Figure 2 shows that this trend continues, such that adding groups linearly improves the throughput of the system. The table shows that average throughput for a single client may suffer, probably because the system throughput benchmark creates many clients, while the client throughput test creates a single client; having multiple clients increases the likelihood that a client must wait to see its request served since the replicas may be busy serving another client's request.
 
 \begin{figure}[h]
 \centering
@@ -473,52 +391,18 @@ becomes the limiting factor.
 %Recovery time of a 1GB database using our system: TBD
 
 \subsection{Bottlenecks}
-Although the above enhancements significantly improved performance,
-various were identified which could be addressed in the future.
 
-One notable bottleneck is disk reading and writing.  The database
-library wrapper, LeveDB, offers a cache as well as compression and is
-quite fast.  However, as discussed previously, benchmark tests
-revealed that scanning the database to compile data for shard
-transfers accounted for a significant portion of total transfer time.
-Additionally, in the process of debugging networked RPCs, simple
-logging was implemented which slowed down operations by nearly a
-factor of ten (it was disabled for benchmarks); this was a good
-demonstration of disk latency and how care must be taken in even
-mundane aspects of the system.  In the future, the system topology
-could be somewhat altered to allow for more parallelizable recovery
-and transfer procedures to help minimize the effect of disk latency
-(for example, a topology inspired by FDS).
+Although the above enhancements significantly improved performance, various were identified which could be addressed in the future.
 
-For disk recovery, we also examined the possibility of using a raw TCP
-stream to send the data, instead of using RPCs, in order to reduce
-overhead. The transfer rate for a 1GB database was about 4.5
-Mbps. This was approximately equivalent to the data rate at which the
-database itself was created locally. Thus, the overhead necessary to
-read and write values to the database is a key bottleneck. 
+One notable bottleneck is disk reading and writing.  The database library wrapper, LeveDB, offers a cache as well as compression and is quite fast.  However, as discussed previously, benchmark tests revealed that scanning the database to compile data for shard transfers accounted for a significant portion of total transfer time.  Additionally, in the process of debugging networked RPCs, simple logging was implemented which slowed down operations by nearly a factor of ten (this was disabled for the above benchmarks); this was a good demonstration of disk latency and how care must be taken in even mundane aspects of the system.  It was considered adding a commit point marker (similar to the ideas presented in \cite{harp}), which would be straightforward in the current system by simply returning before the disk write and not advancing the Paxos min until the write completes, but the above measurements indicate that database scanning is much more significant than isolated accesses.  In the future, the improvements can be made to avoid this iteration bottleneck.  For example, the system topology could be altered to allow for more parallelizable recovery with a procedure inspired by FDS \cite{fds}.  More simply, however, the servers can be altered to store a separate database for each shard; the entire database could then be transferred to the receiver using TCP/UDP.  Preliminary tests on AWS showed that a 100MB database can be sent over TCP in less than one second.  In addition, this would avoid the need for either the sender or the receiver to scan through a database, thus eliminating the major bottleneck identified previously.  
 
-Another bottleneck is network capacity and/or number of messages.  As
-shown in the latency and thoughput section, increasing the number of
-replicas has an adverse effect on performance since each operation
-requires communication with a majority of replicas.  The paxos
-optimizations therefore helped to improve performance, and further
-optimizations could be made to the data transfer protocols to reduce
-the required number of messages.
+Another bottleneck is network capacity and/or number of messages.  As shown in the latency and throughput section, increasing the number of replicas has an adverse effect on performance since each operation requires communication with a majority of replicas.  The paxos optimizations therefore helped to improve performance, and further optimizations could be made to the data transfer protocols to reduce the required number of messages.
 
-Increasing the number of replica groups increases the performance of
-the system for normal operation, especially under heavy load with
-evenly distributed key requests. This is especially noticable in the
-system throughput metric.  This arises since number of groups roughly
-corresponds to how parallelizable the operations are.
+Increasing the number of replica groups increases the performance of the system for normal operation, especially under heavy load with evenly distributed key requests. This is especially noticeable in the system throughput metric.  This arises since number of groups roughly corresponds to how parallelizable the operations are.
 
-Using multipaxos reduces the amount of network communication required,
-which improves the throughput and latency by about a factor of
-two. Multipaxos also saves some disk space by reducing the amount of
-stored paxos state information since prepares are pre-determined.
+Using multipaxos reduces the amount of network communication required, which improves the throughput and latency by about a factor of two. Multipaxos also saves some disk space by reducing the amount of stored paxos state information since prepares are pre-determined.  
 
-It is also suspected that using UDP would improve throughput, as
-servers that do not recieve a response already re-transmit their
-request, making the TCP acknowledgement system redundant.
+It is also suspected that using UDP would improve throughput, as servers that do not receive a response already re-transmit their request, making the TCP acknowledgement system redundant.
 
 \section{Conclusion}
 This project implements, tests, and benchmarks a persistent and
@@ -531,4 +415,6 @@ revealing the bottlenecks that can be addressed in the future.
 %{\footnotesize \bibliographystyle{acm}
 %\bibliography{paper}}
 %\newpage
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,paper}
 \end{document}
